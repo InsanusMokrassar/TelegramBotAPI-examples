@@ -21,7 +21,7 @@ apply plugin: 'application'
 project.version = "0.1.0"
 project.group = "com.insanusmokrassar"
 
-mainClassName="com.insanusmokrassar.examples.ForwarderBotKt.main"
+mainClassName="com.insanusmokrassar.examples.ForwarderBotKt"
 
 repositories {
     mavenLocal()
