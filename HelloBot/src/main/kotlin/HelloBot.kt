@@ -13,6 +13,9 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
+/**
+ * The main purpose of this bot is just to answer "Oh, hi, " and add user mention here
+ */
 suspend fun main(vararg args: String) {
     val botToken = args.first()
 
