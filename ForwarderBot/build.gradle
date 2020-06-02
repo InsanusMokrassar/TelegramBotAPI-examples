@@ -11,7 +11,7 @@ buildscript {
 apply plugin: 'kotlin'
 apply plugin: 'application'
 
-mainClassName="com.insanusmokrassar.examples.ForwarderBotKt"
+mainClassName="ForwarderBotKt"
 
 repositories {
     jcenter()
