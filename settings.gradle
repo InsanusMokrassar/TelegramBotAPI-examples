@@ -1,2 +1,3 @@
 include ":ForwarderBot"
 include ":RandomFileSenderBot"
+include ":HelloBot"
