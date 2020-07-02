@@ -36,11 +36,15 @@ suspend fun main(vararg args: String) {
                     is GroupChat -> bot.getChat(chat).inviteLink ?.let {
                         chat.title.linkMarkdownV2(it)
                     } ?: chat.title
-                    is ChannelChat -> (chat.username ?.username ?: bot.getChat(chat).inviteLink) ?.let {
-                        chat.title.linkMarkdownV2(it)
-                    } ?: chat.title
                     else -> "Unknown :(".escapeMarkdownV2Common()
                 }
+                bot.sendTextMessage(chat, message, MarkdownV2)
+            }
+        }.launchIn(scope)
+        channelPostFlow.onEach {
+            safely {
+                val chat = it.data.chat
+                val message = "Hi everybody in this channel \"${(chat as ChannelChat).title}\""
                 bot.sendTextMessage(chat, message, MarkdownV2)
             }
         }.launchIn(scope)
