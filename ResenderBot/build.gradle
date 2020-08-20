@@ -1,0 +1,22 @@
+plugins {
+    id 'org.jetbrains.kotlin.js' version "$kotlin_version"
+}
+
+repositories {
+    jcenter()
+    mavenCentral()
+    mavenLocal()
+}
+
+kotlin {
+    js(IR) {
+        browser()
+        binaries.executable()
+    }
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-js"
+
+    implementation "com.github.insanusmokrassar:TelegramBotAPI:$telegram_bot_api_version"
+}
