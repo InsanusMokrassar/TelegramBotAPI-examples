@@ -30,11 +30,7 @@ suspend fun activateResenderBot(
             }.launchIn(scope)
             filterMediaGroupMessages<MediaGroupContent>(scope).onEach {
                 safely {
-                    bot.sendMediaGroup(
-                        it.first().chat,
-                        it.map { it.content.toMediaGroupMemberInputMedia() },
-                        replyToMessageId = it.first().messageId
-                    ).also {
+                    bot.executeUnsafe(it.createResend(it.chat ?: return@safely, replyTo = it.first().messageId)).also {
                         print(it)
                     }
                 }
