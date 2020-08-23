@@ -23,14 +23,17 @@ suspend fun activateResenderBot(
         bot.startGettingFlowsUpdatesByLongPolling {
             filterContentMessages<MessageContent>(scope).onEach {
                 it.content.createResends(it.chat.id, replyToMessageId = it.messageId).forEach {
-                    bot.executeUnsafe(it) ?.also {
+                    bot.executeUnsafe(it) {
+                        it.forEach(print)
+                    } ?.also {
                         print(it)
                     }
                 }
             }.launchIn(scope)
-            filterMediaGroupMessages<MediaGroupContent>(scope).onEach {
-                safely {
-                    bot.executeUnsafe(it.createResend(it.chat ?: return@safely, replyTo = it.first().messageId)).also {
+            mediaGroupMessages(scope).onEach {
+                safely({ print(it.stackTraceToString()) }) {
+                    println(it.chat)
+                    bot.execute(it.createResend(it.chat ?: return@safely, replyTo = it.first().messageId)).also {
                         print(it)
                     }
                 }

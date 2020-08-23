@@ -1,3 +1,4 @@
+import com.github.insanusmokrassar.TelegramBotAPI.extensions.api.bot.getMe
 import com.github.insanusmokrassar.TelegramBotAPI.extensions.api.bot.setMyCommands
 import com.github.insanusmokrassar.TelegramBotAPI.extensions.api.send.media.sendDocument
 import com.github.insanusmokrassar.TelegramBotAPI.extensions.api.send.sendTextMessage
@@ -49,6 +50,7 @@ suspend fun main(args: Array<String>) {
         bot.setMyCommands(
             BotCommand(command, "Send some random file in picker directory")
         )
+        println(bot.getMe())
     }
 
     scope.coroutineContext[Job]!!.join()
