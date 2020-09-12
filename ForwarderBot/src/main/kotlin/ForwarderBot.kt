@@ -24,7 +24,7 @@ suspend fun main(vararg args: String) {
 
     bot.startGettingFlowsUpdatesByLongPolling(scope = scope) {
         messageFlow.asContentMessagesFlow().mapNotNull { it as? PossiblyForwardedMessage }.onEach { message ->
-            safely {
+            safely({ it.printStackTrace() }) {
                 val toAnswer = when (val forwardInfo = message.forwardInfo) {
                     null -> "There is no forward info"
                     is AnonymousForwardInfo -> "Anonymous user which signed as \"${forwardInfo.senderName.codeMarkdownV2()}\""
