@@ -32,6 +32,7 @@ suspend fun main(vararg args: String) {
                         "User ${user.id.chatId.toString().codeMarkdownV2()} " + "(${user.firstName} ${user.lastName}: ${user.username ?.username ?: "Without username"})".regularMarkdownV2()
                     }
                     is ForwardFromChannelInfo -> "Channel (".regularMarkdownV2() + (forwardInfo.channelChat).title.codeMarkdownV2() + ")".regularMarkdownV2()
+                    is ForwardFromSupergroupInfo -> "Supergroup (".regularMarkdownV2() + (forwardInfo.group).title.codeMarkdownV2() + ")".regularMarkdownV2()
                 }
                 bot.sendTextMessage(message.chat, toAnswer, MarkdownV2)
             }
