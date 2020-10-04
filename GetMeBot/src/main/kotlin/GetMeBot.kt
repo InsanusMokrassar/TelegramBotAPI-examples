@@ -1,5 +1,5 @@
-import com.github.insanusmokrassar.TelegramBotAPI.extensions.api.bot.getMe
-import com.github.insanusmokrassar.TelegramBotAPI.extensions.api.telegramBot
+import dev.inmo.tgbotapi.extensions.api.bot.getMe
+import dev.inmo.tgbotapi.extensions.api.telegramBot
 
 /**
  * This is one of the most easiest bot - it will just print information about itself
