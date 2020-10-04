@@ -1,5 +1,6 @@
 import dev.inmo.tgbotapi.extensions.api.chat.get.getChat
 import dev.inmo.tgbotapi.extensions.api.chat.get.getChatAdministrators
+import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.sendTextMessage
 import dev.inmo.tgbotapi.extensions.api.telegramBot
 import dev.inmo.tgbotapi.extensions.utils.formatting.linkMarkdownV2
@@ -32,8 +33,9 @@ suspend fun main(vararg args: String) {
     bot.startGettingFlowsUpdatesByLongPolling(scope = scope) {
         messageFlow.onEach {
             safely {
-                val chat = it.data.chat
-                val message = "Oh, hi, " + when (chat) {
+                val message = it.data
+                val chat = message.chat
+                val answerText = "Oh, hi, " + when (chat) {
                     is PrivateChat -> "${chat.firstName} ${chat.lastName}".textMentionMarkdownV2(chat.id)
                     is User -> "${chat.firstName} ${chat.lastName}".textMentionMarkdownV2(chat.id)
                     is SupergroupChat -> (chat.username ?.username ?: bot.getChat(chat).inviteLink) ?.let {
@@ -44,7 +46,11 @@ suspend fun main(vararg args: String) {
                     } ?: chat.title
                     else -> "Unknown :(".escapeMarkdownV2Common()
                 }
-                bot.sendTextMessage(chat, message, MarkdownV2)
+                bot.reply(
+                    message,
+                    answerText,
+                    MarkdownV2
+                )
             }
         }.launchIn(scope)
         channelPostFlow.onEach {
