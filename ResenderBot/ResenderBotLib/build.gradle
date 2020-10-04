@@ -28,7 +28,7 @@ kotlin {
             dependencies {
                 implementation kotlin('stdlib')
 
-                api "com.github.insanusmokrassar:TelegramBotAPI:$telegram_bot_api_version"
+                api "dev.inmo:TelegramBotAPI:$telegram_bot_api_version"
             }
         }
     }

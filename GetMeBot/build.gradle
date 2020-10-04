@@ -20,5 +20,5 @@ repositories {
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 
-    implementation "com.github.insanusmokrassar:TelegramBotAPI:$telegram_bot_api_version"
+    implementation "dev.inmo:TelegramBotAPI:$telegram_bot_api_version"
 }
