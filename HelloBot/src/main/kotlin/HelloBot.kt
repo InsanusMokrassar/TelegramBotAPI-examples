@@ -26,10 +26,6 @@ suspend fun main(vararg args: String) {
 
     val scope = CoroutineScope(Dispatchers.Default)
 
-    scope.launch {
-        println(bot.getChatAdministrators((-1001433262056L).toChatId()))
-    }
-
     bot.startGettingFlowsUpdatesByLongPolling(scope = scope) {
         messageFlow.onEach {
             safely {

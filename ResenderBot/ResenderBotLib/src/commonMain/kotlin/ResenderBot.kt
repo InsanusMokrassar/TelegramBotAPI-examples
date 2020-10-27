@@ -20,7 +20,7 @@ suspend fun activateResenderBot(
 
     supervisorScope {
         val scope = this
-        bot.startGettingFlowsUpdatesByLongPolling {
+        bot.startGettingFlowsUpdatesByLongPolling(scope = scope) {
             filterContentMessages<MessageContent>(scope).onEach {
                 it.content.createResends(it.chat.id, replyToMessageId = it.messageId).forEach {
                     bot.executeUnsafe(it) {
