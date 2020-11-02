@@ -1,8 +1,10 @@
 import dev.inmo.tgbotapi.extensions.api.send.sendTextMessage
 import dev.inmo.tgbotapi.extensions.api.telegramBot
+import dev.inmo.tgbotapi.extensions.utils.flatMap
 import dev.inmo.tgbotapi.extensions.utils.formatting.codeMarkdownV2
 import dev.inmo.tgbotapi.extensions.utils.formatting.regularMarkdownV2
 import dev.inmo.tgbotapi.extensions.utils.safely
+import dev.inmo.tgbotapi.extensions.utils.shortcuts.mediaGroupMessages
 import dev.inmo.tgbotapi.extensions.utils.updates.asContentMessagesFlow
 import dev.inmo.tgbotapi.extensions.utils.updates.retrieving.startGettingFlowsUpdatesByLongPolling
 import dev.inmo.tgbotapi.types.ParseMode.MarkdownV2
@@ -23,7 +25,7 @@ suspend fun main(vararg args: String) {
     val scope = CoroutineScope(Dispatchers.Default)
 
     bot.startGettingFlowsUpdatesByLongPolling(scope = scope) {
-        messageFlow.asContentMessagesFlow().mapNotNull { it as? PossiblyForwardedMessage }.onEach { message ->
+        (merge(messageFlow.asContentMessagesFlow(), mediaGroupMessages(scope).flatMap())).mapNotNull { it as? PossiblyForwardedMessage }.onEach { message ->
             safely({ it.printStackTrace() }) {
                 val toAnswer = when (val forwardInfo = message.forwardInfo) {
                     null -> "There is no forward info"
