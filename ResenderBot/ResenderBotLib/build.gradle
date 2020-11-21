@@ -18,8 +18,8 @@ repositories {
 
 kotlin {
     jvm()
-    js(LEGACY) {
-//    js(IR) {
+//    js(LEGACY) {
+    js(IR) {
         browser()
         binaries.executable()
     }
