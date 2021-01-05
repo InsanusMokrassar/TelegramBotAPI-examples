@@ -1,16 +1,15 @@
+import dev.inmo.micro_utils.coroutines.safely
 import dev.inmo.tgbotapi.extensions.api.chat.get.getChat
-import dev.inmo.tgbotapi.extensions.api.chat.get.getChatAdministrators
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.sendTextMessage
-import dev.inmo.tgbotapi.extensions.api.telegramBot
+import dev.inmo.tgbotapi.bot.Ktor.telegramBot
+import dev.inmo.tgbotapi.extensions.utils.asChannelChat
 import dev.inmo.tgbotapi.extensions.utils.formatting.linkMarkdownV2
 import dev.inmo.tgbotapi.extensions.utils.formatting.textMentionMarkdownV2
-import dev.inmo.tgbotapi.extensions.utils.safely
 import dev.inmo.tgbotapi.extensions.utils.updates.retrieving.startGettingFlowsUpdatesByLongPolling
 import dev.inmo.tgbotapi.types.ParseMode.MarkdownV2
 import dev.inmo.tgbotapi.types.User
 import dev.inmo.tgbotapi.types.chat.abstracts.*
-import dev.inmo.tgbotapi.types.toChatId
 import dev.inmo.tgbotapi.utils.extensions.escapeMarkdownV2Common
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.launchIn
@@ -52,7 +51,7 @@ suspend fun main(vararg args: String) {
         channelPostFlow.onEach {
             safely {
                 val chat = it.data.chat
-                val message = "Hi everybody in this channel \"${(chat as ChannelChat).title}\""
+                val message = "Hi everybody in this channel \"${(chat.asChannelChat()) ?.title}\""
                 bot.sendTextMessage(chat, message, MarkdownV2)
             }
         }.launchIn(scope)
