@@ -1,16 +1,13 @@
+import dev.inmo.tgbotapi.bot.Ktor.telegramBot
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.bot.setMyCommands
 import dev.inmo.tgbotapi.extensions.api.send.media.sendDocument
-import dev.inmo.tgbotapi.extensions.api.send.sendTextMessage
-import dev.inmo.tgbotapi.extensions.api.telegramBot
-import dev.inmo.tgbotapi.extensions.utils.safely
-import dev.inmo.tgbotapi.extensions.utils.updates.filterExactCommands
-import dev.inmo.tgbotapi.extensions.utils.updates.retrieving.startGettingFlowsUpdatesByLongPolling
+import dev.inmo.tgbotapi.extensions.api.send.reply
+import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviour
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.requests.abstracts.toInputFile
 import dev.inmo.tgbotapi.types.BotCommand
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import java.io.File
 
 private const val command = "send_file"
@@ -33,25 +30,18 @@ suspend fun main(args: Array<String>) {
     val bot = telegramBot(botToken)
     val scope = CoroutineScope(Dispatchers.Default)
 
-    bot.startGettingFlowsUpdatesByLongPolling(scope = scope) {
-        messageFlow.filterExactCommands(Regex(command)).onEach { message ->
-            safely {
-                pickFile() ?.let {
-                    bot.sendDocument(
-                        message.chat.id,
-                        it.toInputFile()
-                    )
-                } ?: bot.sendTextMessage(message.chat.id, "Nothing selected :(")
-            }
-        }.launchIn(scope)
-    }
-
-    safely {
-        bot.setMyCommands(
+    bot.buildBehaviour(scope) {
+        onCommand(command.toRegex()) { message ->
+            pickFile() ?.let {
+                bot.sendDocument(
+                    message.chat.id,
+                    it.toInputFile()
+                )
+            } ?: bot.reply(message, "Nothing selected :(")
+        }
+        setMyCommands(
             BotCommand(command, "Send some random file in picker directory")
         )
-        println(bot.getMe())
-    }
-
-    scope.coroutineContext[Job]!!.join()
+        println(getMe())
+    }.join()
 }
