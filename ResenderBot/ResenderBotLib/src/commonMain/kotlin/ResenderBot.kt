@@ -1,14 +1,12 @@
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
-import dev.inmo.tgbotapi.extensions.api.send.media.sendMediaGroup
 import dev.inmo.tgbotapi.bot.Ktor.telegramBot
-import dev.inmo.micro_utils.coroutines.safely
+import dev.inmo.tgbotapi.extensions.api.send.media.*
+import dev.inmo.tgbotapi.extensions.behaviour_builder.*
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
 import dev.inmo.tgbotapi.extensions.utils.shortcuts.*
-import dev.inmo.tgbotapi.extensions.utils.updates.retrieving.startGettingFlowsUpdatesByLongPolling
-import dev.inmo.tgbotapi.types.message.content.abstracts.MediaGroupContent
-import dev.inmo.tgbotapi.types.message.content.abstracts.MessageContent
+import dev.inmo.tgbotapi.types.message.abstracts.MediaGroupMessage
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlin.coroutines.coroutineContext
 
 suspend fun activateResenderBot(
     token: String,
@@ -18,26 +16,24 @@ suspend fun activateResenderBot(
 
     print(bot.getMe())
 
-    supervisorScope {
-        val scope = this
-        bot.startGettingFlowsUpdatesByLongPolling(scope = scope) {
-            filterContentMessages<MessageContent>(scope).onEach {
-                it.content.createResends(it.chat.id, replyToMessageId = it.messageId).forEach {
-                    bot.executeUnsafe(it) {
-                        it.forEach(print)
-                    } ?.also {
-                        print(it)
-                    }
-                }
-            }.launchIn(scope)
-            mediaGroupMessages(scope).onEach {
-                safely({ print(it.stackTraceToString()) }) {
-                    println(it.chat)
-                    bot.execute(it.createResend(it.chat ?: return@safely, replyTo = it.first().messageId)).also {
-                        print(it)
-                    }
-                }
-            }.launchIn(scope)
+    bot.buildBehaviour(CoroutineScope(coroutineContext + SupervisorJob())) {
+        onContentMessage(
+            additionalFilter = { it !is MediaGroupMessage<*> }
+        ) {
+            it.content.createResends(it.chat.id, replyToMessageId = it.messageId).forEach {
+                executeUnsafe(it) {
+                    it.forEach(print)
+                } ?.also(print)
+            }
         }
-    }
+        onVisualGallery {
+            sendVisualMediaGroup(it.chat!!, it.map { it.content.toMediaGroupMemberInputMedia() })
+        }
+        onPlaylist {
+            sendPlaylist(it.chat!!, it.map { it.content.toMediaGroupMemberInputMedia() })
+        }
+        onDocumentsGroup {
+            sendDocumentsGroup(it.chat!!, it.map { it.content.toMediaGroupMemberInputMedia() })
+        }
+    }.join()
 }
