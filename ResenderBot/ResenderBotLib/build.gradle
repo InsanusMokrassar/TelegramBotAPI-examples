@@ -12,9 +12,6 @@ plugins {
     id "org.jetbrains.kotlin.multiplatform" version "$kotlin_version"
 }
 
-repositories {
-    jcenter()
-}
 
 kotlin {
     jvm()

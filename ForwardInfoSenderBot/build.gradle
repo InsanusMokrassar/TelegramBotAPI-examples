@@ -13,9 +13,6 @@ apply plugin: 'application'
 
 mainClassName="ForwardInfoSenderBotKt"
 
-repositories {
-    jcenter()
-}
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
