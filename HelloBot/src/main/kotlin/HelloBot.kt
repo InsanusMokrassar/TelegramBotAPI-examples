@@ -6,7 +6,7 @@ import dev.inmo.tgbotapi.bot.Ktor.telegramBot
 import dev.inmo.tgbotapi.extensions.utils.asChannelChat
 import dev.inmo.tgbotapi.extensions.utils.formatting.linkMarkdownV2
 import dev.inmo.tgbotapi.extensions.utils.formatting.textMentionMarkdownV2
-import dev.inmo.tgbotapi.extensions.utils.updates.retrieving.startGettingFlowsUpdatesByLongPolling
+import dev.inmo.tgbotapi.extensions.utils.updates.retrieving.longPolling
 import dev.inmo.tgbotapi.types.ParseMode.MarkdownV2
 import dev.inmo.tgbotapi.types.User
 import dev.inmo.tgbotapi.types.chat.abstracts.*
@@ -25,7 +25,7 @@ suspend fun main(vararg args: String) {
 
     val scope = CoroutineScope(Dispatchers.Default)
 
-    bot.startGettingFlowsUpdatesByLongPolling(scope = scope) {
+    bot.longPolling(scope = scope) {
         messageFlow.onEach {
             safely {
                 val message = it.data

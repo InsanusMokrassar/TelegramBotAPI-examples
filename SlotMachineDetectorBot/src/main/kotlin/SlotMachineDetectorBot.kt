@@ -3,7 +3,7 @@ import dev.inmo.tgbotapi.bot.Ktor.telegramBot
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.utils.*
 import dev.inmo.tgbotapi.extensions.utils.shortcuts.filterContentMessages
-import dev.inmo.tgbotapi.extensions.utils.updates.retrieving.startGettingFlowsUpdatesByLongPolling
+import dev.inmo.tgbotapi.extensions.utils.updates.retrieving.longPolling
 import dev.inmo.tgbotapi.types.dice.SlotMachineDiceAnimationType
 import dev.inmo.tgbotapi.types.message.content.DiceContent
 import kotlinx.coroutines.*
@@ -14,7 +14,7 @@ suspend fun main(args: Array<String>) {
     val bot = telegramBot(args.first())
 
     val scope = CoroutineScope(Dispatchers.Default)
-    bot.startGettingFlowsUpdatesByLongPolling(scope = scope) {
+    bot.longPolling(scope = scope) {
         filterContentMessages<DiceContent>(scope).onEach {
             val content = it.content
             val dice = content.dice

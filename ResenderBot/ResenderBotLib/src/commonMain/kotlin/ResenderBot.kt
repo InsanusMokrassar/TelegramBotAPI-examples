@@ -20,11 +20,7 @@ suspend fun activateResenderBot(
         onContentMessage(
             additionalFilter = { it !is MediaGroupMessage<*> }
         ) {
-            it.content.createResends(it.chat.id, replyToMessageId = it.messageId).forEach {
-                executeUnsafe(it) {
-                    it.forEach(print)
-                } ?.also(print)
-            }
+            executeUnsafe(it.content.createResend(it.chat.id, replyToMessageId = it.messageId))
         }
         onVisualGallery {
             sendVisualMediaGroup(it.chat!!, it.map { it.content.toMediaGroupMemberInputMedia() })

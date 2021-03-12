@@ -7,10 +7,9 @@ import dev.inmo.tgbotapi.extensions.utils.formatting.codeMarkdownV2
 import dev.inmo.tgbotapi.extensions.utils.formatting.regularMarkdownV2
 import dev.inmo.tgbotapi.extensions.utils.shortcuts.mediaGroupMessages
 import dev.inmo.tgbotapi.extensions.utils.updates.asContentMessagesFlow
-import dev.inmo.tgbotapi.extensions.utils.updates.retrieving.startGettingFlowsUpdatesByLongPolling
+import dev.inmo.tgbotapi.extensions.utils.updates.retrieving.longPolling
 import dev.inmo.tgbotapi.types.ParseMode.MarkdownV2
 import dev.inmo.tgbotapi.types.message.*
-import dev.inmo.tgbotapi.types.message.abstracts.PossiblyForwardedMessage
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
@@ -25,7 +24,7 @@ suspend fun main(vararg args: String) {
 
     val scope = CoroutineScope(Dispatchers.Default)
 
-    bot.startGettingFlowsUpdatesByLongPolling(scope = scope) {
+    bot.longPolling(scope = scope) {
         (merge(messageFlow.asContentMessagesFlow(), mediaGroupMessages(scope).flatMap())).mapNotNull { it.asPossiblyForwardedMessage() }.onEach { message ->
             safely({ it.printStackTrace() }) {
                 val toAnswer = when (val forwardInfo = message.forwardInfo) {

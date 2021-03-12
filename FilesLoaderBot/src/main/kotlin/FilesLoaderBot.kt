@@ -4,7 +4,7 @@ import dev.inmo.tgbotapi.extensions.api.downloadFile
 import dev.inmo.tgbotapi.extensions.api.get.getFileAdditionalInfo
 import dev.inmo.tgbotapi.extensions.utils.flatMap
 import dev.inmo.tgbotapi.extensions.utils.shortcuts.*
-import dev.inmo.tgbotapi.extensions.utils.updates.retrieving.startGettingFlowsUpdatesByLongPolling
+import dev.inmo.tgbotapi.extensions.utils.updates.retrieving.longPolling
 import dev.inmo.tgbotapi.types.message.content.abstracts.MediaContent
 import dev.inmo.tgbotapi.utils.filenameFromUrl
 import kotlinx.coroutines.*
@@ -22,7 +22,7 @@ suspend fun main(args: Array<String>) {
     val bot = telegramBot(botToken)
     val scope = CoroutineScope(Dispatchers.Default)
 
-    bot.startGettingFlowsUpdatesByLongPolling(scope = scope) {
+    bot.longPolling(scope = scope) {
         val flow = merge (
             filterContentMessages<MediaContent>(),
             mediaGroupMessages().flatMap()
