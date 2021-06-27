@@ -1,17 +1,12 @@
-import dev.inmo.micro_utils.coroutines.safely
+import dev.inmo.micro_utils.coroutines.defaultSafelyExceptionHandler
 import dev.inmo.tgbotapi.bot.Ktor.telegramBot
-import dev.inmo.tgbotapi.extensions.api.send.sendTextMessage
-import dev.inmo.tgbotapi.extensions.api.telegramBot
-import dev.inmo.tgbotapi.extensions.utils.*
-import dev.inmo.tgbotapi.extensions.utils.formatting.codeMarkdownV2
-import dev.inmo.tgbotapi.extensions.utils.formatting.regularMarkdownV2
-import dev.inmo.tgbotapi.extensions.utils.shortcuts.mediaGroupMessages
-import dev.inmo.tgbotapi.extensions.utils.updates.asContentMessagesFlow
-import dev.inmo.tgbotapi.extensions.utils.updates.retrieving.longPolling
+import dev.inmo.tgbotapi.extensions.api.send.reply
+import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviour
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onContentMessage
+import dev.inmo.tgbotapi.extensions.utils.formatting.*
 import dev.inmo.tgbotapi.types.ParseMode.MarkdownV2
 import dev.inmo.tgbotapi.types.message.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
 
 /**
  * This bot will always return message about forwarder. In cases when sent message was not a forward message it will
@@ -20,26 +15,25 @@ import kotlinx.coroutines.flow.*
 suspend fun main(vararg args: String) {
     val botToken = args.first()
 
-    val bot = telegramBot(botToken)
-
-    val scope = CoroutineScope(Dispatchers.Default)
-
-    bot.longPolling(scope = scope) {
-        (merge(messageFlow.asContentMessagesFlow(), mediaGroupMessages(scope).flatMap())).mapNotNull { it.asPossiblyForwardedMessage() }.onEach { message ->
-            safely({ it.printStackTrace() }) {
-                val toAnswer = when (val forwardInfo = message.forwardInfo) {
-                    null -> "There is no forward info"
-                    is AnonymousForwardInfo -> "Anonymous user which signed as \"${forwardInfo.senderName.codeMarkdownV2()}\""
-                    is UserForwardInfo -> forwardInfo.from.let { user ->
-                        "User ${user.id.chatId.toString().codeMarkdownV2()} " + "(${user.firstName} ${user.lastName}: ${user.username ?.username ?: "Without username"})".regularMarkdownV2()
+    telegramBotWithBehaviour(botToken, CoroutineScope(Dispatchers.IO)) {
+        onContentMessage(includeMediaGroups = true) {
+            val toAnswer = buildEntities {
+                when (val forwardInfo = it.forwardInfo) {
+                    null -> +"There is no forward info"
+                    is AnonymousForwardInfo -> {
+                        regular("Anonymous user which signed as \"") + code(forwardInfo.senderName) + "\""
                     }
-                    is ForwardFromChannelInfo -> "Channel (".regularMarkdownV2() + (forwardInfo.channelChat).title.codeMarkdownV2() + ")".regularMarkdownV2()
-                    is ForwardFromSupergroupInfo -> "Supergroup (".regularMarkdownV2() + (forwardInfo.group).title.codeMarkdownV2() + ")".regularMarkdownV2()
+                    is UserForwardInfo -> {
+                        val user = forwardInfo.from
+                        regular("User ") + code(user.id.chatId.toString()) + " (${user.firstName} ${user.lastName}: ${user.username ?.username ?: "Without username"})"
+                    }
+                    is ForwardFromChannelInfo -> regular("Channel (") + code((forwardInfo.channelChat).title) + ")"
+                    is ForwardFromSupergroupInfo -> regular("Supergroup (") + code((forwardInfo.group).title) + ")"
                 }
-                bot.sendTextMessage(message.chat, toAnswer, MarkdownV2)
             }
-        }.launchIn(scope)
-    }
-
-    scope.coroutineContext[Job]!!.join()
+            reply(it, toAnswer)
+            coroutineContext.job.invokeOnCompletion { println("completance of onContentMessage") }
+        }
+        coroutineContext.job.invokeOnCompletion { println("Completed :)") }
+    }.second.join()
 }

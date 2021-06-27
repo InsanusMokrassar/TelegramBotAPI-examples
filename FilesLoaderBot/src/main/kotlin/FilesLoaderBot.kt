@@ -1,14 +1,12 @@
-import dev.inmo.micro_utils.coroutines.safely
-import dev.inmo.tgbotapi.bot.Ktor.telegramBot
 import dev.inmo.tgbotapi.extensions.api.downloadFile
 import dev.inmo.tgbotapi.extensions.api.get.getFileAdditionalInfo
-import dev.inmo.tgbotapi.extensions.utils.flatMap
-import dev.inmo.tgbotapi.extensions.utils.shortcuts.*
-import dev.inmo.tgbotapi.extensions.utils.updates.retrieving.longPolling
-import dev.inmo.tgbotapi.types.message.content.abstracts.MediaContent
+import dev.inmo.tgbotapi.extensions.api.send.reply
+import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviour
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onContentMessage
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMedia
 import dev.inmo.tgbotapi.utils.filenameFromUrl
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import java.io.File
 
 /**
@@ -19,24 +17,15 @@ suspend fun main(args: Array<String>) {
     val directoryOrFile = args.getOrNull(1) ?.let { File(it) } ?: File("")
     directoryOrFile.mkdirs()
 
-    val bot = telegramBot(botToken)
-    val scope = CoroutineScope(Dispatchers.Default)
-
-    bot.longPolling(scope = scope) {
-        val flow = merge (
-            filterContentMessages<MediaContent>(),
-            mediaGroupMessages().flatMap()
-        )
-        flow.onEach {
-            safely({ it.printStackTrace() }) {
-                val pathedFile = bot.getFileAdditionalInfo(it.content.media)
-                File(directoryOrFile, pathedFile.filePath.filenameFromUrl).apply {
-                    createNewFile()
-                    writeBytes(bot.downloadFile(pathedFile))
-                }
+    telegramBotWithBehaviour(botToken, CoroutineScope(Dispatchers.IO)) {
+        onMedia(includeMediaGroups = true) {
+            val pathedFile = bot.getFileAdditionalInfo(it.content.media)
+            val file = File(directoryOrFile, pathedFile.filePath.filenameFromUrl).apply {
+                createNewFile()
+                writeBytes(bot.downloadFile(pathedFile))
             }
-        }.launchIn(scope)
-    }
-
-    scope.coroutineContext[Job]!!.join()
+            reply(it, "Saved to ${file.absolutePath}")
+        }
+        onContentMessage { println(it) }
+    }.second.join()
 }
