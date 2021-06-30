@@ -3,6 +3,8 @@ import dev.inmo.tgbotapi.extensions.api.chat.get.getChat
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.sendTextMessage
 import dev.inmo.tgbotapi.bot.Ktor.telegramBot
+import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviour
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onContentMessage
 import dev.inmo.tgbotapi.extensions.utils.asChannelChat
 import dev.inmo.tgbotapi.extensions.utils.formatting.linkMarkdownV2
 import dev.inmo.tgbotapi.extensions.utils.formatting.textMentionMarkdownV2
@@ -21,41 +23,30 @@ import kotlinx.coroutines.flow.onEach
 suspend fun main(vararg args: String) {
     val botToken = args.first()
 
-    val bot = telegramBot(botToken)
-
-    val scope = CoroutineScope(Dispatchers.Default)
-
-    bot.longPolling(scope = scope) {
-        messageFlow.onEach {
-            safely {
-                val message = it.data
-                val chat = message.chat
-                val answerText = "Oh, hi, " + when (chat) {
-                    is PrivateChat -> "${chat.firstName} ${chat.lastName}".textMentionMarkdownV2(chat.id)
-                    is User -> "${chat.firstName} ${chat.lastName}".textMentionMarkdownV2(chat.id)
-                    is SupergroupChat -> (chat.username ?.username ?: bot.getChat(chat).inviteLink) ?.let {
-                        chat.title.linkMarkdownV2(it)
-                    } ?: chat.title
-                    is GroupChat -> bot.getChat(chat).inviteLink ?.let {
-                        chat.title.linkMarkdownV2(it)
-                    } ?: chat.title
-                    else -> "Unknown :(".escapeMarkdownV2Common()
-                }
-                bot.reply(
-                    message,
-                    answerText,
-                    MarkdownV2
-                )
+    telegramBotWithBehaviour(botToken, CoroutineScope(Dispatchers.IO)) {
+        onContentMessage { message ->
+            val chat = message.chat
+            if (chat is ChannelChat) {
+                val answer = "Hi everybody in this channel \"${chat.title}\""
+                sendTextMessage(chat, answer, MarkdownV2)
+                return@onContentMessage
             }
-        }.launchIn(scope)
-        channelPostFlow.onEach {
-            safely {
-                val chat = it.data.chat
-                val message = "Hi everybody in this channel \"${(chat.asChannelChat()) ?.title}\""
-                bot.sendTextMessage(chat, message, MarkdownV2)
+            val answerText = "Oh, hi, " + when (chat) {
+                is PrivateChat -> "${chat.firstName} ${chat.lastName}".textMentionMarkdownV2(chat.id)
+                is User -> "${chat.firstName} ${chat.lastName}".textMentionMarkdownV2(chat.id)
+                is SupergroupChat -> (chat.username ?.username ?: getChat(chat).inviteLink) ?.let {
+                    chat.title.linkMarkdownV2(it)
+                } ?: chat.title
+                is GroupChat -> bot.getChat(chat).inviteLink ?.let {
+                    chat.title.linkMarkdownV2(it)
+                } ?: chat.title
+                else -> "Unknown :(".escapeMarkdownV2Common()
             }
-        }.launchIn(scope)
-    }
-
-    scope.coroutineContext[Job]!!.join()
+            reply(
+                message,
+                answerText,
+                MarkdownV2
+            )
+        }
+    }.second.join()
 }
