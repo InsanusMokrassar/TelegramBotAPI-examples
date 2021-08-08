@@ -41,13 +41,13 @@ suspend fun main(args: Array<String>) {
 
                 val content = oneOf(
                     parallel {
-                        waitContentMessage(includeMediaGroups = false) { if (chat.id == it.context) content else null }.also(::println)
+                        waitContentMessage(includeMediaGroups = false, filter = { message -> message.chat.id == it.context }).also(::println)
                     },
                     parallel {
                         waitMediaGroup { chat ?.id == it.context }.also(::println)
                     },
                     parallel {
-                        waitText { if (content.containsStopCommand()) content else null }.also(::println)
+                        waitText (filter = { it.content.containsStopCommand() }).also(::println)
                     }
                 ).first()
 

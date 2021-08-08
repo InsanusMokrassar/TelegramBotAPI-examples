@@ -4,6 +4,7 @@ import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviour
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onContentMessage
 import dev.inmo.tgbotapi.extensions.utils.formatting.*
+import dev.inmo.tgbotapi.types.*
 import dev.inmo.tgbotapi.types.ParseMode.MarkdownV2
 import dev.inmo.tgbotapi.types.message.*
 import kotlinx.coroutines.*
@@ -25,7 +26,11 @@ suspend fun main(vararg args: String) {
                     }
                     is UserForwardInfo -> {
                         val user = forwardInfo.from
-                        regular("User ") + code(user.id.chatId.toString()) + " (${user.firstName} ${user.lastName}: ${user.username ?.username ?: "Without username"})"
+                        when (user) {
+                            is CommonUser -> regular("User ")
+                            is CommonBot,
+                            is ExtendedBot -> regular("Bot ")
+                        } + code(user.id.chatId.toString()) + " (${user.firstName} ${user.lastName}: ${user.username ?.username ?: "Without username"})"
                     }
                     is ForwardFromChannelInfo -> regular("Channel (") + code((forwardInfo.channelChat).title) + ")"
                     is ForwardFromSupergroupInfo -> regular("Supergroup (") + code((forwardInfo.group).title) + ")"
