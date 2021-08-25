@@ -15,7 +15,7 @@ mainClassName="ForwardInfoSenderBotKt"
 
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
     implementation "dev.inmo:tgbotapi:$telegram_bot_api_version"
 }

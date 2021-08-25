@@ -15,7 +15,7 @@ mainClassName="ResenderBotJvmKt"
 
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
     implementation project(":ResenderBot:ResenderBotLib")
 }
