@@ -17,7 +17,7 @@ suspend fun main(vararg args: String) {
     val botToken = args.first()
 
     telegramBotWithBehaviour(botToken, CoroutineScope(Dispatchers.IO)) {
-        onContentMessage(includeMediaGroups = true) {
+        onContentMessage(subcontextUpdatesFilter = { _, _ -> true }) {
             val toAnswer = buildEntities {
                 when (val forwardInfo = it.forwardInfo) {
                     null -> +"There is no forward info"

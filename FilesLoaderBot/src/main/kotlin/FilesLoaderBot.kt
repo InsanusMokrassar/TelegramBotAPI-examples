@@ -18,7 +18,7 @@ suspend fun main(args: Array<String>) {
     directoryOrFile.mkdirs()
 
     telegramBotWithBehaviour(botToken, CoroutineScope(Dispatchers.IO)) {
-        onMedia(includeMediaGroups = true) {
+        onMedia(initialFilter = null) {
             val pathedFile = bot.getFileAdditionalInfo(it.content.media)
             val file = File(directoryOrFile, pathedFile.filePath.filenameFromUrl).apply {
                 createNewFile()

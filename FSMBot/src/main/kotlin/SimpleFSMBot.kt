@@ -6,7 +6,7 @@ import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.sendMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.*
-import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.command
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
 import dev.inmo.tgbotapi.extensions.utils.extensions.parseCommandsWithParams
 import dev.inmo.tgbotapi.extensions.utils.formatting.*
 import dev.inmo.tgbotapi.extensions.utils.shortcuts.chat
@@ -15,14 +15,11 @@ import dev.inmo.tgbotapi.types.message.abstracts.CommonMessage
 import dev.inmo.tgbotapi.types.message.content.TextContent
 import dev.inmo.tgbotapi.types.message.content.abstracts.MediaGroupContent
 import dev.inmo.tgbotapi.types.message.content.abstracts.MessageContent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 
-sealed interface State : State
-data class ExpectContentOrStopState(override val context: ChatId, val sourceMessage: CommonMessage<TextContent>) : State
-data class StopState(override val context: ChatId) : State
-
-fun TextContent.containsStopCommand() = parseCommandsWithParams().keys.firstOrNull { it == "stop" } != null
+sealed interface BotState : State
+data class ExpectContentOrStopState(override val context: ChatId, val sourceMessage: CommonMessage<TextContent>) : BotState
+data class StopState(override val context: ChatId) : BotState
 
 suspend fun main(args: Array<String>) {
     val botToken = args.first()
@@ -33,46 +30,23 @@ suspend fun main(args: Array<String>) {
                 sendMessage(
                     it.context,
                     buildEntities {
-                        +"Send me some content or "
-                        botCommand("stop")
-                        +" if you want to stop sending"
+                        +"Send me some content or " + botCommand("stop") + " if you want to stop sending"
                     }
                 )
 
-                val content = oneOf(
-                    parallel {
-                        waitContentMessage(includeMediaGroups = false, filter = { message -> message.chat.id == it.context }).also(::println)
-                    },
-                    parallel {
-                        waitMediaGroup { chat ?.id == it.context }.also(::println)
-                    },
-                    parallel {
-                        waitText (filter = { it.content.containsStopCommand() }).also(::println)
+                doInSubContext(stopOnCompletion = false) {
+                    val behaviourSubcontext = this
+                    onContentMessage(
+                        initialFilter = { message -> message.chat.id == it.context }
+                    ) { message ->
+                        execute(message.content.createResend(it.context))
                     }
-                ).first()
-
-                when {
-                    content is TextContent && content.containsStopCommand() -> StopState(it.context) // assume we got "stop" command
-                    content is List<*> -> { // assume it is media group
-                        val casted = (content as List<MediaGroupContent>)
-
-                        reply(it.sourceMessage, "Ok, I got this media group and now will resend it to you")
-                        sendMediaGroup(it.context, casted.map { it.toMediaGroupMemberInputMedia() })
-
-                        it
+                    onCommand("stop") {
+                        behaviourSubcontext.cancel()
                     }
-                    content is MessageContent -> {
+                }.join()
 
-                        reply(it.sourceMessage, "Ok, I got this content and now will resend it to you")
-                        execute(content.createResend(it.context))
-
-                        it
-                    }
-                    else -> {
-                        sendMessage(it.context, "Unknown internal error")
-                        it
-                    }
-                }
+                StopState(it.context)
             }
             strictlyOn<StopState> {
                 sendMessage(it.context, "You have stopped sending of content")

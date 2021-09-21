@@ -2,7 +2,9 @@ import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.bot.Ktor.telegramBot
 import dev.inmo.tgbotapi.extensions.api.send.media.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.*
+import dev.inmo.tgbotapi.extensions.behaviour_builder.filters.MessageFilterByChat
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
+import dev.inmo.tgbotapi.extensions.behaviour_builder.utils.plus
 import dev.inmo.tgbotapi.extensions.utils.shortcuts.*
 import dev.inmo.tgbotapi.types.message.abstracts.MediaGroupMessage
 import kotlinx.coroutines.*
@@ -18,7 +20,7 @@ suspend fun activateResenderBot(
 
     bot.buildBehaviour(CoroutineScope(coroutineContext + SupervisorJob())) {
         onContentMessage(
-            additionalFilter = { it !is MediaGroupMessage<*> }
+            subcontextUpdatesFilter = MessageFilterByChat + BehaviourContextAndTwoTypesReceiver { it, _ -> it !is MediaGroupMessage<*> }
         ) {
             executeUnsafe(it.content.createResend(it.chat.id, replyToMessageId = it.messageId))
         }

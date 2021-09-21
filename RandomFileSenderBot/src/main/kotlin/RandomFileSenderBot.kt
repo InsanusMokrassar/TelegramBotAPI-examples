@@ -36,7 +36,7 @@ suspend fun main(args: Array<String>) {
         if (currentRoot.isFile) {
             return currentRoot
         } else {
-            return pickFile(currentRoot.listFiles() ?.random() ?: return null)
+            return pickFile(currentRoot.listFiles() ?.takeIf { it.isNotEmpty() } ?.random() ?: return null)
         }
     }
 
@@ -76,8 +76,10 @@ suspend fun main(args: Array<String>) {
                     }
                 }
 
-                sendFiles(message.chat, chosen)
-                sent || chosen.isNotEmpty()
+                if (chosen.isNotEmpty()) {
+                    sendFiles(message.chat, chosen)
+                    sent = true
+                }
 
                 if (!sent) {
                     bot.reply(message, "Nothing selected :(")
