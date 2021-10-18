@@ -1,6 +1,7 @@
 buildscript {
     repositories {
-        jcenter()
+        mavenLocal()
+        mavenCentral()
     }
 
     dependencies {
@@ -13,10 +14,13 @@ apply plugin: 'application'
 
 mainClassName="SimpleFSMBotKt"
 
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
     implementation "dev.inmo:tgbotapi:$telegram_bot_api_version"
-    implementation "dev.inmo:micro_utils.fsm.common:$micro_utils_version"
 }
