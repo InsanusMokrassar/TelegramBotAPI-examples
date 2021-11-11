@@ -18,7 +18,7 @@ suspend fun activateResenderBot(
 
     print(bot.getMe())
 
-    bot.buildBehaviour(CoroutineScope(coroutineContext + SupervisorJob())) {
+    bot.buildBehaviourWithLongPolling(CoroutineScope(coroutineContext + SupervisorJob())) {
         onContentMessage(
             subcontextUpdatesFilter = MessageFilterByChat + BehaviourContextAndTwoTypesReceiver { it, _ -> it !is MediaGroupMessage<*> }
         ) {

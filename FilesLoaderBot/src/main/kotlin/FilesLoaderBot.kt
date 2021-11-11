@@ -2,6 +2,7 @@ import dev.inmo.tgbotapi.extensions.api.files.downloadFile
 import dev.inmo.tgbotapi.extensions.api.get.getFileAdditionalInfo
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviour
+import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onContentMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMedia
 import dev.inmo.tgbotapi.utils.filenameFromUrl
@@ -17,7 +18,7 @@ suspend fun main(args: Array<String>) {
     val directoryOrFile = args.getOrNull(1) ?.let { File(it) } ?: File("")
     directoryOrFile.mkdirs()
 
-    telegramBotWithBehaviour(botToken, CoroutineScope(Dispatchers.IO)) {
+    telegramBotWithBehaviourAndLongPolling(botToken, CoroutineScope(Dispatchers.IO)) {
         onMedia(initialFilter = null) {
             val pathedFile = bot.getFileAdditionalInfo(it.content.media)
             val file = File(directoryOrFile, pathedFile.filePath.filenameFromUrl).apply {

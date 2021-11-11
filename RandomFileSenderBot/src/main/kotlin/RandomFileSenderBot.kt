@@ -7,6 +7,7 @@ import dev.inmo.tgbotapi.extensions.api.send.media.sendDocumentsGroup
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.withUploadDocumentAction
 import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviour
+import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviourWithLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommandWithArgs
 import dev.inmo.tgbotapi.requests.abstracts.asMultipartFile
@@ -55,7 +56,7 @@ suspend fun main(args: Array<String>) {
 
     val bot = telegramBot(botToken)
 
-    bot.buildBehaviour(defaultExceptionsHandler = { it.printStackTrace() }) {
+    bot.buildBehaviourWithLongPolling (defaultExceptionsHandler = { it.printStackTrace() }) {
         onCommandWithArgs(command) { message, args ->
 
             withUploadDocumentAction(message.chat) {

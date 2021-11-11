@@ -17,7 +17,7 @@ data class StopState(override val context: ChatId) : BotState
 suspend fun main(args: Array<String>) {
     val botToken = args.first()
 
-    telegramBotWithBehaviourAndFSMAndStartLongPolling(botToken, CoroutineScope(Dispatchers.IO)) {
+    telegramBotWithBehaviourAndFSMAndStartLongPolling<BotState>(botToken, CoroutineScope(Dispatchers.IO)) {
         strictlyOn<ExpectContentOrStopState> {
             sendMessage(
                 it.context,

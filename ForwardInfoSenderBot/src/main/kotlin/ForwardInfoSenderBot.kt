@@ -1,11 +1,8 @@
-import dev.inmo.micro_utils.coroutines.defaultSafelyExceptionHandler
-import dev.inmo.tgbotapi.bot.Ktor.telegramBot
 import dev.inmo.tgbotapi.extensions.api.send.reply
-import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviour
+import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onContentMessage
 import dev.inmo.tgbotapi.extensions.utils.formatting.*
 import dev.inmo.tgbotapi.types.*
-import dev.inmo.tgbotapi.types.ParseMode.MarkdownV2
 import dev.inmo.tgbotapi.types.message.*
 import kotlinx.coroutines.*
 
@@ -16,7 +13,7 @@ import kotlinx.coroutines.*
 suspend fun main(vararg args: String) {
     val botToken = args.first()
 
-    telegramBotWithBehaviour(botToken, CoroutineScope(Dispatchers.IO)) {
+    telegramBotWithBehaviourAndLongPolling(botToken, CoroutineScope(Dispatchers.IO)) {
         onContentMessage(subcontextUpdatesFilter = { _, _ -> true }) {
             val toAnswer = buildEntities {
                 when (val forwardInfo = it.forwardInfo) {
