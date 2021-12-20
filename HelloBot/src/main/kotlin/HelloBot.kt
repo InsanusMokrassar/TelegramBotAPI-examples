@@ -1,3 +1,4 @@
+import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.tgbotapi.extensions.api.chat.get.getChat
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.sendTextMessage
@@ -42,5 +43,6 @@ suspend fun main(vararg args: String) {
                 MarkdownV2
             )
         }
+        allUpdatesFlow.subscribeSafelyWithoutExceptions(this) { println(it) }
     }.second.join()
 }
