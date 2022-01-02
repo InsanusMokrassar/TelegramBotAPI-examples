@@ -45,11 +45,13 @@ suspend fun main(args: Array<String>) {
         when (files.size) {
             1 -> sendDocument(
                 chat.id,
-                files.first().asMultipartFile()
+                files.first().asMultipartFile(),
+                protectContent = true
             )
             else -> sendDocumentsGroup(
                 chat,
-                files.map { InputMediaDocument(it.asMultipartFile()) }
+                files.map { InputMediaDocument(it.asMultipartFile()) },
+                protectContent = true
             )
         }
     }

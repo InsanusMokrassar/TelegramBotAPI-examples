@@ -1,3 +1,4 @@
+import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.bot.Ktor.telegramBot
 import dev.inmo.tgbotapi.extensions.api.send.media.*
@@ -32,6 +33,10 @@ suspend fun activateResenderBot(
         }
         onDocumentsGroup {
             sendDocumentsGroup(it.chat!!, it.map { it.content.toMediaGroupMemberInputMedia() })
+        }
+
+        allUpdatesFlow.subscribeSafelyWithoutExceptions(this) {
+            println(it)
         }
     }.join()
 }
