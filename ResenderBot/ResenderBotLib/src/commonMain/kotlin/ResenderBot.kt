@@ -1,14 +1,15 @@
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.bot.Ktor.telegramBot
+import dev.inmo.tgbotapi.extensions.api.send.*
 import dev.inmo.tgbotapi.extensions.api.send.media.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.filters.CommonMessageFilterExcludeMediaGroups
 import dev.inmo.tgbotapi.extensions.behaviour_builder.filters.MessageFilterByChat
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
 import dev.inmo.tgbotapi.extensions.utils.shortcuts.*
+import dev.inmo.tgbotapi.types.message.abstracts.Message
 import kotlinx.coroutines.*
-import kotlin.coroutines.coroutineContext
 
 suspend fun activateResenderBot(
     token: String,
@@ -18,21 +19,33 @@ suspend fun activateResenderBot(
 
     print(bot.getMe())
 
-    bot.buildBehaviourWithLongPolling(CoroutineScope(coroutineContext + SupervisorJob())) {
+    bot.buildBehaviourWithLongPolling(CoroutineScope(currentCoroutineContext() + SupervisorJob())) {
         onContentMessage(
             initialFilter = CommonMessageFilterExcludeMediaGroups,
             subcontextUpdatesFilter = MessageFilterByChat
         ) {
-            executeUnsafe(it.content.createResend(it.chat.id, replyToMessageId = it.messageId))
+            val chat = it.chat
+            withTypingAction(chat) {
+                executeUnsafe(it.content.createResend(chat.id, replyToMessageId = it.messageId))
+            }
         }
         onVisualGallery {
-            sendVisualMediaGroup(it.chat!!, it.map { it.content.toMediaGroupMemberInputMedia() })
+            val chat = it.chat ?: return@onVisualGallery
+            withUploadPhotoAction(chat) {
+                sendVisualMediaGroup(chat, it.map { it.content.toMediaGroupMemberInputMedia() })
+            }
         }
         onPlaylist {
-            sendPlaylist(it.chat!!, it.map { it.content.toMediaGroupMemberInputMedia() })
+            val chat = it.chat ?: return@onPlaylist
+            withUploadDocumentAction(chat) {
+                sendPlaylist(chat, it.map { it.content.toMediaGroupMemberInputMedia() })
+            }
         }
         onDocumentsGroup {
-            sendDocumentsGroup(it.chat!!, it.map { it.content.toMediaGroupMemberInputMedia() })
+            val chat = it.chat ?: return@onDocumentsGroup
+            withUploadDocumentAction(chat) {
+                sendDocumentsGroup(chat, it.map { it.content.toMediaGroupMemberInputMedia() })
+            }
         }
 
         allUpdatesFlow.subscribeSafelyWithoutExceptions(this) {
