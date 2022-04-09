@@ -1,0 +1,32 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+plugins {
+    id "org.jetbrains.kotlin.multiplatform" version "$kotlin_version"
+}
+
+
+kotlin {
+    jvm()
+    js(IR) {
+        browser()
+        binaries.executable()
+    }
+
+    sourceSets {
+        commonMain {
+            dependencies {
+                implementation kotlin('stdlib')
+
+                api "dev.inmo:tgbotapi:$telegram_bot_api_version"
+            }
+        }
+    }
+}
