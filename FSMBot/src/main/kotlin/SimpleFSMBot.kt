@@ -26,7 +26,9 @@ suspend fun main(args: Array<String>) {
                 }
             )
 
-            val content = waitContentMessage().first()
+            val contentMessage = waitContentMessage().first()
+            val content = contentMessage.content
+
             when {
                 content is TextContent && content.parseCommandsWithParams().keys.contains("stop") -> StopState(it.context)
                 else -> {
