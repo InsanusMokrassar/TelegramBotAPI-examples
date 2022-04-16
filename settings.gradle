@@ -1,9 +1,19 @@
 include ":ForwardInfoSenderBot"
+
 include ":RandomFileSenderBot"
+
 include ":HelloBot"
+
 include ":GetMeBot"
+
 include ":FilesLoaderBot"
+
 include ":ResenderBot:ResenderBotLib"
 include ":ResenderBot:jvm_launcher"
+
+include ":KeyboardsBot:KeyboardsBotLib"
+include ":KeyboardsBot:jvm_launcher"
+
 include ":SlotMachineDetectorBot"
+
 include ":FSMBot"
