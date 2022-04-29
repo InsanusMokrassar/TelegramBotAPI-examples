@@ -16,4 +16,6 @@ include ":KeyboardsBot:jvm_launcher"
 
 include ":SlotMachineDetectorBot"
 
+include ":WebApp"
+
 include ":FSMBot"

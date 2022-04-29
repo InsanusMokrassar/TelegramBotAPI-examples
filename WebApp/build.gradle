@@ -1,0 +1,55 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+plugins {
+    id "org.jetbrains.kotlin.multiplatform" version "$kotlin_version"
+}
+
+apply plugin: 'application'
+
+kotlin {
+    jvm()
+    js(IR) {
+        browser()
+        binaries.executable()
+    }
+
+    sourceSets {
+        commonMain {
+            dependencies {
+                implementation kotlin('stdlib')
+            }
+        }
+
+        jsMain {
+            dependencies {
+                implementation "dev.inmo:tgbotapi.webapps:$telegram_bot_api_version"
+            }
+        }
+
+        jvmMain {
+            dependencies {
+                implementation "dev.inmo:tgbotapi:$telegram_bot_api_version"
+                implementation "dev.inmo:micro_utils.ktor.server:$micro_utils_version"
+                implementation "io.ktor:ktor-server-tomcat:$ktor_version"
+            }
+        }
+    }
+}
+
+application {
+    mainClassName = "WebAppServerKt"
+}
+
+tasks.getByName("compileKotlinJvm")
+        .dependsOn(jsBrowserDistribution)
+tasks.getByName("compileKotlinJvm").configure {
+    mustRunAfter jsBrowserDistribution
+}
