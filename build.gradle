@@ -1,7 +1,7 @@
 allprojects {
     repositories {
         mavenLocal()
-        jcenter()
+        mavenCentral()
         if (project.hasProperty("GITHUB_USER") && project.hasProperty("GITHUB_TOKEN")) {
             maven {
                 url "https://maven.pkg.github.com/InsanusMokrassar/TelegramBotAPI"
