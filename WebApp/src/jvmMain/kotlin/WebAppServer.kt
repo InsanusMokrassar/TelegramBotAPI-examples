@@ -5,11 +5,9 @@ import dev.inmo.tgbotapi.extensions.api.send.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.*
-import io.ktor.application.call
-import io.ktor.http.content.files
-import io.ktor.http.content.static
-import io.ktor.routing.get
-import io.ktor.routing.routing
+import dev.inmo.tgbotapi.types.webapps.WebAppInfo
+import io.ktor.http.content.*
+import io.ktor.routing.*
 import io.ktor.server.tomcat.Tomcat
 import kotlinx.coroutines.Dispatchers
 import java.io.File
@@ -45,12 +43,13 @@ suspend fun main(vararg args: String) {
         onCommand("start") {
             reply(
                 it,
-                "Button:",
-                replyMarkup = inlineKeyboard {
+                "Button",
+                replyMarkup = replyKeyboard {
                     row {
-                        webAppButton("Open", args[1])
+                        webAppButton("Open WebApp", WebAppInfo(args[1]))
                     }
                 }
+
             )
         }
         allUpdatesFlow.subscribeSafelyWithoutExceptions(this) {
