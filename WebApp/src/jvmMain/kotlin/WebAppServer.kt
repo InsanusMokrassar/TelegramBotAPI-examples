@@ -19,8 +19,6 @@ import io.ktor.http.content.*
 import io.ktor.request.receiveText
 import io.ktor.response.respond
 import io.ktor.routing.*
-import io.ktor.server.tomcat.Tomcat
-import io.ktor.utils.io.readRemaining
 import kotlinx.coroutines.Dispatchers
 import java.io.File
 
@@ -35,7 +33,6 @@ import java.io.File
 suspend fun main(vararg args: String) {
     val bot = telegramBot(args.first(), testServer = args.any { it == "testServer" })
     createKtorServer(
-        Tomcat,
         "0.0.0.0",
         8080,
         additionalEngineEnvironmentConfigurator = {
