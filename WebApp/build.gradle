@@ -38,7 +38,7 @@ kotlin {
             dependencies {
                 implementation "dev.inmo:tgbotapi:$telegram_bot_api_version"
                 implementation "dev.inmo:micro_utils.ktor.server:$micro_utils_version"
-                implementation "io.ktor:ktor-server-tomcat:$ktor_version"
+                implementation "io.ktor:ktor-server-cio:$ktor_version"
             }
         }
     }
