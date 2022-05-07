@@ -81,6 +81,9 @@ suspend fun main(vararg args: String) {
 
             )
         }
+        onUnhandledCommand {
+            println("Unhandled command: ${it.content}")
+        }
         setMyCommands(
             BotCommand("reply_markup", "Use to get reply markup keyboard with web app trigger"),
             BotCommand("inline", "Use to get inline keyboard with web app trigger"),
