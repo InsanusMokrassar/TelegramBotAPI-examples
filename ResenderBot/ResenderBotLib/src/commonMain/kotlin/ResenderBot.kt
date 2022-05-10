@@ -1,6 +1,6 @@
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
-import dev.inmo.tgbotapi.bot.Ktor.telegramBot
+import dev.inmo.tgbotapi.bot.ktor.telegramBot
 import dev.inmo.tgbotapi.extensions.api.send.*
 import dev.inmo.tgbotapi.extensions.api.send.media.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.*
@@ -8,7 +8,6 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.filters.CommonMessageFilte
 import dev.inmo.tgbotapi.extensions.behaviour_builder.filters.MessageFilterByChat
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
 import dev.inmo.tgbotapi.extensions.utils.shortcuts.*
-import dev.inmo.tgbotapi.types.message.abstracts.Message
 import kotlinx.coroutines.*
 
 suspend fun activateResenderBot(
@@ -32,19 +31,19 @@ suspend fun activateResenderBot(
         onVisualGallery {
             val chat = it.chat ?: return@onVisualGallery
             withUploadPhotoAction(chat) {
-                sendVisualMediaGroup(chat, it.map { it.content.toMediaGroupMemberInputMedia() })
+                sendVisualMediaGroup(chat, it.map { it.content.toMediaGroupMemberTelegramMedia() })
             }
         }
         onPlaylist {
             val chat = it.chat ?: return@onPlaylist
             withUploadDocumentAction(chat) {
-                sendPlaylist(chat, it.map { it.content.toMediaGroupMemberInputMedia() })
+                sendPlaylist(chat, it.map { it.content.toMediaGroupMemberTelegramMedia() })
             }
         }
         onDocumentsGroup {
             val chat = it.chat ?: return@onDocumentsGroup
             withUploadDocumentAction(chat) {
-                sendDocumentsGroup(chat, it.map { it.content.toMediaGroupMemberInputMedia() })
+                sendDocumentsGroup(chat, it.map { it.content.toMediaGroupMemberTelegramMedia() })
             }
         }
 

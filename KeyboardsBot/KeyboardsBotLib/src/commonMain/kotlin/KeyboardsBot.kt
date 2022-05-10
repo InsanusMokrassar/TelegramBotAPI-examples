@@ -1,15 +1,11 @@
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
-import dev.inmo.tgbotapi.bot.Ktor.telegramBot
+import dev.inmo.tgbotapi.bot.ktor.telegramBot
 import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.edit.text.editMessageText
 import dev.inmo.tgbotapi.extensions.api.send.*
-import dev.inmo.tgbotapi.extensions.api.send.media.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.*
-import dev.inmo.tgbotapi.extensions.behaviour_builder.filters.CommonMessageFilterExcludeMediaGroups
-import dev.inmo.tgbotapi.extensions.behaviour_builder.filters.MessageFilterByChat
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
-import dev.inmo.tgbotapi.extensions.utils.shortcuts.*
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.*
 import dev.inmo.tgbotapi.extensions.utils.withContent
 import dev.inmo.tgbotapi.types.message.content.TextContent

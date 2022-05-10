@@ -1,4 +1,4 @@
-import dev.inmo.tgbotapi.bot.Ktor.telegramBot
+import dev.inmo.tgbotapi.bot.ktor.telegramBot
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 
 /**

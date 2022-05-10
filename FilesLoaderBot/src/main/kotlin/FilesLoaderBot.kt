@@ -1,7 +1,6 @@
 import dev.inmo.tgbotapi.extensions.api.files.downloadFile
 import dev.inmo.tgbotapi.extensions.api.get.getFileAdditionalInfo
 import dev.inmo.tgbotapi.extensions.api.send.reply
-import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviour
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onContentMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMedia

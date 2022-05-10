@@ -2,7 +2,9 @@ import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onContentMessage
 import dev.inmo.tgbotapi.extensions.utils.formatting.*
-import dev.inmo.tgbotapi.types.*
+import dev.inmo.tgbotapi.types.chat.CommonBot
+import dev.inmo.tgbotapi.types.chat.CommonUser
+import dev.inmo.tgbotapi.types.chat.ExtendedBot
 import dev.inmo.tgbotapi.types.message.*
 import kotlinx.coroutines.*
 
@@ -34,8 +36,8 @@ suspend fun main(vararg args: String) {
                 }
             }
             reply(it, toAnswer)
-            coroutineContext.job.invokeOnCompletion { println("completance of onContentMessage") }
+            currentCoroutineContext().job.invokeOnCompletion { println("completance of onContentMessage") }
         }
-        coroutineContext.job.invokeOnCompletion { println("Completed :)") }
+        currentCoroutineContext().job.invokeOnCompletion { println("Completed :)") }
     }.second.join()
 }

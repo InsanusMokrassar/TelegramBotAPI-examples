@@ -13,12 +13,14 @@ import dev.inmo.tgbotapi.types.InlineQueries.InlineQueryResult.InlineQueryResult
 import dev.inmo.tgbotapi.types.InlineQueries.InputMessageContent.InputTextMessageContent
 import dev.inmo.tgbotapi.types.webAppQueryIdField
 import dev.inmo.tgbotapi.types.webapps.WebAppInfo
-import io.ktor.application.call
+import dev.inmo.tgbotapi.utils.PreviewFeature
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.content.*
-import io.ktor.request.receiveText
-import io.ktor.response.respond
-import io.ktor.routing.*
+import io.ktor.server.application.call
+import io.ktor.server.http.content.*
+import io.ktor.server.request.receiveText
+import io.ktor.server.response.respond
+import io.ktor.server.routing.post
+import io.ktor.server.routing.routing
 import kotlinx.coroutines.Dispatchers
 import java.io.File
 
@@ -30,6 +32,7 @@ import java.io.File
  *
  * Will start the server to share the static (index.html and WebApp.js) on 0.0.0.0:8080
  */
+@OptIn(PreviewFeature::class)
 suspend fun main(vararg args: String) {
     val bot = telegramBot(args.first(), testServer = args.any { it == "testServer" })
     createKtorServer(
