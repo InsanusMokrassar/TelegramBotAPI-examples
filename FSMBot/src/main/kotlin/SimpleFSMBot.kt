@@ -1,3 +1,4 @@
+import dev.inmo.micro_utils.coroutines.AccumulatorFlow
 import dev.inmo.micro_utils.fsm.common.State
 import dev.inmo.tgbotapi.extensions.api.send.sendMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.*

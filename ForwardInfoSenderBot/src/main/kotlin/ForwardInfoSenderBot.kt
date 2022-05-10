@@ -36,8 +36,6 @@ suspend fun main(vararg args: String) {
                 }
             }
             reply(it, toAnswer)
-            currentCoroutineContext().job.invokeOnCompletion { println("completance of onContentMessage") }
         }
-        currentCoroutineContext().job.invokeOnCompletion { println("Completed :)") }
     }.second.join()
 }
