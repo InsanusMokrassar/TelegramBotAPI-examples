@@ -2,12 +2,16 @@ import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.bot.ktor.telegramBot
 import dev.inmo.tgbotapi.extensions.api.answers.answer
+import dev.inmo.tgbotapi.extensions.api.bot.setMyCommands
 import dev.inmo.tgbotapi.extensions.api.edit.text.editMessageText
 import dev.inmo.tgbotapi.extensions.api.send.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
+import dev.inmo.tgbotapi.extensions.utils.formatting.botCommand
+import dev.inmo.tgbotapi.extensions.utils.formatting.buildEntities
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.*
 import dev.inmo.tgbotapi.extensions.utils.withContent
+import dev.inmo.tgbotapi.types.BotCommand
 import dev.inmo.tgbotapi.types.message.content.TextContent
 import kotlinx.coroutines.*
 
@@ -82,12 +86,14 @@ suspend fun activateKeyboardsBot(
                 return@onMessageDataCallbackQuery
             }
 
+            val text = "This is $page of $count"
+
             editMessageText(
                 it.message.withContent<TextContent>() ?: it.let {
                     answer(it, "Unsupported message type :(")
                     return@onMessageDataCallbackQuery
                 },
-                "This is $page of $count",
+                text,
                 replyMarkup = inlineKeyboard {
                     row {
                         includePageButtons(page, count)
@@ -95,6 +101,22 @@ suspend fun activateKeyboardsBot(
                 }
             )
         }
+
+        onUnhandledCommand {
+            reply(
+                it,
+                buildEntities {
+                    +"Use " + botCommand("inline") + " to get pagination inline keyboard"
+                },
+                replyMarkup = replyKeyboard(resizeKeyboard = true, oneTimeKeyboard = true) {
+                    row {
+                        simpleButton("/inline")
+                    }
+                }
+            )
+        }
+
+        setMyCommands(BotCommand("inline", "Creates message with pagination inline keyboard"))
 
         allUpdatesFlow.subscribeSafelyWithoutExceptions(this) {
             println(it)

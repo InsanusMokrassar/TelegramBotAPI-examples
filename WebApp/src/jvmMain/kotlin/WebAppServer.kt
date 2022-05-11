@@ -7,6 +7,8 @@ import dev.inmo.tgbotapi.extensions.api.send.*
 import dev.inmo.tgbotapi.extensions.api.telegramBot
 import dev.inmo.tgbotapi.extensions.behaviour_builder.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
+import dev.inmo.tgbotapi.extensions.utils.formatting.botCommand
+import dev.inmo.tgbotapi.extensions.utils.formatting.buildEntities
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.*
 import dev.inmo.tgbotapi.types.BotCommand
 import dev.inmo.tgbotapi.types.InlineQueries.InlineQueryResult.InlineQueryResultArticle
@@ -85,7 +87,13 @@ suspend fun main(vararg args: String) {
             )
         }
         onUnhandledCommand {
-            println("Unhandled command: ${it.content}")
+            reply(
+                it,
+                buildEntities {
+                    +"Use " + botCommand("inline") + " to get inline web app button\n"
+                    +"Use " + botCommand("reply_markup") + " to get reply markup web app button\n"
+                }
+            )
         }
         setMyCommands(
             BotCommand("reply_markup", "Use to get reply markup keyboard with web app trigger"),
