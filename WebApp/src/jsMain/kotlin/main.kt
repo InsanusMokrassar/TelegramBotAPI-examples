@@ -29,9 +29,9 @@ fun main() {
                 addEventListener("click", {
                     scope.launchSafelyWithoutExceptions {
                         handleResult({ "Clicked" }) {
-                            HttpClient().post<HttpResponse>("${window.location.origin.removeSuffix("/")}/inline") {
+                            HttpClient().post("${window.location.origin.removeSuffix("/")}/inline") {
                                 parameter(webAppQueryIdField, it)
-                                body = TextContent("Clicked", ContentType.Text.Plain)
+                                setBody(TextContent("Clicked", ContentType.Text.Plain))
                                 document.body ?.log(url.build().toString())
                             }.coroutineContext.job.join()
                         }

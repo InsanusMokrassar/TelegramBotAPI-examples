@@ -6,15 +6,19 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAn
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onContentMessage
 import dev.inmo.tgbotapi.extensions.utils.formatting.linkMarkdownV2
 import dev.inmo.tgbotapi.extensions.utils.formatting.textMentionMarkdownV2
-import dev.inmo.tgbotapi.types.ParseMode.MarkdownV2
-import dev.inmo.tgbotapi.types.User
-import dev.inmo.tgbotapi.types.chat.abstracts.*
+import dev.inmo.tgbotapi.types.chat.*
+import dev.inmo.tgbotapi.types.chat.GroupChat
+import dev.inmo.tgbotapi.types.chat.PrivateChat
+import dev.inmo.tgbotapi.types.chat.SupergroupChat
+import dev.inmo.tgbotapi.types.message.MarkdownV2
+import dev.inmo.tgbotapi.utils.PreviewFeature
 import dev.inmo.tgbotapi.utils.extensions.escapeMarkdownV2Common
 import kotlinx.coroutines.*
 
 /**
  * The main purpose of this bot is just to answer "Oh, hi, " and add user mention here
  */
+@OptIn(PreviewFeature::class)
 suspend fun main(vararg args: String) {
     val botToken = args.first()
 
@@ -27,8 +31,8 @@ suspend fun main(vararg args: String) {
                 return@onContentMessage
             }
             val answerText = "Oh, hi, " + when (chat) {
-                is PrivateChat -> "${chat.firstName} ${chat.lastName}".textMentionMarkdownV2(chat.id)
                 is User -> "${chat.firstName} ${chat.lastName}".textMentionMarkdownV2(chat.id)
+                is PrivateChat -> "${chat.firstName} ${chat.lastName}".textMentionMarkdownV2(chat.id)
                 is SupergroupChat -> (chat.username ?.username ?: getChat(chat).inviteLink) ?.let {
                     chat.title.linkMarkdownV2(it)
                 } ?: chat.title
