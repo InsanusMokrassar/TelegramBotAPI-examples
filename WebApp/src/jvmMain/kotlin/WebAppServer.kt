@@ -1,4 +1,5 @@
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
+import dev.inmo.micro_utils.crypto.hmacSha256
 import dev.inmo.micro_utils.ktor.server.createKtorServer
 import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
@@ -16,7 +17,8 @@ import dev.inmo.tgbotapi.types.InlineQueries.InputMessageContent.InputTextMessag
 import dev.inmo.tgbotapi.types.webAppQueryIdField
 import dev.inmo.tgbotapi.types.webapps.WebAppInfo
 import dev.inmo.tgbotapi.utils.PreviewFeature
-import io.ktor.http.HttpStatusCode
+import dev.inmo.tgbotapi.utils.TelegramAPIUrlsKeeper
+import io.ktor.http.*
 import io.ktor.server.application.call
 import io.ktor.server.http.content.*
 import io.ktor.server.request.receiveText
@@ -24,7 +26,9 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import kotlinx.coroutines.Dispatchers
+import kotlinx.serialization.json.Json
 import java.io.File
+import java.nio.charset.Charset
 
 /**
  * Accepts two parameters:
@@ -36,7 +40,11 @@ import java.io.File
  */
 @OptIn(PreviewFeature::class)
 suspend fun main(vararg args: String) {
-    val bot = telegramBot(args.first(), testServer = args.any { it == "testServer" })
+    val telegramBotAPIUrlsKeeper = TelegramAPIUrlsKeeper(
+        args.first(),
+        testServer = args.any { it == "testServer" }
+    )
+    val bot = telegramBot(telegramBotAPIUrlsKeeper)
     createKtorServer(
         "0.0.0.0",
         8080,
@@ -55,6 +63,14 @@ suspend fun main(vararg args: String) {
 
                 bot.answer(queryId, InlineQueryResultArticle(queryId, "Result", InputTextMessageContent(requestBody)))
                 call.respond(HttpStatusCode.OK)
+            }
+            post("check") {
+                val requestBody = call.receiveText()
+                val webAppCheckData = Json {  }.decodeFromString(WebAppDataWrapper.serializer(), requestBody)
+
+                val isSafe = telegramBotAPIUrlsKeeper.checkWebAppLink(webAppCheckData.data, webAppCheckData.hash)
+
+                call.respond(HttpStatusCode.OK, isSafe.toString())
             }
         }
     }.start(false)

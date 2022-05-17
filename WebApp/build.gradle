@@ -9,7 +9,8 @@ buildscript {
 }
 
 plugins {
-    id "org.jetbrains.kotlin.multiplatform" version "$kotlin_version"
+    id "org.jetbrains.kotlin.multiplatform"
+    id "org.jetbrains.kotlin.plugin.serialization"
 }
 
 apply plugin: 'application'
@@ -25,6 +26,7 @@ kotlin {
         commonMain {
             dependencies {
                 implementation kotlin('stdlib')
+                implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:$serialization_version"
             }
         }
 
