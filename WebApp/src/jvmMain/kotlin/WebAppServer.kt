@@ -68,7 +68,7 @@ suspend fun main(vararg args: String) {
                 val requestBody = call.receiveText()
                 val webAppCheckData = Json {  }.decodeFromString(WebAppDataWrapper.serializer(), requestBody)
 
-                val isSafe = telegramBotAPIUrlsKeeper.checkWebAppLink(webAppCheckData.data, webAppCheckData.hash)
+                val isSafe = telegramBotAPIUrlsKeeper.checkWebAppData(webAppCheckData.data, webAppCheckData.hash)
 
                 call.respond(HttpStatusCode.OK, isSafe.toString())
             }
