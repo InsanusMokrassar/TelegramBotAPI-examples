@@ -1,3 +1,4 @@
+import dev.inmo.micro_utils.common.filesize
 import dev.inmo.tgbotapi.bot.ktor.telegramBot
 import dev.inmo.tgbotapi.bot.TelegramBot
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
@@ -64,9 +65,9 @@ suspend fun main(args: Array<String>) {
                 val chosen = mutableListOf<File>()
 
                 while (left > 0) {
-                    left--
-                    val picked = pickFile() ?: continue
+                    val picked = pickFile() ?.takeIf { it.filesize > 0 } ?: continue
                     chosen.add(picked)
+                    left--
                     if (chosen.size >= mediaCountInMediaGroup.last) {
                         sendFiles(message.chat, chosen)
                         chosen.clear()
