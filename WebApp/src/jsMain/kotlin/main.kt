@@ -1,6 +1,8 @@
 import dev.inmo.micro_utils.coroutines.launchSafelyWithoutExceptions
 import dev.inmo.tgbotapi.types.webAppQueryIdField
 import dev.inmo.tgbotapi.webapps.*
+import dev.inmo.tgbotapi.webapps.haptic.HapticFeedbackStyle
+import dev.inmo.tgbotapi.webapps.haptic.HapticFeedbackType
 import io.ktor.client.HttpClient
 import io.ktor.client.request.*
 import io.ktor.client.statement.bodyAsText
@@ -15,8 +17,8 @@ import kotlinx.serialization.json.Json
 import org.w3c.dom.HTMLElement
 
 fun HTMLElement.log(text: String) {
-    appendElement("p", {})
     appendText(text)
+    appendElement("p", {})
 }
 
 fun main() {
@@ -39,13 +41,17 @@ fun main() {
                 }
                 val dataIsSafe = response.bodyAsText().toBoolean()
 
-                document.body ?.appendElement("div") {
-                    textContent = if (dataIsSafe) {
+                document.body ?.log(
+                    if (dataIsSafe) {
                         "Data is safe"
                     } else {
                         "Data is unsafe"
                     }
-                }
+                )
+
+                document.body ?.log(
+                    webApp.initDataUnsafe.chat.toString()
+                )
             }
 
             document.body ?.appendElement("button") {
@@ -68,6 +74,28 @@ fun main() {
                 }
                 onViewportChanged {
                     document.body ?.log("Viewport changed: ${it.isStateStable}")
+                }
+                backButton.apply {
+                    onClick {
+                        document.body ?.log("Back button clicked")
+                        hapticFeedback.impactOccurred(
+                            HapticFeedbackStyle.Heavy
+                        )
+                    }
+                    show()
+                }
+                mainButton.apply {
+                    setText("Main button")
+                    onClick {
+                        document.body ?.log("Main button clicked")
+                        hapticFeedback.notificationOccurred(
+                            HapticFeedbackType.Success
+                        )
+                    }
+                    show()
+                }
+                onSettingsButtonClicked {
+                    document.body ?.log("Settings button clicked")
                 }
             }
             webApp.ready()

@@ -26,7 +26,13 @@ suspend fun main(vararg args: String) {
                     is UserForwardInfo -> {
                         val user = forwardInfo.from
                         when (user) {
-                            is CommonUser -> regular("User ")
+                            is CommonUser -> {
+                                if (user.isPremium) {
+                                    regular("Premium user ")
+                                } else {
+                                    regular("User ")
+                                }
+                            }
                             is CommonBot,
                             is ExtendedBot -> regular("Bot ")
                         } + code(user.id.chatId.toString()) + " (${user.firstName} ${user.lastName}: ${user.username ?.username ?: "Without username"})"

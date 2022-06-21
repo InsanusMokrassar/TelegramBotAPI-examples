@@ -20,11 +20,9 @@ suspend fun main(args: Array<String>) {
     telegramBotWithBehaviourAndLongPolling(botToken, CoroutineScope(Dispatchers.IO)) {
         onMedia(initialFilter = null) {
             val pathedFile = bot.getFileAdditionalInfo(it.content.media)
-            val file = File(directoryOrFile, pathedFile.filePath.filenameFromUrl).apply {
-                createNewFile()
-                writeBytes(bot.downloadFile(pathedFile))
-            }
-            reply(it, "Saved to ${file.absolutePath}")
+            val outFile = File(directoryOrFile, pathedFile.filePath.filenameFromUrl)
+            bot.downloadFile(it.content.media, outFile)
+            reply(it, "Saved to ${outFile.absolutePath}")
         }
         onContentMessage { println(it) }
     }.second.join()
