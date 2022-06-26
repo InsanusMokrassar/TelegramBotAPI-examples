@@ -1,7 +1,6 @@
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.tgbotapi.extensions.api.chat.get.getChat
-import dev.inmo.tgbotapi.extensions.api.send.reply
-import dev.inmo.tgbotapi.extensions.api.send.sendTextMessage
+import dev.inmo.tgbotapi.extensions.api.send.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onContentMessage
 import dev.inmo.tgbotapi.extensions.utils.formatting.linkMarkdownV2
@@ -27,7 +26,7 @@ suspend fun main(vararg args: String) {
             val chat = message.chat
             if (chat is ChannelChat) {
                 val answer = "Hi everybody in this channel \"${chat.title}\""
-                sendTextMessage(chat, answer, MarkdownV2)
+                send(chat, answer, MarkdownV2)
                 return@onContentMessage
             }
             val answerText = "Oh, hi, " + when (chat) {

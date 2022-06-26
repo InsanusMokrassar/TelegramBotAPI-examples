@@ -3,6 +3,7 @@ import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.bot.ktor.telegramBot
 import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.bot.setMyCommands
+import dev.inmo.tgbotapi.extensions.api.edit.common.edit
 import dev.inmo.tgbotapi.extensions.api.edit.text.editMessageText
 import dev.inmo.tgbotapi.extensions.api.send.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.*
@@ -88,7 +89,7 @@ suspend fun activateKeyboardsBot(
 
             val text = "This is $page of $count"
 
-            editMessageText(
+            edit(
                 it.message.withContent<TextContent>() ?: it.let {
                     answer(it, "Unsupported message type :(")
                     return@onMessageDataCallbackQuery

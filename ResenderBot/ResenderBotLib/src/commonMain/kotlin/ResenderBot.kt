@@ -31,19 +31,19 @@ suspend fun activateResenderBot(
         onVisualGallery {
             val chat = it.chat ?: return@onVisualGallery
             withUploadPhotoAction(chat) {
-                sendVisualMediaGroup(chat, it.map { it.content.toMediaGroupMemberTelegramMedia() })
+                send(chat, it.map { it.content.toMediaGroupMemberTelegramMedia() })
             }
         }
         onPlaylist {
             val chat = it.chat ?: return@onPlaylist
             withUploadDocumentAction(chat) {
-                sendPlaylist(chat, it.map { it.content.toMediaGroupMemberTelegramMedia() })
+                send(chat, it.map { it.content.toMediaGroupMemberTelegramMedia() })
             }
         }
         onDocumentsGroup {
             val chat = it.chat ?: return@onDocumentsGroup
             withUploadDocumentAction(chat) {
-                sendDocumentsGroup(chat, it.map { it.content.toMediaGroupMemberTelegramMedia() })
+                send(chat, it.map { it.content.toMediaGroupMemberTelegramMedia() })
             }
         }
 
