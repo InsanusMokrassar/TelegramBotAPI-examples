@@ -17,9 +17,9 @@ suspend fun main(args: Array<String>) {
 
             if (diceType == SlotMachineDiceAnimationType) {
                 val result = dice.calculateSlotMachineResult() ?: return@onDice
-                bot.reply(it, "${result.leftReel}|${result.centerReel}|${result.rightReel}")
+                reply(it, "${result.leftReel}|${result.centerReel}|${result.rightReel}")
             } else {
-                bot.reply(it, "There is no slot machine dice in message")
+                reply(it, "There is no slot machine dice in message")
             }
         }
     }.join()

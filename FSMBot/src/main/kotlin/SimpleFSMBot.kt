@@ -1,5 +1,6 @@
 import dev.inmo.micro_utils.coroutines.AccumulatorFlow
 import dev.inmo.micro_utils.fsm.common.State
+import dev.inmo.tgbotapi.extensions.api.send.send
 import dev.inmo.tgbotapi.extensions.api.send.sendMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.*
@@ -55,7 +56,7 @@ suspend fun main(args: Array<String>) {
             }
         }
         strictlyOn<StopState> {
-            sendMessage(it.context, "You have stopped sending of content")
+            send(it.context, "You have stopped sending of content")
 
             null
         }
