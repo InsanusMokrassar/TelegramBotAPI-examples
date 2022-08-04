@@ -16,7 +16,7 @@ suspend fun main(vararg args: String) {
     val botToken = args.first()
 
     telegramBotWithBehaviourAndLongPolling(botToken, CoroutineScope(Dispatchers.IO)) {
-        onContentMessage(subcontextUpdatesFilter = { _, _ -> true }) {
+        onContentMessage {
             val toAnswer = buildEntities {
                 when (val forwardInfo = it.forwardInfo) {
                     null -> +"There is no forward info"
@@ -37,8 +37,9 @@ suspend fun main(vararg args: String) {
                             is ExtendedBot -> regular("Bot ")
                         } + code(user.id.chatId.toString()) + " (${user.firstName} ${user.lastName}: ${user.username ?.username ?: "Without username"})"
                     }
-                    is ForwardFromChannelInfo -> regular("Channel (") + code((forwardInfo.channelChat).title) + ")"
-                    is ForwardFromSupergroupInfo -> regular("Supergroup (") + code((forwardInfo.group).title) + ")"
+                    is ForwardFromPublicChatInfo.FromChannel -> regular("Channel (") + code(forwardInfo.channelChat.title) + ")"
+                    is ForwardFromPublicChatInfo.FromSupergroup -> regular("Supergroup (") + code(forwardInfo.group.title) + ")"
+                    is ForwardFromPublicChatInfo.SentByChannel -> regular("Sent by channel (") + code(forwardInfo.channelChat.title) + ")"
                 }
             }
             reply(it, toAnswer)
