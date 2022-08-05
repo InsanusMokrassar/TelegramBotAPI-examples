@@ -100,6 +100,7 @@ suspend fun activateKeyboardsBot(
                     }
                 }
             )
+            answer(it)
         }
 
         onUnhandledCommand {

@@ -20,10 +20,10 @@ suspend fun main(vararg args: String) {
             val toAnswer = buildEntities {
                 when (val forwardInfo = it.forwardInfo) {
                     null -> +"There is no forward info"
-                    is AnonymousForwardInfo -> {
+                    is ForwardInfo.ByAnonymous -> {
                         regular("Anonymous user which signed as \"") + code(forwardInfo.senderName) + "\""
                     }
-                    is UserForwardInfo -> {
+                    is ForwardInfo.ByUser -> {
                         val user = forwardInfo.from
                         when (user) {
                             is CommonUser -> {
@@ -37,9 +37,9 @@ suspend fun main(vararg args: String) {
                             is ExtendedBot -> regular("Bot ")
                         } + code(user.id.chatId.toString()) + " (${user.firstName} ${user.lastName}: ${user.username ?.username ?: "Without username"})"
                     }
-                    is ForwardFromPublicChatInfo.FromChannel -> regular("Channel (") + code(forwardInfo.channelChat.title) + ")"
-                    is ForwardFromPublicChatInfo.FromSupergroup -> regular("Supergroup (") + code(forwardInfo.group.title) + ")"
-                    is ForwardFromPublicChatInfo.SentByChannel -> regular("Sent by channel (") + code(forwardInfo.channelChat.title) + ")"
+                    is ForwardInfo.PublicChat.FromChannel -> regular("Channel (") + code(forwardInfo.channelChat.title) + ")"
+                    is ForwardInfo.PublicChat.FromSupergroup -> regular("Supergroup (") + code(forwardInfo.group.title) + ")"
+                    is ForwardInfo.PublicChat.SentByChannel -> regular("Sent by channel (") + code(forwardInfo.channelChat.title) + ")"
                 }
             }
             reply(it, toAnswer)
