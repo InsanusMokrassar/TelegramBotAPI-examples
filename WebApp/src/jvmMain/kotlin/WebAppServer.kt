@@ -1,5 +1,4 @@
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
-import dev.inmo.micro_utils.crypto.hmacSha256
 import dev.inmo.micro_utils.ktor.server.createKtorServer
 import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.bot.getMe

@@ -14,14 +14,18 @@ import java.io.File
  */
 suspend fun main(args: Array<String>) {
     val botToken = args.first()
-    val directoryOrFile = args.getOrNull(1) ?.let { File(it) } ?: File("")
+    val directoryOrFile = args.getOrNull(1) ?.let { File(it) } ?: File("/tmp/")
     directoryOrFile.mkdirs()
 
     telegramBotWithBehaviourAndLongPolling(botToken, CoroutineScope(Dispatchers.IO)) {
         onMedia(initialFilter = null) {
             val pathedFile = bot.getFileAdditionalInfo(it.content.media)
             val outFile = File(directoryOrFile, pathedFile.filePath.filenameFromUrl)
-            bot.downloadFile(it.content.media, outFile)
+            runCatching {
+                bot.downloadFile(it.content.media, outFile)
+            }.onFailure {
+                it.printStackTrace()
+            }
             reply(it, "Saved to ${outFile.absolutePath}")
         }
         onContentMessage { println(it) }
