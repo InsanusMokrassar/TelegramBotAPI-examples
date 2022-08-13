@@ -1,0 +1,33 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+plugins {
+    id "org.jetbrains.kotlin.multiplatform"
+}
+
+
+kotlin {
+    jvm()
+//    js(LEGACY) {
+    js(IR) {
+        browser()
+        binaries.executable()
+    }
+
+    sourceSets {
+        commonMain {
+            dependencies {
+                implementation kotlin('stdlib')
+
+                api "dev.inmo:tgbotapi:$telegram_bot_api_version"
+            }
+        }
+    }
+}
