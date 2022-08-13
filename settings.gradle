@@ -14,6 +14,9 @@ include ":ResenderBot:jvm_launcher"
 include ":KeyboardsBot:KeyboardsBotLib"
 include ":KeyboardsBot:jvm_launcher"
 
+include ":StickerInfoBot:StickerInfoBotLib"
+include ":StickerInfoBot:jvm_launcher"
+
 include ":SlotMachineDetectorBot"
 
 include ":WebApp"

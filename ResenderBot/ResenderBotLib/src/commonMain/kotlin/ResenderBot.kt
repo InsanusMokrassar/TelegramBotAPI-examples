@@ -25,7 +25,9 @@ suspend fun activateResenderBot(
         ) {
             val chat = it.chat
             withTypingAction(chat) {
-                executeUnsafe(it.content.createResend(chat.id, replyToMessageId = it.messageId))
+                executeUnsafe(it.content.createResend(chat.id, replyToMessageId = it.messageId)) {
+                    it.forEach(print)
+                }
             }
         }
         onVisualGallery {
