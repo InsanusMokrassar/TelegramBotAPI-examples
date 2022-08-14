@@ -125,6 +125,23 @@ fun main() {
 
             document.body ?.appendElement("p", {})
 
+            document.body ?.appendElement("button") {
+                fun updateText() {
+                    textContent = if (webApp.isClosingConfirmationEnabled) {
+                        "Disable closing confirmation"
+                    } else {
+                        "Enable closing confirmation"
+                    }
+                }
+                addEventListener("click", {
+                    webApp.toggleClosingConfirmation()
+                    updateText()
+                })
+                updateText()
+            } ?: window.alert("Unable to load body")
+
+            document.body ?.appendElement("p", {})
+
             webApp.apply {
                 onThemeChanged {
                     document.body ?.log("Theme changed: ${webApp.themeParams}")
