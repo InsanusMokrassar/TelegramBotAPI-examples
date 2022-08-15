@@ -3,6 +3,7 @@ import dev.inmo.tgbotapi.types.webAppQueryIdField
 import dev.inmo.tgbotapi.webapps.*
 import dev.inmo.tgbotapi.webapps.haptic.HapticFeedbackStyle
 import dev.inmo.tgbotapi.webapps.haptic.HapticFeedbackType
+import dev.inmo.tgbotapi.webapps.popup.*
 import io.ktor.client.HttpClient
 import io.ktor.client.request.*
 import io.ktor.client.statement.bodyAsText
@@ -68,6 +69,79 @@ fun main() {
                 })
                 appendText("Example button")
             } ?: window.alert("Unable to load body")
+
+            document.body ?.appendElement("p", {})
+            document.body ?.appendText("Alerts:")
+
+            document.body ?.appendElement("button") {
+                addEventListener("click", {
+                    webApp.showPopup(
+                        PopupParams(
+                            "It is sample title of default button",
+                            "It is sample message of default button",
+                            DefaultPopupButton("default", "Default button"),
+                            OkPopupButton("ok"),
+                            DestructivePopupButton("destructive", "Destructive button")
+                        )
+                    ) {
+                        document.body ?.log(
+                            when (it) {
+                                "default" -> "You have clicked default button in popup"
+                                "ok" -> "You have clicked ok button in popup"
+                                "destructive" -> "You have clicked destructive button in popup"
+                                else -> "I can't imagine where you take button with id $it"
+                            }
+                        )
+                    }
+                })
+                appendText("Popup")
+            } ?: window.alert("Unable to load body")
+
+            document.body ?.appendElement("button") {
+                addEventListener("click", {
+                    webApp.showAlert(
+                        "This is alert message"
+                    ) {
+                        document.body ?.log(
+                            "You have closed alert"
+                        )
+                    }
+                })
+                appendText("Alert")
+            } ?: window.alert("Unable to load body")
+
+            document.body ?.appendElement("button") {
+                addEventListener("click", {
+                    webApp.showConfirm(
+                        "This is confirm message"
+                    ) {
+                        document.body ?.log(
+                            "You have pressed \"${if (it) "Ok" else "Cancel"}\" in confirm"
+                        )
+                    }
+                })
+                appendText("Confirm")
+            } ?: window.alert("Unable to load body")
+
+            document.body ?.appendElement("p", {})
+
+            document.body ?.appendElement("button") {
+                fun updateText() {
+                    textContent = if (webApp.isClosingConfirmationEnabled) {
+                        "Disable closing confirmation"
+                    } else {
+                        "Enable closing confirmation"
+                    }
+                }
+                addEventListener("click", {
+                    webApp.toggleClosingConfirmation()
+                    updateText()
+                })
+                updateText()
+            } ?: window.alert("Unable to load body")
+
+            document.body ?.appendElement("p", {})
+
             webApp.apply {
                 onThemeChanged {
                     document.body ?.log("Theme changed: ${webApp.themeParams}")
