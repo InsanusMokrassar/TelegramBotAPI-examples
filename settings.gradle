@@ -6,6 +6,8 @@ include ":HelloBot"
 
 include ":GetMeBot"
 
+include ":DeepLinksBot"
+
 include ":FilesLoaderBot"
 
 include ":ResenderBot:ResenderBotLib"
