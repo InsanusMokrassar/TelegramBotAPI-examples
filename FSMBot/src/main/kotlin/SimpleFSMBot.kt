@@ -10,6 +10,7 @@ import dev.inmo.tgbotapi.extensions.utils.formatting.*
 import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.tgbotapi.types.message.abstracts.CommonMessage
 import dev.inmo.tgbotapi.types.message.content.TextContent
+import dev.inmo.tgbotapi.utils.botCommand
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
 
@@ -37,12 +38,11 @@ suspend fun main(args: Array<String>) {
         }
     ) {
         strictlyOn<ExpectContentOrStopState> {
-            sendMessage(
-                it.context,
-                buildEntities {
-                    +"Send me some content or " + botCommand("stop") + " if you want to stop sending"
-                }
-            )
+            send(
+                it.context
+            ) {
+                +"Send me some content or " + botCommand("stop") + " if you want to stop sending"
+            }
 
             val contentMessage = waitContentMessage().first()
             val content = contentMessage.content
@@ -56,7 +56,7 @@ suspend fun main(args: Array<String>) {
             }
         }
         strictlyOn<StopState> {
-            send(it.context, "You have stopped sending of content")
+            send(it.context) { +"You have stopped sending of content" }
 
             null
         }

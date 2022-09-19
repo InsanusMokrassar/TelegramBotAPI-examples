@@ -7,10 +7,11 @@ import dev.inmo.tgbotapi.extensions.api.get.getStickerSet
 import dev.inmo.tgbotapi.extensions.api.send.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
-import dev.inmo.tgbotapi.extensions.utils.formatting.*
 import dev.inmo.tgbotapi.types.StickerType
 import dev.inmo.tgbotapi.types.message.textsources.*
 import dev.inmo.tgbotapi.types.stickers.StickerSet
+import dev.inmo.tgbotapi.utils.bold
+import dev.inmo.tgbotapi.utils.buildEntities
 import kotlinx.coroutines.*
 
 fun StickerSet.buildInfo() = buildEntities {
