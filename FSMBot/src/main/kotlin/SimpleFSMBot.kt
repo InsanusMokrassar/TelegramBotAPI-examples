@@ -10,6 +10,7 @@ import dev.inmo.tgbotapi.extensions.utils.formatting.*
 import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.tgbotapi.types.message.abstracts.CommonMessage
 import dev.inmo.tgbotapi.types.message.content.TextContent
+import dev.inmo.tgbotapi.utils.botCommand
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
 

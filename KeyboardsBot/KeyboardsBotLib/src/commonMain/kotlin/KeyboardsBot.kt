@@ -7,12 +7,11 @@ import dev.inmo.tgbotapi.extensions.api.edit.edit
 import dev.inmo.tgbotapi.extensions.api.send.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
-import dev.inmo.tgbotapi.extensions.utils.formatting.botCommand
-import dev.inmo.tgbotapi.extensions.utils.formatting.buildEntities
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.*
 import dev.inmo.tgbotapi.extensions.utils.withContent
 import dev.inmo.tgbotapi.types.BotCommand
 import dev.inmo.tgbotapi.types.message.content.TextContent
+import dev.inmo.tgbotapi.utils.*
 import kotlinx.coroutines.*
 
 private const val nextPageData = "next"
@@ -71,13 +70,14 @@ suspend fun activateKeyboardsBot(
             val numberOfPages = args.firstOrNull() ?.toIntOrNull() ?: 10
             reply(
                 message,
-                "Your inline keyboard with $numberOfPages pages",
                 replyMarkup = inlineKeyboard {
                     row {
                         includePageButtons(1, numberOfPages)
                     }
                 }
-            )
+            ) {
+                regular("Your inline keyboard with $numberOfPages pages")
+            }
         }
 
         onMessageDataCallbackQuery {
@@ -86,35 +86,33 @@ suspend fun activateKeyboardsBot(
                 return@onMessageDataCallbackQuery
             }
 
-            val text = "This is $page of $count"
-
             edit(
                 it.message.withContent<TextContent>() ?: it.let {
                     answer(it, "Unsupported message type :(")
                     return@onMessageDataCallbackQuery
                 },
-                text,
                 replyMarkup = inlineKeyboard {
                     row {
                         includePageButtons(page, count)
                     }
                 }
-            )
+            ) {
+                regular("This is $page of $count")
+            }
             answer(it)
         }
 
         onUnhandledCommand {
             reply(
                 it,
-                buildEntities {
-                    +"Use " + botCommand("inline") + " to get pagination inline keyboard"
-                },
                 replyMarkup = replyKeyboard(resizeKeyboard = true, oneTimeKeyboard = true) {
                     row {
                         simpleButton("/inline")
                     }
                 }
-            )
+            ) {
+                +"Use " + botCommand("inline") + " to get pagination inline keyboard"
+            }
         }
 
         setMyCommands(BotCommand("inline", "Creates message with pagination inline keyboard"))
