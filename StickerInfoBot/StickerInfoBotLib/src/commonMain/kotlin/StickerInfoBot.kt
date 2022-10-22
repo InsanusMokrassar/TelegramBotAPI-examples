@@ -2,8 +2,7 @@ import dev.inmo.micro_utils.coroutines.defaultSafelyWithoutExceptionHandler
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.bot.ktor.telegramBot
-import dev.inmo.tgbotapi.extensions.api.get.getCustomEmojiStickerOrNull
-import dev.inmo.tgbotapi.extensions.api.get.getStickerSet
+import dev.inmo.tgbotapi.extensions.api.get.*
 import dev.inmo.tgbotapi.extensions.api.send.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
@@ -14,17 +13,21 @@ import dev.inmo.tgbotapi.utils.bold
 import dev.inmo.tgbotapi.utils.buildEntities
 import kotlinx.coroutines.*
 
-fun StickerSet.buildInfo() = buildEntities {
-    bold("StickerSet name: ") + "${name}\n"
-    bold("StickerSet title: ") + "${title}\n"
-    bold(
-        when (stickerType) {
-            StickerType.CustomEmoji -> "Custom emoji"
-            StickerType.Mask -> "Mask"
-            StickerType.Regular -> "Regular"
-            is StickerType.Unknown -> "Unknown type \"${stickerType.type}\""
-        }
-    ) + " sticker set with title " + bold(title) + " and name " + bold(name)
+fun StickerSet?.buildInfo() = buildEntities {
+    if (this@buildInfo == null) {
+        bold("Looks like this stickerset has been removed")
+    } else {
+        bold("StickerSet name: ") + "${name}\n"
+        bold("StickerSet title: ") + "${title}\n"
+        bold(
+            when (stickerType) {
+                StickerType.CustomEmoji -> "Custom emoji"
+                StickerType.Mask -> "Mask"
+                StickerType.Regular -> "Regular"
+                is StickerType.Unknown -> "Unknown type \"${stickerType.type}\""
+            }
+        ) + " sticker set with title " + bold(title) + " and name " + bold(name)
+    }
 }
 
 suspend fun activateStickerInfoBot(
@@ -58,7 +61,7 @@ suspend fun activateStickerInfoBot(
             }
         }
         onSticker {
-            val stickerSetInfo = getStickerSet(it.content.media)
+            val stickerSetInfo = getStickerSetOrNull(it.content.media)
             reply(
                 it,
                 stickerSetInfo.buildInfo()
