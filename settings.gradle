@@ -21,6 +21,8 @@ include ":StickerInfoBot:jvm_launcher"
 
 include ":SlotMachineDetectorBot"
 
+include ":ChatAvatarSetter"
+
 include ":WebApp"
 
 include ":FSMBot"
