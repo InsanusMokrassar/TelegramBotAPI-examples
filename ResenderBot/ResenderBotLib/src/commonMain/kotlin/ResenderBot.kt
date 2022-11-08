@@ -21,7 +21,7 @@ suspend fun activateResenderBot(
 
     bot.buildBehaviourWithLongPolling(CoroutineScope(currentCoroutineContext() + SupervisorJob())) {
         onContentMessage(
-            subcontextUpdatesFilter = MessageFilterByChat
+            subcontextUpdatesFilter = MessageFilterByChat,
         ) {
             val chat = it.chat
 
