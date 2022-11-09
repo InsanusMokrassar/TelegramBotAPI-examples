@@ -8,6 +8,7 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.filters.CommonMessageFilte
 import dev.inmo.tgbotapi.extensions.behaviour_builder.filters.MessageFilterByChat
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
 import dev.inmo.tgbotapi.extensions.utils.shortcuts.*
+import dev.inmo.tgbotapi.utils.extensions.threadIdOrNull
 import kotlinx.coroutines.*
 
 suspend fun activateResenderBot(
@@ -20,33 +21,23 @@ suspend fun activateResenderBot(
 
     bot.buildBehaviourWithLongPolling(CoroutineScope(currentCoroutineContext() + SupervisorJob())) {
         onContentMessage(
-            initialFilter = CommonMessageFilterExcludeMediaGroups,
-            subcontextUpdatesFilter = MessageFilterByChat
+            subcontextUpdatesFilter = MessageFilterByChat,
         ) {
             val chat = it.chat
-            withTypingAction(chat) {
-                executeUnsafe(it.content.createResend(chat.id, replyToMessageId = it.messageId)) {
+
+            val answer = withTypingAction(chat) {
+                executeUnsafe(
+                    it.content.createResend(
+                        chat.id,
+                        messageThreadId = it.threadIdOrNull,
+                        replyToMessageId = it.messageId
+                    )
+                ) {
                     it.forEach(print)
                 }
             }
-        }
-        onVisualGallery {
-            val chat = it.chat ?: return@onVisualGallery
-            withUploadPhotoAction(chat) {
-                send(chat, it.map { it.content.toMediaGroupMemberTelegramMedia() })
-            }
-        }
-        onPlaylist {
-            val chat = it.chat ?: return@onPlaylist
-            withUploadDocumentAction(chat) {
-                send(chat, it.map { it.content.toMediaGroupMemberTelegramMedia() })
-            }
-        }
-        onDocumentsGroup {
-            val chat = it.chat ?: return@onDocumentsGroup
-            withUploadDocumentAction(chat) {
-                send(chat, it.map { it.content.toMediaGroupMemberTelegramMedia() })
-            }
+
+            println("Answer info: $answer")
         }
 
         allUpdatesFlow.subscribeSafelyWithoutExceptions(this) {
