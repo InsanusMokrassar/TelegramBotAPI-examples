@@ -26,3 +26,5 @@ include ":ChatAvatarSetter"
 include ":WebApp"
 
 include ":FSMBot"
+
+include ":TopicsHandling"
