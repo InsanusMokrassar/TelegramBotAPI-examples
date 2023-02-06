@@ -5,5 +5,5 @@ Use `/start` with bot to get request buttons. Bot will ask you to choose user/ch
 ## Launch
 
 ```bash
-../gradlew run --args="BOT_TOKEN[ optional/folder/path]"
+../gradlew run --args="BOT_TOKEN"
 ```
