@@ -28,3 +28,7 @@ include ":WebApp"
 include ":FSMBot"
 
 include ":TopicsHandling"
+
+include ":UserChatShared"
+
+include ":RightsChangerBot"

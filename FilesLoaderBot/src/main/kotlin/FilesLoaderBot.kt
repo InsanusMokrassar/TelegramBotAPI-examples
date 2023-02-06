@@ -2,6 +2,7 @@ import dev.inmo.tgbotapi.extensions.api.files.downloadFile
 import dev.inmo.tgbotapi.extensions.api.get.getFileAdditionalInfo
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onContentMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMedia
 import dev.inmo.tgbotapi.utils.filenameFromUrl
@@ -18,6 +19,9 @@ suspend fun main(args: Array<String>) {
     directoryOrFile.mkdirs()
 
     telegramBotWithBehaviourAndLongPolling(botToken, CoroutineScope(Dispatchers.IO)) {
+        onCommand("start") {
+            reply(it, "Send me any media (like photo or video) to download it")
+        }
         onMedia(initialFilter = null) {
             val pathedFile = bot.getFileAdditionalInfo(it.content.media)
             val outFile = File(directoryOrFile, pathedFile.filePath.filenameFromUrl)
