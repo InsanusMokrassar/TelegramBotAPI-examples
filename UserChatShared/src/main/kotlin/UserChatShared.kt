@@ -1,5 +1,6 @@
 import dev.inmo.micro_utils.coroutines.runCatchingSafely
 import dev.inmo.tgbotapi.bot.ktor.telegramBot
+import dev.inmo.tgbotapi.extensions.api.bot.setMyCommands
 import dev.inmo.tgbotapi.extensions.api.chat.get.getChat
 import dev.inmo.tgbotapi.extensions.api.send.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviourWithLongPolling
@@ -12,6 +13,7 @@ import dev.inmo.tgbotapi.extensions.utils.types.buttons.requestChatButton
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.requestGroupButton
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.requestUserButton
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.requestUserOrBotButton
+import dev.inmo.tgbotapi.types.BotCommand
 import dev.inmo.tgbotapi.types.chat.PrivateChat
 import dev.inmo.tgbotapi.types.message.textsources.mention
 import dev.inmo.tgbotapi.types.request.RequestId
@@ -210,5 +212,7 @@ suspend fun main(args: Array<String>) {
                 +" (chat info: $chatInfo; chat id: $chatId)"
             }
         }
+
+        setMyCommands(BotCommand("start", "Trigger buttons"))
     }.join()
 }
