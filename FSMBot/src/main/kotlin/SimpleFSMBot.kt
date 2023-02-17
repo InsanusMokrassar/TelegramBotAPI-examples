@@ -48,7 +48,7 @@ suspend fun main(args: Array<String>) {
                 +"Send me some content or " + botCommand("stop") + " if you want to stop sending"
             }
 
-            val contentMessage = waitContentMessage().filter { message ->
+            val contentMessage = waitAnyContentMessage().filter { message ->
                 message.sameThread(it.sourceMessage)
             }.first()
             val content = contentMessage.content
