@@ -32,3 +32,5 @@ include ":TopicsHandling"
 include ":UserChatShared"
 
 include ":RightsChangerBot"
+
+include ":LiveLocationsBot"
