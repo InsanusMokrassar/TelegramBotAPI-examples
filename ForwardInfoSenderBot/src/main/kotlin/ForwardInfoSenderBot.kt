@@ -1,12 +1,14 @@
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onContentMessage
-import dev.inmo.tgbotapi.extensions.utils.formatting.*
+import dev.inmo.tgbotapi.extensions.utils.formatting.makeLink
 import dev.inmo.tgbotapi.types.chat.CommonBot
 import dev.inmo.tgbotapi.types.chat.CommonUser
 import dev.inmo.tgbotapi.types.chat.ExtendedBot
 import dev.inmo.tgbotapi.types.message.*
+import dev.inmo.tgbotapi.utils.buildEntities
 import dev.inmo.tgbotapi.utils.code
+import dev.inmo.tgbotapi.utils.link
 import dev.inmo.tgbotapi.utils.regular
 import kotlinx.coroutines.*
 
@@ -40,7 +42,14 @@ suspend fun main(vararg args: String) {
                             is ExtendedBot -> regular("Bot ")
                         } + code(user.id.chatId.toString()) + " (${user.firstName} ${user.lastName}: ${user.username?.username ?: "Without username"})"
                     }
-                    is ForwardInfo.PublicChat.FromChannel -> regular("Channel (") + code(forwardInfo.channelChat.title) + ")"
+                    is ForwardInfo.PublicChat.FromChannel -> {
+                        regular("Channel (") + (forwardInfo.channelChat.username ?.let {
+                            link(
+                                forwardInfo.channelChat.title,
+                                makeLink(it)
+                            )
+                        } ?: code(forwardInfo.channelChat.title)) + ")"
+                    }
                     is ForwardInfo.PublicChat.FromSupergroup -> regular("Supergroup (") + code(forwardInfo.group.title) + ")"
                     is ForwardInfo.PublicChat.SentByChannel -> regular("Sent by channel (") + code(forwardInfo.channelChat.title) + ")"
                 }
