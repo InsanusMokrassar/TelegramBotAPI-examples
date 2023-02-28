@@ -109,7 +109,11 @@ suspend fun main(args: Array<String>) {
         }
     }
 
-    bot.buildBehaviourWithLongPolling {
+    bot.buildBehaviourWithLongPolling(
+        defaultExceptionsHandler = {
+            println(it)
+        }
+    ) {
         onCommand("simple", initialFilter = { it.chat is PublicChat && it.fromUserMessageOrNull() ?.user ?.id == allowedAdmin }) {
             val replyMessage = it.replyTo
             val userInReply = replyMessage ?.fromUserMessageOrNull() ?.user ?.id ?: return@onCommand
