@@ -34,3 +34,5 @@ include ":UserChatShared"
 include ":RightsChangerBot"
 
 include ":LiveLocationsBot"
+
+include ":StickerSetHandler"
