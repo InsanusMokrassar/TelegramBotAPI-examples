@@ -12,6 +12,6 @@ What is there in this module:
 
 ## How to run
 
-```kotlin
+```bash
 ./gradlew run --args="TOKEN WEB_APP_ADDRESS"
 ```
