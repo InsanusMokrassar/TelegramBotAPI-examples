@@ -1,6 +1,7 @@
 include ":ForwardInfoSenderBot"
 
 include ":RandomFileSenderBot"
+include ":NativeRandomFileSenderBot"
 
 include ":HelloBot"
 

@@ -4,6 +4,8 @@ This repository contains several examples of simple bots which are using Telegra
 
 ## How to use this repository
 
+***TO RUN NATIVE TARGETS ON LINUX YOU SHOULD INSTALL CURL LIBRARY. FOR EXAMPLE: `sudo apt install libcurl4-gnutls-dev`***
+
 This repository contains several important things:
 
 * Example subprojects
