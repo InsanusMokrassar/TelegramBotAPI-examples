@@ -42,7 +42,7 @@ kotlin {
                 else if (isMingwX64) engine = "winhttp"
                 else throw new GradleException("Host OS is not supported in Kotlin/Native.")
 
-                api "io.ktor:ktor-client-$engine:2.3.0-eap-638"
+                api "io.ktor:ktor-client-$engine:$ktor_version"
             }
         }
     }
