@@ -15,11 +15,7 @@ suspend fun activateResenderBot(
     token: String,
     print: (Any) -> Unit
 ) {
-    val bot = telegramBot(token)
-
-    print(bot.getMe())
-
-    bot.buildBehaviourWithLongPolling(CoroutineScope(currentCoroutineContext() + SupervisorJob())) {
+    telegramBotWithBehaviourAndLongPolling(token, scope = CoroutineScope(currentCoroutineContext() + SupervisorJob())) {
         onContentMessage(
             subcontextUpdatesFilter = MessageFilterByChat,
         ) {
@@ -43,5 +39,6 @@ suspend fun activateResenderBot(
         allUpdatesFlow.subscribeSafelyWithoutExceptions(this) {
             println(it)
         }
-    }.join()
+        print(bot.getMe())
+    }.second.join()
 }

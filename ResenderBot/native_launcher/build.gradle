@@ -12,10 +12,6 @@ plugins {
     id "org.jetbrains.kotlin.multiplatform"
 }
 
-repositories {
-    maven { url "https://maven.pkg.jetbrains.space/public/p/ktor/eap/" }
-}
-
 
 kotlin {
     def hostOs = System.getProperty("os.name")
@@ -30,7 +26,7 @@ kotlin {
             dependencies {
                 implementation kotlin('stdlib')
 
-                api "dev.inmo:tgbotapi:$telegram_bot_api_version"
+                api project(":ResenderBot:ResenderBotLib")
             }
         }
 
@@ -47,3 +43,4 @@ kotlin {
         }
     }
 }
+
