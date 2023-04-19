@@ -12,10 +12,6 @@ plugins {
     id "org.jetbrains.kotlin.multiplatform"
 }
 
-apply plugin: 'application'
-
-mainClassName="RandomFileSenderBotKt"
-
 
 kotlin {
     def hostOs = System.getProperty("os.name")
@@ -25,14 +21,12 @@ kotlin {
     else if (isMingwX64) nativeTarget = mingwX64("native") { binaries { executable() } }
     else throw new GradleException("Host OS is not supported in Kotlin/Native.")
 
-    jvm()
-
     sourceSets {
         commonMain {
             dependencies {
                 implementation kotlin('stdlib')
 
-                api "dev.inmo:tgbotapi:$telegram_bot_api_version"
+                api project(":ResenderBot:ResenderBotLib")
             }
         }
 

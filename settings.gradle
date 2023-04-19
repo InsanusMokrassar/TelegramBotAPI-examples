@@ -12,6 +12,7 @@ include ":FilesLoaderBot"
 
 include ":ResenderBot:ResenderBotLib"
 include ":ResenderBot:jvm_launcher"
+include ":ResenderBot:native_launcher"
 
 include ":KeyboardsBot:KeyboardsBotLib"
 include ":KeyboardsBot:jvm_launcher"

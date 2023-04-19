@@ -43,14 +43,13 @@ suspend fun main(vararg args: String) {
     val bot = telegramBot(telegramBotAPIUrlsKeeper)
     createKtorServer(
         "0.0.0.0",
-        8080,
+        args.getOrNull(2) ?.toIntOrNull() ?: 8080,
         additionalEngineEnvironmentConfigurator = {
             parentCoroutineContext += Dispatchers.IO
         }
     ) {
         routing {
-            static {
-                files(File("WebApp/build/distributions"))
+            staticFiles("", File("WebApp/build/distributions")) {
                 default("WebApp/build/distributions/index.html")
             }
             post("inline") {
