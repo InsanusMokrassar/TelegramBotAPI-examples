@@ -4,12 +4,17 @@ import dev.inmo.tgbotapi.bot.ktor.telegramBot
 import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.bot.setMyCommands
 import dev.inmo.tgbotapi.extensions.api.edit.edit
+import dev.inmo.tgbotapi.extensions.api.edit.editMessageText
+import dev.inmo.tgbotapi.extensions.api.edit.reply_markup.editMessageReplyMarkup
+import dev.inmo.tgbotapi.extensions.api.edit.text.editMessageText
 import dev.inmo.tgbotapi.extensions.api.send.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.*
 import dev.inmo.tgbotapi.extensions.utils.withContent
 import dev.inmo.tgbotapi.types.BotCommand
+import dev.inmo.tgbotapi.types.InlineQueries.InlineQueryResult.InlineQueryResultArticle
+import dev.inmo.tgbotapi.types.InlineQueries.InputMessageContent.InputTextMessageContent
 import dev.inmo.tgbotapi.types.message.content.TextContent
 import dev.inmo.tgbotapi.utils.*
 import kotlinx.coroutines.*
@@ -55,6 +60,16 @@ fun InlineKeyboardBuilder.includePageButtons(page: Int, count: Int) {
             dataButton(">>", "$count $count")
         }
     }
+    row {
+        inlineQueryInChosenChatButton(
+            "Send somebody page",
+            query = "$page $count",
+            allowUsers = true,
+            allowBots = true,
+            allowGroups = true,
+            allowChannels = true,
+        )
+    }
 }
 
 suspend fun activateKeyboardsBot(
@@ -71,9 +86,7 @@ suspend fun activateKeyboardsBot(
             reply(
                 message,
                 replyMarkup = inlineKeyboard {
-                    row {
-                        includePageButtons(1, numberOfPages)
-                    }
+                    includePageButtons(1, numberOfPages)
                 }
             ) {
                 regular("Your inline keyboard with $numberOfPages pages")
@@ -92,14 +105,47 @@ suspend fun activateKeyboardsBot(
                     return@onMessageDataCallbackQuery
                 },
                 replyMarkup = inlineKeyboard {
-                    row {
-                        includePageButtons(page, count)
-                    }
+                    includePageButtons(page, count)
                 }
             ) {
                 regular("This is $page of $count")
             }
             answer(it)
+        }
+        onInlineMessageIdDataCallbackQuery {
+            val (page, count) = it.data.parsePageAndCount() ?: it.let {
+                answer(it, "Unsupported data :(")
+                return@onInlineMessageIdDataCallbackQuery
+            }
+
+            editMessageText(
+                it.inlineMessageId,
+                replyMarkup = inlineKeyboard {
+                    includePageButtons(page, count)
+                }
+            ) {
+                regular("This is $page of $count")
+            }
+            answer(it)
+        }
+
+        onBaseInlineQuery {
+            val page = it.query.takeWhile { it.isDigit() }.toIntOrNull() ?: return@onBaseInlineQuery
+            val count = it.query.removePrefix(page.toString()).dropWhile { !it.isDigit() }.takeWhile { it.isDigit() }.toIntOrNull() ?: return@onBaseInlineQuery
+
+            answer(
+                it,
+                results = listOf(
+                    InlineQueryResultArticle(
+                        it.query,
+                        "Send buttons",
+                        InputTextMessageContent("It is sent via inline mode inline buttons"),
+                        replyMarkup = inlineKeyboard {
+                            includePageButtons(page, count)
+                        }
+                    )
+                )
+            )
         }
 
         onUnhandledCommand {
