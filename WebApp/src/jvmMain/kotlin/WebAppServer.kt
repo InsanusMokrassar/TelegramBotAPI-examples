@@ -1,6 +1,7 @@
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.micro_utils.ktor.server.createKtorServer
 import dev.inmo.tgbotapi.extensions.api.answers.answer
+import dev.inmo.tgbotapi.extensions.api.answers.answerInlineQuery
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.bot.setMyCommands
 import dev.inmo.tgbotapi.extensions.api.send.*
@@ -9,6 +10,7 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
 import dev.inmo.tgbotapi.extensions.utils.formatting.makeTelegramStartattach
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.*
+import dev.inmo.tgbotapi.requests.answers.InlineQueryResultsButton
 import dev.inmo.tgbotapi.types.BotCommand
 import dev.inmo.tgbotapi.types.InlineQueries.InlineQueryResult.InlineQueryResultArticle
 import dev.inmo.tgbotapi.types.InlineQueries.InputMessageContent.InputTextMessageContent
@@ -102,13 +104,22 @@ suspend fun main(vararg args: String) {
         onCommand("attachment_menu") {
             reply(
                 it,
-                ,
+                "Button",
                 replyMarkup = inlineKeyboard {
                     row {
                         webAppButton("Open WebApp", WebAppInfo(args[1]))
                     }
                 }
 
+            )
+        }
+        onBaseInlineQuery {
+            answerInlineQuery(
+                it,
+                button = InlineQueryResultsButton.invoke(
+                    "Open webApp",
+                    WebAppInfo(args[1])
+                )
             )
         }
         onUnhandledCommand {
