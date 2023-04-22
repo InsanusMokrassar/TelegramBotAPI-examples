@@ -37,3 +37,5 @@ include ":RightsChangerBot"
 include ":LiveLocationsBot"
 
 include ":StickerSetHandler"
+
+include ":InlineQueriesBot"
