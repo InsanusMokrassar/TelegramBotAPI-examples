@@ -1,9 +1,9 @@
-# RandomFileSenderBot
+# InlineQueriesBot
 
-This bot will send random file from input folder OR from bot working folder
+This bot will form the inline queries for you. For that feature you should explicitly enable inline queries in bot settings
 
 ## Launch
 
 ```bash
-../gradlew run --args="BOT_TOKEN[ optional/folder/path]"
+../gradlew run --args="BOT_TOKEN"
 ```
