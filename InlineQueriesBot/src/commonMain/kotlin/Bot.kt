@@ -13,11 +13,8 @@ import dev.inmo.tgbotapi.types.inlineQueryAnswerResultsLimit
 import dev.inmo.tgbotapi.utils.buildEntities
 
 /**
- * This bot will send files inside of working directory OR from directory in the second argument.
- * You may send /send_file command to this bot to get random file from the directory OR
- * `/send_file $number` when you want to receive required number of files. For example,
- * /send_file and `/send_file 1` will have the same effect - bot will send one random file.
- * But if you will send `/send_file 5` it will choose 5 random files and send them as group
+ * Thi bot will create inline query answers. You
+ * should enable inline queries in bot settings
  */
 suspend fun doInlineQueriesBot(token: String) {
     val bot = telegramBot(token)
