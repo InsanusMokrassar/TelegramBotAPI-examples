@@ -67,7 +67,7 @@ fun main() {
                         }
                     }
                 })
-                appendText("Example button")
+                appendText("Exit button")
             } ?: window.alert("Unable to load body")
 
             document.body ?.appendElement("p", {})
