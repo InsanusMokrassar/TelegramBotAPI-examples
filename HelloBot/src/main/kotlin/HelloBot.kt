@@ -1,8 +1,10 @@
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
+import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.chat.get.getChat
 import dev.inmo.tgbotapi.extensions.api.send.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onContentMessage
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMentionWithAnyContent
 import dev.inmo.tgbotapi.extensions.utils.extensions.raw.sender_chat
 import dev.inmo.tgbotapi.extensions.utils.formatting.linkMarkdownV2
 import dev.inmo.tgbotapi.extensions.utils.formatting.textMentionMarkdownV2
@@ -25,24 +27,25 @@ suspend fun main(vararg args: String) {
     val botToken = args.first()
 
     telegramBotWithBehaviourAndLongPolling(botToken, CoroutineScope(Dispatchers.IO)) {
-        onContentMessage { message ->
+        val me = getMe()
+        onMentionWithAnyContent(me.username) { message ->
             val chat = message.chat
 
             val answerText = when (val chat = message.chat) {
                 is ChannelChat -> {
                     val answer = "Hi everybody in this channel \"${chat.title}\""
                     reply(message, answer, MarkdownV2)
-                    return@onContentMessage
+                    return@onMentionWithAnyContent
                 }
                 is PrivateChat -> {
                     reply(message, "Hi, " + "${chat.firstName} ${chat.lastName}".textMentionMarkdownV2(chat.id), MarkdownV2)
-                    return@onContentMessage
+                    return@onMentionWithAnyContent
                 }
                 is GroupChat -> {
                     message.ifFromChannelGroupContentMessage {
                         val answer = "Hi, ${it.senderChat.title}"
                         reply(message, answer, MarkdownV2)
-                        return@onContentMessage
+                        return@onMentionWithAnyContent
                     }
                     "Oh, hi, " + when (chat) {
                         is SupergroupChat -> (chat.username ?.username ?: getChat(chat).inviteLink) ?.let {
