@@ -1,3 +1,4 @@
+import dev.inmo.micro_utils.coroutines.runCatchingSafely
 import dev.inmo.tgbotapi.bot.ktor.telegramBot
 import dev.inmo.tgbotapi.extensions.api.bot.setMyCommands
 import dev.inmo.tgbotapi.extensions.api.chat.get.getChat
@@ -111,7 +112,7 @@ suspend fun main(args: Array<String>) {
 
     bot.buildBehaviourWithLongPolling(
         defaultExceptionsHandler = {
-            println(it)
+            it.printStackTrace()
         }
     ) {
         onCommand("simple", initialFilter = { it.chat is PublicChat && it.fromUserMessageOrNull() ?.user ?.id == allowedAdmin }) {
