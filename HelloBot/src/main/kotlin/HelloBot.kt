@@ -28,7 +28,7 @@ suspend fun main(vararg args: String) {
 
     telegramBotWithBehaviourAndLongPolling(botToken, CoroutineScope(Dispatchers.IO)) {
         val me = getMe()
-        onMentionWithAnyContent(me.username) { message ->
+        onMentionWithAnyContent(me) { message ->
             val chat = message.chat
 
             val answerText = when (val chat = message.chat) {

@@ -17,12 +17,17 @@ suspend fun main(vararg args: String) {
 
     telegramBotWithBehaviourAndLongPolling(botToken) {
         val me = bot.getMe()
+        val username = me.username
         println(me)
+
+        if (username == null) {
+            error("Unable to start bot work: it have no username")
+        }
 
         onText(
             initialFilter = { it.content.textSources.none { it is BotCommandTextSource } } // excluding messages with commands
         ) {
-            reply(it, makeTelegramDeepLink(me.username, it.content.text))
+            reply(it, makeTelegramDeepLink(username, it.content.text))
         }
 
         onCommand("start", requireOnlyCommandInMessage = true) { // handling of `start` without args

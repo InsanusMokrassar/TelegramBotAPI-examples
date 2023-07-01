@@ -32,7 +32,7 @@ suspend fun main(args: Array<String>) {
         }
     ) {
         val me = getMe()
-        fun Chat.stickerSetName() = "s${id.chatId}_by_${me.username.usernameWithoutAt}"
+        fun Chat.stickerSetName() = "s${id.chatId}_by_${me.username ?.usernameWithoutAt}"
         onCommand("start") {
             reply(it) {
                 botCommand("delete") + " - to clear stickers"
