@@ -4,6 +4,8 @@ include ":RandomFileSenderBot"
 
 include ":HelloBot"
 
+include ":PollsBot"
+
 include ":GetMeBot"
 
 include ":DeepLinksBot"
