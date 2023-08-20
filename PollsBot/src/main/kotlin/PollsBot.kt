@@ -5,10 +5,7 @@ import dev.inmo.tgbotapi.extensions.api.chat.get.getChat
 import dev.inmo.tgbotapi.extensions.api.send.*
 import dev.inmo.tgbotapi.extensions.api.send.polls.sendRegularPoll
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
-import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
-import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onContentMessage
-import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMentionWithAnyContent
-import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onPollAnswer
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
 import dev.inmo.tgbotapi.extensions.utils.extensions.raw.sender_chat
 import dev.inmo.tgbotapi.extensions.utils.formatting.linkMarkdownV2
 import dev.inmo.tgbotapi.extensions.utils.formatting.textMentionMarkdownV2
@@ -83,8 +80,17 @@ suspend fun main(vararg args: String) {
             val chatId = pollToChat[it.pollId] ?: return@onPollAnswer
 
             when(it) {
-                is PollAnswer.Public -> send(chatId, "User ${it.user} have answered")
-                is PollAnswer.Anonymous -> send(chatId, "Chat ${it.voterChat} have answered")
+                is PollAnswer.Public -> send(chatId, "[onPollAnswer] User ${it.user} have answered")
+                is PollAnswer.Anonymous -> send(chatId, "[onPollAnswer] Chat ${it.voterChat} have answered")
+            }
+        }
+
+        onPollUpdates {
+            val chatId = pollToChat[it.id] ?: return@onPollUpdates
+
+            when(it.isAnonymous) {
+                false -> send(chatId, "[onPollUpdates] Public poll updated: ${it.options.joinToString()}")
+                true -> send(chatId, "[onPollUpdates] Anonymous poll updated: ${it.options.joinToString()}")
             }
         }
 
