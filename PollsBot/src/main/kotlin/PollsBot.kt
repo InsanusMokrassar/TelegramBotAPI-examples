@@ -33,7 +33,11 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /**
- * The main purpose of this bot is just to answer "Oh, hi, " and add user mention here
+ * This bot will answer with anonymous or public poll and send message on
+ * updates of any of it.
+ * 
+ * * Use `/anonymous` to take anonymous regular poll
+ * * Use `/public` to take public regular poll
  */
 @OptIn(PreviewFeature::class)
 suspend fun main(vararg args: String) {
