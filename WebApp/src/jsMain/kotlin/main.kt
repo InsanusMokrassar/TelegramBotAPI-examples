@@ -110,6 +110,32 @@ fun main() {
                 appendText("Alert")
             } ?: window.alert("Unable to load body")
 
+            document.body ?.appendElement("p", {})
+
+            document.body ?.appendElement("button") {
+                addEventListener("click", { webApp.requestWriteAccess() })
+                appendText("Request write access without callback")
+            } ?: window.alert("Unable to load body")
+
+            document.body ?.appendElement("button") {
+                addEventListener("click", { webApp.requestWriteAccess { document.body ?.log("Write access request result: $it") } })
+                appendText("Request write access with callback")
+            } ?: window.alert("Unable to load body")
+
+            document.body ?.appendElement("p", {})
+
+            document.body ?.appendElement("button") {
+                addEventListener("click", { webApp.requestContact() })
+                appendText("Request contact without callback")
+            } ?: window.alert("Unable to load body")
+
+            document.body ?.appendElement("button") {
+                addEventListener("click", { webApp.requestContact { document.body ?.log("Contact request result: $it") } })
+                appendText("Request contact with callback")
+            } ?: window.alert("Unable to load body")
+
+            document.body ?.appendElement("p", {})
+
             document.body ?.appendElement("button") {
                 addEventListener("click", {
                     webApp.showConfirm(
@@ -170,6 +196,12 @@ fun main() {
                 }
                 onSettingsButtonClicked {
                     document.body ?.log("Settings button clicked")
+                }
+                onWriteAccessRequested {
+                    document.body ?.log("Write access request result: $it")
+                }
+                onContactRequested {
+                    document.body ?.log("Contact request result: $it")
                 }
             }
             webApp.ready()
