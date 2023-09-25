@@ -25,10 +25,8 @@ import dev.inmo.tgbotapi.types.chat.PublicChat
 import dev.inmo.tgbotapi.types.chat.member.*
 import dev.inmo.tgbotapi.types.commands.BotCommandScope
 import dev.inmo.tgbotapi.types.request.RequestId
-import dev.inmo.tgbotapi.utils.botCommand
+import dev.inmo.tgbotapi.utils.*
 import dev.inmo.tgbotapi.utils.mention
-import dev.inmo.tgbotapi.utils.regular
-import dev.inmo.tgbotapi.utils.row
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
@@ -79,6 +77,7 @@ suspend fun main(args: Array<String>) {
     val webPagePreviewToggleCommonData = "$commonDataPrefix web page preview"
 
     val adminRightsDataPrefix = "admin"
+    val refreshAdminRightsData = "${adminRightsDataPrefix}_refresh"
     val postMessagesToggleAdminRightsData = "${adminRightsDataPrefix}_post_messages"
     val editMessagesToggleAdminRightsData = "${adminRightsDataPrefix}_edit_messages"
     val deleteMessagesToggleAdminRightsData = "${adminRightsDataPrefix}_delete_messages"
@@ -128,24 +127,31 @@ suspend fun main(args: Array<String>) {
         }
     }
     fun buildAdminRightsKeyboard(
-        permissions: AdministratorChatMember,
+        permissions: AdministratorChatMember?,
         channelId: ChatId,
         userId: UserId
     ): InlineKeyboardMarkup {
         return inlineKeyboard {
-            row {
-                dataButton("Edit messages${permissions.canEditMessages.allowedSymbol()}", "$editMessagesToggleAdminRightsData ${channelId.chatId} ${userId.chatId}")
-                dataButton("Delete messages${permissions.canRemoveMessages.allowedSymbol()}", "$deleteMessagesToggleAdminRightsData ${channelId.chatId} ${userId.chatId}")
-            }
-            row {
-                dataButton("Post messages${permissions.canPostMessages.allowedSymbol()}", "$postMessagesToggleAdminRightsData ${channelId.chatId} ${userId.chatId}")
-            }
-            row {
-                dataButton("Edit stories${permissions.canEditStories.allowedSymbol()}", "$editStoriesToggleAdminRightsData ${channelId.chatId} ${userId.chatId}")
-                dataButton("Delete stories${permissions.canDeleteStories.allowedSymbol()}", "$deleteStoriesToggleAdminRightsData ${channelId.chatId} ${userId.chatId}")
-            }
-            row {
-                dataButton("Post stories${permissions.canPostStories.allowedSymbol()}", "$postStoriesToggleAdminRightsData ${channelId.chatId} ${userId.chatId}")
+            permissions ?.also {
+                row {
+                    dataButton("Refresh", "$refreshAdminRightsData ${channelId.chatId} ${userId.chatId}")
+                }
+                row {
+                    dataButton("Edit messages${permissions.canEditMessages.allowedSymbol()}", "$editMessagesToggleAdminRightsData ${channelId.chatId} ${userId.chatId}")
+                    dataButton("Delete messages${permissions.canRemoveMessages.allowedSymbol()}", "$deleteMessagesToggleAdminRightsData ${channelId.chatId} ${userId.chatId}")
+                }
+                row {
+                    dataButton("Post messages${permissions.canPostMessages.allowedSymbol()}", "$postMessagesToggleAdminRightsData ${channelId.chatId} ${userId.chatId}")
+                }
+                row {
+                    dataButton("Edit stories${permissions.canEditStories.allowedSymbol()}", "$editStoriesToggleAdminRightsData ${channelId.chatId} ${userId.chatId}")
+                    dataButton("Delete stories${permissions.canDeleteStories.allowedSymbol()}", "$deleteStoriesToggleAdminRightsData ${channelId.chatId} ${userId.chatId}")
+                }
+                row {
+                    dataButton("Post stories${permissions.canPostStories.allowedSymbol()}", "$postStoriesToggleAdminRightsData ${channelId.chatId} ${userId.chatId}")
+                }
+            } ?: row {
+                dataButton("Promote to admin", "$postMessagesToggleAdminRightsData ${channelId.chatId} ${userId.chatId}")
             }
         }
     }
@@ -344,27 +350,30 @@ suspend fun main(args: Array<String>) {
             val (channelIdString, userIdString) = it.data.split(" ").drop(1)
             val channelId = ChatId(channelIdString.toLong())
             val userId = ChatId(userIdString.toLong())
-            val chatMember = getChatMember(channelId, userId).administratorChatMemberOrNull() ?: return@onMessageDataCallbackQuery
+            val chatMember = getChatMember(channelId, userId)
+            val asAdmin = chatMember.administratorChatMemberOrNull()
+            val asMember = chatMember.memberChatMemberOrNull()
 
             val realData = it.data.takeWhile { it != ' ' }
 
-            fun Boolean.toggleIfData(data: String) = if (realData == data) {
-                !this
+            fun Boolean?.toggleIfData(data: String) = if (realData == data) {
+                !(this ?: false)
             } else {
                 null
             }
-            val chat = getChat(userId)
 
-            promoteChannelAdministrator(
-                channelId,
-                userId,
-                canPostMessages = chatMember.canPostMessages.toggleIfData(postMessagesToggleAdminRightsData),
-                canEditMessages = chatMember.canEditMessages.toggleIfData(editMessagesToggleAdminRightsData),
-                canDeleteMessages = chatMember.canRemoveMessages.toggleIfData(deleteMessagesToggleAdminRightsData),
-                canEditStories = chatMember.canEditStories.toggleIfData(editStoriesToggleAdminRightsData),
-                canDeleteStories = chatMember.canDeleteStories.toggleIfData(deleteStoriesToggleAdminRightsData),
-                canPostStories = chatMember.canPostStories.toggleIfData(postStoriesToggleAdminRightsData),
-            )
+            if (realData != refreshAdminRightsData) {
+                promoteChannelAdministrator(
+                    channelId,
+                    userId,
+                    canPostMessages = asAdmin ?.canPostMessages.toggleIfData(postMessagesToggleAdminRightsData),
+                    canEditMessages = asAdmin ?.canEditMessages.toggleIfData(editMessagesToggleAdminRightsData),
+                    canDeleteMessages = asAdmin ?.canRemoveMessages.toggleIfData(deleteMessagesToggleAdminRightsData),
+                    canEditStories = asAdmin ?.canEditStories.toggleIfData(editStoriesToggleAdminRightsData),
+                    canDeleteStories = asAdmin ?.canDeleteStories.toggleIfData(deleteStoriesToggleAdminRightsData),
+                    canPostStories = asAdmin ?.canPostStories.toggleIfData(postStoriesToggleAdminRightsData),
+                )
+            }
 
             edit(
                 it.message,
@@ -372,7 +381,7 @@ suspend fun main(args: Array<String>) {
                     getChatMember(
                         channelId,
                         userId
-                    ).administratorChatMemberOrNull() ?: return@onMessageDataCallbackQuery,
+                    ).administratorChatMemberOrNull(),
                     channelId,
                     userId
                 )
@@ -478,7 +487,8 @@ suspend fun main(args: Array<String>) {
                 )
             ) {
                 regular("Rights of ")
-                mention(chatMember.user)
+                mentionln(chatMember.user)
+                regular("Please, remember, that to be able to change user rights bot must promote user by itself to admin")
             }
             null
         }
