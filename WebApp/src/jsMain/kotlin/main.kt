@@ -172,12 +172,15 @@ fun main() {
                 updateText()
             } ?: window.alert("Unable to load body")
 
+            document.body ?.appendElement("p", {})
+
             document.body ?.appendElement("button") {
                 fun updateHeaderColor() {
                     val (r, g, b) = Random.nextUBytes(3)
                     val hex = Color.Hex("#${r.toString(16)}${g.toString(16)}${b.toString(16)}")
                     webApp.setHeaderColor(hex)
                     (this as? HTMLButtonElement) ?.style ?.backgroundColor = hex.value
+                    textContent = hex.value
                 }
                 addEventListener("click", {
                     updateHeaderColor()
