@@ -15,7 +15,10 @@ import kotlinx.coroutines.*
 import kotlinx.dom.appendElement
 import kotlinx.dom.appendText
 import kotlinx.serialization.json.Json
+import org.w3c.dom.HTMLButtonElement
 import org.w3c.dom.HTMLElement
+import kotlin.random.Random
+import kotlin.random.nextUBytes
 
 fun HTMLElement.log(text: String) {
     appendText(text)
@@ -69,6 +72,9 @@ fun main() {
                 })
                 appendText("Exit button")
             } ?: window.alert("Unable to load body")
+
+            document.body ?.appendElement("p", {})
+            document.body ?.appendText("Allow to write in private messages: ${webApp.initDataUnsafe.user ?.allowsWriteToPM ?: "User unavailable"}")
 
             document.body ?.appendElement("p", {})
             document.body ?.appendText("Alerts:")
@@ -164,6 +170,19 @@ fun main() {
                     updateText()
                 })
                 updateText()
+            } ?: window.alert("Unable to load body")
+
+            document.body ?.appendElement("button") {
+                fun updateHeaderColor() {
+                    val (r, g, b) = Random.nextUBytes(3)
+                    val hex = Color.Hex("#${r.toString(16)}${g.toString(16)}${b.toString(16)}")
+                    webApp.setHeaderColor(hex)
+                    (this as? HTMLButtonElement) ?.style ?.backgroundColor = hex.value
+                }
+                addEventListener("click", {
+                    updateHeaderColor()
+                })
+                updateHeaderColor()
             } ?: window.alert("Unable to load body")
 
             document.body ?.appendElement("p", {})
