@@ -180,7 +180,7 @@ fun main() {
                     val hex = Color.Hex("#${r.toString(16)}${g.toString(16)}${b.toString(16)}")
                     webApp.setHeaderColor(hex)
                     (this as? HTMLButtonElement) ?.style ?.backgroundColor = hex.value
-                    textContent = hex.value
+                    textContent = "Header color: ${hex.value.uppercase()} (click to change)"
                 }
                 addEventListener("click", {
                     updateHeaderColor()
