@@ -1,6 +1,7 @@
 import dev.inmo.micro_utils.coroutines.launchSafelyWithoutExceptions
 import dev.inmo.tgbotapi.types.webAppQueryIdField
 import dev.inmo.tgbotapi.webapps.*
+import dev.inmo.tgbotapi.webapps.cloud.*
 import dev.inmo.tgbotapi.webapps.haptic.HapticFeedbackStyle
 import dev.inmo.tgbotapi.webapps.haptic.HapticFeedbackType
 import dev.inmo.tgbotapi.webapps.popup.*
@@ -14,8 +15,11 @@ import kotlinx.browser.window
 import kotlinx.coroutines.*
 import kotlinx.dom.appendElement
 import kotlinx.dom.appendText
+import kotlinx.dom.clear
 import kotlinx.serialization.json.Json
-import org.w3c.dom.HTMLElement
+import org.w3c.dom.*
+import kotlin.random.Random
+import kotlin.random.nextUBytes
 
 fun HTMLElement.log(text: String) {
     appendText(text)
@@ -71,6 +75,9 @@ fun main() {
             } ?: window.alert("Unable to load body")
 
             document.body ?.appendElement("p", {})
+            document.body ?.appendText("Allow to write in private messages: ${webApp.initDataUnsafe.user ?.allowsWriteToPM ?: "User unavailable"}")
+
+            document.body ?.appendElement("p", {})
             document.body ?.appendText("Alerts:")
 
             document.body ?.appendElement("button") {
@@ -110,6 +117,32 @@ fun main() {
                 appendText("Alert")
             } ?: window.alert("Unable to load body")
 
+            document.body ?.appendElement("p", {})
+
+            document.body ?.appendElement("button") {
+                addEventListener("click", { webApp.requestWriteAccess() })
+                appendText("Request write access without callback")
+            } ?: window.alert("Unable to load body")
+
+            document.body ?.appendElement("button") {
+                addEventListener("click", { webApp.requestWriteAccess { document.body ?.log("Write access request result: $it") } })
+                appendText("Request write access with callback")
+            } ?: window.alert("Unable to load body")
+
+            document.body ?.appendElement("p", {})
+
+            document.body ?.appendElement("button") {
+                addEventListener("click", { webApp.requestContact() })
+                appendText("Request contact without callback")
+            } ?: window.alert("Unable to load body")
+
+            document.body ?.appendElement("button") {
+                addEventListener("click", { webApp.requestContact { document.body ?.log("Contact request result: $it") } })
+                appendText("Request contact with callback")
+            } ?: window.alert("Unable to load body")
+
+            document.body ?.appendElement("p", {})
+
             document.body ?.appendElement("button") {
                 addEventListener("click", {
                     webApp.showConfirm(
@@ -142,6 +175,91 @@ fun main() {
 
             document.body ?.appendElement("p", {})
 
+            document.body ?.appendElement("button") {
+                fun updateHeaderColor() {
+                    val (r, g, b) = Random.nextUBytes(3)
+                    val hex = Color.Hex(r, g, b)
+                    webApp.setHeaderColor(hex)
+                    (this as? HTMLButtonElement) ?.style ?.backgroundColor = hex.value
+                    textContent = "Header color: ${hex.value.uppercase()} (click to change)"
+                }
+                addEventListener("click", {
+                    updateHeaderColor()
+                })
+                updateHeaderColor()
+            } ?: window.alert("Unable to load body")
+
+            document.body ?.appendElement("p", {})
+
+            fun Element.updateCloudStorageContent() {
+                clear()
+                webApp.cloudStorage.getAll {
+                    it.onSuccess {
+                        document.body ?.log(it.toString())
+                        appendElement("label") { textContent = "Cloud storage" }
+
+                        appendElement("p", {})
+
+                        it.forEach { (k, v) ->
+                            appendElement("div") {
+                                val kInput = appendElement("input", {}) as HTMLInputElement
+                                val vInput = appendElement("input", {}) as HTMLInputElement
+
+                                kInput.value = k.key
+                                vInput.value = v.value
+
+                                appendElement("button") {
+                                    addEventListener("click", {
+                                        if (k.key == kInput.value) {
+                                            webApp.cloudStorage.set(k.key, vInput.value) {
+                                                document.body ?.log(it.toString())
+                                                this@updateCloudStorageContent.updateCloudStorageContent()
+                                            }
+                                        } else {
+                                            webApp.cloudStorage.remove(k.key) {
+                                                it.onSuccess {
+                                                    webApp.cloudStorage.set(kInput.value, vInput.value) {
+                                                        document.body ?.log(it.toString())
+                                                        this@updateCloudStorageContent.updateCloudStorageContent()
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    })
+                                    this.textContent = "Save"
+                                }
+                            }
+
+                            appendElement("p", {})
+                        }
+                        appendElement("label") { textContent = "Cloud storage: add new" }
+
+                        appendElement("p", {})
+
+                        appendElement("div") {
+                            val kInput = appendElement("input", {}) as HTMLInputElement
+
+                            appendElement("button") {
+                                textContent = "Add key"
+                                addEventListener("click", {
+                                    webApp.cloudStorage.set(kInput.value, kInput.value) {
+                                        document.body ?.log(it.toString())
+                                        this@updateCloudStorageContent.updateCloudStorageContent()
+                                    }
+                                })
+                            }
+                        }
+
+                        appendElement("p", {})
+                    }.onFailure {
+                        document.body ?.log(it.stackTraceToString())
+                    }
+                }
+            }
+            val cloudStorageContentDiv = document.body ?.appendElement("div") {} as HTMLDivElement
+
+            document.body ?.appendElement("p", {})
+
             webApp.apply {
                 onThemeChanged {
                     document.body ?.log("Theme changed: ${webApp.themeParams}")
@@ -171,8 +289,18 @@ fun main() {
                 onSettingsButtonClicked {
                     document.body ?.log("Settings button clicked")
                 }
+                onWriteAccessRequested {
+                    document.body ?.log("Write access request result: $it")
+                }
+                onContactRequested {
+                    document.body ?.log("Contact request result: $it")
+                }
             }
             webApp.ready()
+            document.body ?.appendElement("input", {
+                (this as HTMLInputElement).value = window.location.href
+            })
+            cloudStorageContentDiv.updateCloudStorageContent()
         }.onFailure {
             window.alert(it.stackTraceToString())
         }
