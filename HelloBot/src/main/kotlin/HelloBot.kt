@@ -32,16 +32,16 @@ suspend fun main(vararg args: String) {
             val chat = message.chat
 
             val answerText = when (val chat = message.chat) {
-                is ChannelChat -> {
+                is PreviewChannelChat -> {
                     val answer = "Hi everybody in this channel \"${chat.title}\""
                     reply(message, answer, MarkdownV2)
                     return@onMentionWithAnyContent
                 }
-                is PrivateChat -> {
+                is PreviewPrivateChat -> {
                     reply(message, "Hi, " + "${chat.firstName} ${chat.lastName}".textMentionMarkdownV2(chat.id), MarkdownV2)
                     return@onMentionWithAnyContent
                 }
-                is GroupChat -> {
+                is PreviewGroupChat -> {
                     message.ifFromChannelGroupContentMessage {
                         val answer = "Hi, ${it.senderChat.title}"
                         reply(message, answer, MarkdownV2)
@@ -56,9 +56,7 @@ suspend fun main(vararg args: String) {
                         } ?: chat.title
                     }
                 }
-                is UnknownExtendedChat,
                 is UnknownChatType -> "Unknown :(".escapeMarkdownV2Common()
-                else -> error("Something went wrong: unknown type of chat $chat")
             }
             reply(
                 message,
