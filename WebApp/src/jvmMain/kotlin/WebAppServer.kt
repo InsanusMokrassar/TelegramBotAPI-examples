@@ -52,8 +52,8 @@ suspend fun main(vararg args: String) {
         }
     ) {
         routing {
-            staticFiles("", File("WebApp/build/distributions")) {
-                default("WebApp/build/distributions/index.html")
+            staticFiles("", File("WebApp/build/dist/js/productionExecutable")) {
+                default("WebApp/build/dist/js/productionExecutable/index.html")
             }
             post("inline") {
                 val requestBody = call.receiveText()
