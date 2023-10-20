@@ -1,0 +1,34 @@
+kotlin {
+    def hostOs = System.getProperty("os.name")
+    def isMingwX64 = hostOs.startsWith("Windows")
+    def isArch64 = System.getProperty("os.arch") == "aarch64"
+
+    def nativeTarget
+    if (hostOs == "Linux") {
+        if (isArch64) {
+            nativeTarget = linuxArm64("native") { binaries { executable() } }
+        } else {
+            nativeTarget = linuxX64("native") { binaries { executable() } }
+        }
+    } else {
+        if (isMingwX64) {
+            nativeTarget = mingwX64("native") { binaries { executable() } }
+        } else {
+            throw new GradleException("Host OS is not supported in Kotlin/Native.")
+        }
+    }
+
+    sourceSets {
+        nativeMain {
+            dependencies {
+                def engine
+
+                if (hostOs == "Linux") if (isArch64) engine = "cio" else engine = "curl"
+                else if (isMingwX64) engine = "winhttp"
+                else throw new GradleException("Host OS is not supported in Kotlin/Native.")
+
+                api "io.ktor:ktor-client-$engine:$ktor_version"
+            }
+        }
+    }
+}
