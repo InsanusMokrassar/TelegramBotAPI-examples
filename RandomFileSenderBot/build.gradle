@@ -16,8 +16,6 @@ apply plugin: 'application'
 
 mainClassName="RandomFileSenderBotKt"
 
-apply from: "$nativePartTemplate"
-
 kotlin {
     jvm()
 
@@ -31,4 +29,6 @@ kotlin {
         }
     }
 }
+
+apply from: "$nativePartTemplate"
 
