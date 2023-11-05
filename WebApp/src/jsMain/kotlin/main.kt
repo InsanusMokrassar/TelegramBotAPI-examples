@@ -71,7 +71,7 @@ fun main() {
                         }
                     }
                 })
-                appendText("Exit button")
+                appendText("Answer in chat button")
             } ?: window.alert("Unable to load body")
 
             document.body ?.appendElement("p", {})

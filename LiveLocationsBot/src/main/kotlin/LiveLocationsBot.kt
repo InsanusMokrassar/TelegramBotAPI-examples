@@ -2,6 +2,7 @@ import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.tgbotapi.extensions.api.EditLiveLocationInfo
 import dev.inmo.tgbotapi.extensions.api.chat.get.getChat
 import dev.inmo.tgbotapi.extensions.api.edit.edit
+import dev.inmo.tgbotapi.extensions.api.edit.location.live.stopLiveLocation
 import dev.inmo.tgbotapi.extensions.api.handleLiveLocation
 import dev.inmo.tgbotapi.extensions.api.send.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitMessageDataCallbackQuery
@@ -75,7 +76,7 @@ suspend fun main(vararg args: String) {
 
             sendingJob.cancel() // ends live location
             currentMessageState.value ?.let {
-                edit(it, replyMarkup = null) // removing reply keyboard
+                stopLiveLocation(it, replyMarkup = null)
             }
         }
         allUpdatesFlow.subscribeSafelyWithoutExceptions(this) { println(it) }
