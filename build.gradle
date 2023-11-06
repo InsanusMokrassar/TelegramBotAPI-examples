@@ -10,6 +10,9 @@ buildscript {
 }
 
 allprojects {
+    ext {
+        nativePartTemplate = "${rootProject.projectDir.absolutePath}/native_template.gradle"
+    }
     repositories {
         mavenLocal()
         mavenCentral()
@@ -23,6 +26,6 @@ allprojects {
             }
         }
 
-//        maven { url "https://git.inmo.dev/api/packages/InsanusMokrassar/maven" }
+        maven { url "https://git.inmo.dev/api/packages/InsanusMokrassar/maven" }
     }
 }
