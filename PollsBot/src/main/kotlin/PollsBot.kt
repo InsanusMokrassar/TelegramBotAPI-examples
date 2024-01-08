@@ -14,6 +14,7 @@ import dev.inmo.tgbotapi.extensions.utils.ifFromChannelGroupContentMessage
 import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.tgbotapi.types.IdChatIdentifier
 import dev.inmo.tgbotapi.types.PollIdentifier
+import dev.inmo.tgbotapi.types.ReplyParameters
 import dev.inmo.tgbotapi.types.chat.*
 import dev.inmo.tgbotapi.types.chat.GroupChat
 import dev.inmo.tgbotapi.types.chat.PrivateChat
@@ -54,7 +55,7 @@ suspend fun main(vararg args: String) {
                     it.toString()
                 },
                 isAnonymous = true,
-                replyToMessageId = it.messageId
+                replyParameters = ReplyParameters(it)
             )
             pollToChatMutex.withLock {
                 pollToChat[sentPoll.content.poll.id] = sentPoll.chat.id
@@ -69,7 +70,7 @@ suspend fun main(vararg args: String) {
                     it.toString()
                 },
                 isAnonymous = false,
-                replyToMessageId = it.messageId
+                replyParameters = ReplyParameters(it)
             )
             pollToChatMutex.withLock {
                 pollToChat[sentPoll.content.poll.id] = sentPoll.chat.id
