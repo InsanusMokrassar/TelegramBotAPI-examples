@@ -1,16 +1,14 @@
 import dev.inmo.kslog.common.KSLog
 import dev.inmo.kslog.common.LogLevel
 import dev.inmo.kslog.common.defaultMessageFormatter
-import dev.inmo.kslog.common.filter.filtered
 import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.tgbotapi.bot.ktor.telegramBot
-import dev.inmo.tgbotapi.extensions.api.bot.getMe
-import dev.inmo.tgbotapi.extensions.api.chat.get.getChat
 import dev.inmo.tgbotapi.extensions.api.send.reply
+import dev.inmo.tgbotapi.extensions.api.send.setMessageReaction
+import dev.inmo.tgbotapi.extensions.api.send.setMessageReactions
 import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviourWithLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onChatMessageReactionUpdatedByUser
 import dev.inmo.tgbotapi.types.reactions.Reaction
-import dev.inmo.tgbotapi.utils.DefaultKTgBotAPIKSLog
 import dev.inmo.tgbotapi.utils.customEmoji
 import dev.inmo.tgbotapi.utils.regular
 
@@ -33,7 +31,12 @@ suspend fun main(vararg args: String) {
 
     bot.buildBehaviourWithLongPolling {
         onChatMessageReactionUpdatedByUser {
-            val result = reply(
+            setMessageReaction(
+                it.chat.id,
+                it.messageId,
+                "✍"
+            )
+            val replyResult = reply(
                 it.chat.id,
                 it.messageId,
                 replyInChat = it.reactedUser.id
@@ -48,7 +51,10 @@ suspend fun main(vararg args: String) {
                     regular("\n")
                 }
             }
-            println(result)
+            setMessageReaction(
+                it.chat.id,
+                it.messageId,
+            )
         }
     }.join()
 }
