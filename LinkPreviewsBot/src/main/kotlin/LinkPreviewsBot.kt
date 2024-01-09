@@ -24,7 +24,7 @@ import dev.inmo.tgbotapi.utils.customEmoji
 import dev.inmo.tgbotapi.utils.regular
 
 /**
- * This bot will send info about user reactions in his PM with reply to message user reacted to
+ * This bot will reply with the same
  */
 suspend fun main(vararg args: String) {
     val botToken = args.first()
@@ -51,7 +51,7 @@ suspend fun main(vararg args: String) {
                     regular("I am support only content with text contains url only")
                 }
             } ?: return@onContentMessage
-            it.withContentOrNull<TextContent>() ?.let {
+            it.withContentOrNull<TextedContent>() ?.let {
                 send(
                     it.chat,
                     it.content.textSources,
