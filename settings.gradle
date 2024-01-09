@@ -43,3 +43,5 @@ include ":StickerSetHandler"
 include ":InlineQueriesBot"
 
 include ":ReactionsInfoBot"
+
+include ":LinkPreviewsBot"
