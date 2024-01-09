@@ -8,6 +8,7 @@ import dev.inmo.tgbotapi.extensions.api.send.setMessageReaction
 import dev.inmo.tgbotapi.extensions.api.send.setMessageReactions
 import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviourWithLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onChatMessageReactionUpdatedByUser
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onChatMessageReactionsCountUpdated
 import dev.inmo.tgbotapi.types.reactions.Reaction
 import dev.inmo.tgbotapi.utils.customEmoji
 import dev.inmo.tgbotapi.utils.regular
@@ -55,6 +56,9 @@ suspend fun main(vararg args: String) {
                 it.chat.id,
                 it.messageId,
             )
+        }
+        onChatMessageReactionsCountUpdated {
+            println(it)
         }
     }.join()
 }
