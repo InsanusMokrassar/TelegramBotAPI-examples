@@ -3,12 +3,14 @@ import dev.inmo.kslog.common.LogLevel
 import dev.inmo.kslog.common.defaultMessageFormatter
 import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.tgbotapi.bot.ktor.telegramBot
+import dev.inmo.tgbotapi.extensions.api.chat.get.getChat
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.setMessageReaction
 import dev.inmo.tgbotapi.extensions.api.send.setMessageReactions
 import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviourWithLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onChatMessageReactionUpdatedByUser
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onChatMessageReactionsCountUpdated
+import dev.inmo.tgbotapi.types.chat.ExtendedChat
 import dev.inmo.tgbotapi.types.reactions.Reaction
 import dev.inmo.tgbotapi.utils.customEmoji
 import dev.inmo.tgbotapi.utils.regular
@@ -58,6 +60,8 @@ suspend fun main(vararg args: String) {
             )
         }
         onChatMessageReactionsCountUpdated {
+            val extendedChat: ExtendedChat = getChat(it.chat)
+            println(extendedChat)
             println(it)
         }
     }.join()
