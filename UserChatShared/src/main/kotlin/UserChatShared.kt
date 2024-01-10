@@ -7,14 +7,11 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviourWithLongPoll
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onChatShared
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onUserShared
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.replyKeyboard
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.requestBotButton
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.requestChatButton
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.requestGroupButton
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.requestUserButton
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.requestUserOrBotButton
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onUsersShared
+import dev.inmo.tgbotapi.extensions.utils.types.buttons.*
 import dev.inmo.tgbotapi.types.BotCommand
 import dev.inmo.tgbotapi.types.chat.PrivateChat
+import dev.inmo.tgbotapi.types.keyboardButtonRequestUserLimit
 import dev.inmo.tgbotapi.types.message.textsources.mention
 import dev.inmo.tgbotapi.types.request.RequestId
 import dev.inmo.tgbotapi.utils.row
@@ -50,30 +47,35 @@ suspend fun main(args: Array<String>) {
         resizeKeyboard = true,
     ) {
         row {
-            requestUserOrBotButton(
+            requestUsersOrBotsButton(
                 "\uD83D\uDC64/\uD83E\uDD16",
-                requestIdUserOrBot
+                requestIdUserOrBot,
+                maxCount = keyboardButtonRequestUserLimit.last
             )
         }
         row {
-            requestUserButton(
+            requestUsersButton(
                 "\uD83D\uDC64☆",
                 requestIdUserNonPremium,
-                premiumUser = false
+                premiumUser = false,
+                maxCount = keyboardButtonRequestUserLimit.last
             )
-            requestUserButton(
+            requestUsersButton(
                 "\uD83D\uDC64",
                 requestIdUserAny,
-                premiumUser = null
+                premiumUser = null,
+                maxCount = keyboardButtonRequestUserLimit.last
             )
-            requestUserButton(
+            requestUsersButton(
                 "\uD83D\uDC64★",
                 requestIdUserPremium,
-                premiumUser = true
+                premiumUser = true,
+                maxCount = keyboardButtonRequestUserLimit.last
             )
-            requestBotButton(
+            requestBotsButton(
                 "\uD83E\uDD16",
-                requestIdBot
+                requestIdBot,
+                maxCount = keyboardButtonRequestUserLimit.last
             )
         }
         row {
@@ -164,25 +166,26 @@ suspend fun main(args: Array<String>) {
             )
         }
 
-        onUserShared {
-            val userId = it.chatEvent.userId
-            val userInfo = runCatchingSafely { getChat(userId) }.getOrNull()
-            reply(
-                it,
-            ) {
-                +"You have shared "
-                +mention(
-                    when (it.chatEvent.requestId) {
-                        requestIdUserOrBot -> "user or bot"
-                        requestIdUserNonPremium -> "non premium user"
-                        requestIdUserAny -> "any user"
-                        requestIdUserPremium -> "premium user"
-                        requestIdBot -> "bot"
-                        else -> "somebody O.o"
-                    },
-                    userId
-                )
-                +" (user info: $userInfo; user id: $userId)"
+        onUsersShared {
+            it.chatEvent.userIds.forEach { userId ->
+                val userInfo = runCatchingSafely { getChat(userId) }.getOrNull()
+                reply(
+                    it,
+                ) {
+                    +"You have shared "
+                    +mention(
+                        when (it.chatEvent.requestId) {
+                            requestIdUserOrBot -> "user or bot"
+                            requestIdUserNonPremium -> "non premium user"
+                            requestIdUserAny -> "any user"
+                            requestIdUserPremium -> "premium user"
+                            requestIdBot -> "bot"
+                            else -> "somebody O.o"
+                        },
+                        userId
+                    )
+                    +" (user info: $userInfo; user id: $userId)"
+                }
             }
         }
 
