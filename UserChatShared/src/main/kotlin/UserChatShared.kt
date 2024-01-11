@@ -27,54 +27,87 @@ suspend fun main(args: Array<String>) {
     val requestIdUserPremium = RequestId(3)
     val requestIdBot = RequestId(4)
 
-    val requestIdAnyChat = RequestId(5)
-    val requestIdChannel = RequestId(6)
-    val requestIdPublicChannel = RequestId(7)
-    val requestIdPrivateChannel = RequestId(8)
-    val requestIdChannelUserOwner = RequestId(9)
+    val requestIdUsersOrBots = RequestId(5)
+    val requestIdUsersNonPremium = RequestId(6)
+    val requestIdUsersAny = RequestId(7)
+    val requestIdUsersPremium = RequestId(8)
+    val requestIdBots = RequestId(9)
 
-    val requestIdGroup = RequestId(10)
-    val requestIdPublicGroup = RequestId(11)
-    val requestIdPrivateGroup = RequestId(12)
-    val requestIdGroupUserOwner = RequestId(13)
+    val requestIdAnyChat = RequestId(10)
+    val requestIdChannel = RequestId(11)
+    val requestIdPublicChannel = RequestId(12)
+    val requestIdPrivateChannel = RequestId(13)
+    val requestIdChannelUserOwner = RequestId(14)
 
-    val requestIdForum = RequestId(14)
-    val requestIdPublicForum = RequestId(15)
-    val requestIdPrivateForum = RequestId(16)
-    val requestIdForumUserOwner = RequestId(17)
+    val requestIdGroup = RequestId(15)
+    val requestIdPublicGroup = RequestId(16)
+    val requestIdPrivateGroup = RequestId(17)
+    val requestIdGroupUserOwner = RequestId(18)
+
+    val requestIdForum = RequestId(19)
+    val requestIdPublicForum = RequestId(20)
+    val requestIdPrivateForum = RequestId(21)
+    val requestIdForumUserOwner = RequestId(22)
 
     val keyboard = replyKeyboard(
         resizeKeyboard = true,
     ) {
         row {
+            requestUserOrBotButton(
+                "\uD83D\uDC64/\uD83E\uDD16 (1)",
+                requestIdUserOrBot
+            )
+        }
+        row {
+            requestUserButton(
+                "\uD83D\uDC64☆ (1)",
+                requestIdUserNonPremium,
+                premiumUser = false
+            )
+            requestUserButton(
+                "\uD83D\uDC64 (1)",
+                requestIdUserAny,
+                premiumUser = null
+            )
+            requestUserButton(
+                "\uD83D\uDC64★ (1)",
+                requestIdUserPremium,
+                premiumUser = true
+            )
+            requestBotButton(
+                "\uD83E\uDD16 (1)",
+                requestIdBot
+            )
+        }
+        row {
             requestUsersOrBotsButton(
                 "\uD83D\uDC64/\uD83E\uDD16",
-                requestIdUserOrBot,
+                requestIdUsersOrBots,
                 maxCount = keyboardButtonRequestUserLimit.last
             )
         }
         row {
             requestUsersButton(
                 "\uD83D\uDC64☆",
-                requestIdUserNonPremium,
+                requestIdUsersNonPremium,
                 premiumUser = false,
                 maxCount = keyboardButtonRequestUserLimit.last
             )
             requestUsersButton(
                 "\uD83D\uDC64",
-                requestIdUserAny,
+                requestIdUsersAny,
                 premiumUser = null,
                 maxCount = keyboardButtonRequestUserLimit.last
             )
             requestUsersButton(
                 "\uD83D\uDC64★",
-                requestIdUserPremium,
+                requestIdUsersPremium,
                 premiumUser = true,
                 maxCount = keyboardButtonRequestUserLimit.last
             )
             requestBotsButton(
                 "\uD83E\uDD16",
-                requestIdBot,
+                requestIdBots,
                 maxCount = keyboardButtonRequestUserLimit.last
             )
         }
