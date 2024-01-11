@@ -45,3 +45,5 @@ include ":InlineQueriesBot"
 include ":ReactionsInfoBot"
 
 include ":LinkPreviewsBot"
+
+include ":BoostsInfoBot"
