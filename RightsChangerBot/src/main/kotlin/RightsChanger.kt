@@ -24,6 +24,7 @@ import dev.inmo.tgbotapi.types.chat.ChatPermissions
 import dev.inmo.tgbotapi.types.chat.PublicChat
 import dev.inmo.tgbotapi.types.chat.member.*
 import dev.inmo.tgbotapi.types.commands.BotCommandScope
+import dev.inmo.tgbotapi.types.message.abstracts.AccessibleMessage
 import dev.inmo.tgbotapi.types.request.RequestId
 import dev.inmo.tgbotapi.utils.*
 import dev.inmo.tgbotapi.utils.mention
@@ -185,14 +186,21 @@ suspend fun main(args: Array<String>) {
     ) {
         onCommand(
             "simple",
-            initialFilter = { it.chat is PublicChat && it.fromUserMessageOrNull()?.user?.id == allowedAdmin }) {
+            initialFilter = { it.chat is PublicChat && it.fromUserMessageOrNull()?.user?.id == allowedAdmin }
+        ) {
             val replyMessage = it.replyTo
             val userInReply = replyMessage?.fromUserMessageOrNull()?.user?.id ?: return@onCommand
-            reply(
-                replyMessage,
-                "Manage keyboard:",
-                replyMarkup = buildCommonKeyboard(it.chat.id.toChatId(), userInReply) ?: return@onCommand
-            )
+            if (replyMessage is AccessibleMessage) {
+                reply(
+                    replyMessage,
+                    "Manage keyboard:",
+                    replyMarkup = buildCommonKeyboard(it.chat.id.toChatId(), userInReply) ?: return@onCommand
+                )
+            } else {
+                reply(it) {
+                    regular("Reply to somebody's message to get hist/her rights keyboard")
+                }
+            }
         }
         onCommand(
             "granular",
@@ -204,11 +212,17 @@ suspend fun main(args: Array<String>) {
             val usernameInText = it.content.textSources.firstNotNullOfOrNull { it.mentionTextSourceOrNull() } ?.username
             val userInReply = replyMessage?.fromUserMessageOrNull()?.user?.id ?: return@onCommand
 
-            reply(
-                replyMessage,
-                "Manage keyboard:",
-                replyMarkup = buildGranularKeyboard(it.chat.id.toChatId(), userInReply) ?: return@onCommand
-            )
+            if (replyMessage is AccessibleMessage) {
+                reply(
+                    replyMessage,
+                    "Manage keyboard:",
+                    replyMarkup = buildGranularKeyboard(it.chat.id.toChatId(), userInReply) ?: return@onCommand
+                )
+            } else {
+                reply(it) {
+                    regular("Reply to somebody's message to get hist/her rights keyboard")
+                }
+            }
         }
 
         onMessageDataCallbackQuery(

@@ -42,7 +42,7 @@ suspend fun main(vararg args: String) {
             val replyResult = reply(
                 it.chat.id,
                 it.messageId,
-                replyInChat = it.reactedUser.id
+                replyInChatId = it.reactedUser.id
             ) {
                 regular("Current reactions for message in reply:\n")
                 it.new.forEach {
