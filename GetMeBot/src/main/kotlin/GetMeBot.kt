@@ -5,6 +5,7 @@ import dev.inmo.kslog.common.filter.filtered
 import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.tgbotapi.bot.ktor.telegramBot
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
+import dev.inmo.tgbotapi.extensions.api.chat.get.getChat
 import dev.inmo.tgbotapi.utils.DefaultKTgBotAPIKSLog
 
 /**
@@ -12,13 +13,19 @@ import dev.inmo.tgbotapi.utils.DefaultKTgBotAPIKSLog
  */
 suspend fun main(vararg args: String) {
     val botToken = args.first()
+    val isDebug = args.getOrNull(1) == "debug"
 
-    setDefaultKSLog(
-        KSLog { level: LogLevel, tag: String?, message: Any, throwable: Throwable? ->
-            println(defaultMessageFormatter(level, tag, message, throwable))
-        }
-    )
+    if (isDebug) {
+        setDefaultKSLog(
+            KSLog { level: LogLevel, tag: String?, message: Any, throwable: Throwable? ->
+                println(defaultMessageFormatter(level, tag, message, throwable))
+            }
+        )
+    }
+
     val bot = telegramBot(botToken)
 
-    println(bot.getMe())
+    val me = bot.getMe()
+    println(me)
+    println(bot.getChat(me))
 }

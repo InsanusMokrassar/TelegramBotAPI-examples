@@ -1,3 +1,7 @@
+import dev.inmo.kslog.common.KSLog
+import dev.inmo.kslog.common.LogLevel
+import dev.inmo.kslog.common.defaultMessageFormatter
+import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.micro_utils.ktor.server.createKtorServer
 import dev.inmo.tgbotapi.extensions.api.answers.answer
@@ -14,6 +18,7 @@ import dev.inmo.tgbotapi.requests.answers.InlineQueryResultsButton
 import dev.inmo.tgbotapi.types.BotCommand
 import dev.inmo.tgbotapi.types.InlineQueries.InlineQueryResult.InlineQueryResultArticle
 import dev.inmo.tgbotapi.types.InlineQueries.InputMessageContent.InputTextMessageContent
+import dev.inmo.tgbotapi.types.LinkPreviewOptions
 import dev.inmo.tgbotapi.types.webAppQueryIdField
 import dev.inmo.tgbotapi.types.webapps.WebAppInfo
 import dev.inmo.tgbotapi.utils.*
@@ -43,6 +48,16 @@ suspend fun main(vararg args: String) {
         args.first(),
         testServer = args.any { it == "testServer" }
     )
+    val isDebug = args.any { it == "debug" }
+
+    if (isDebug) {
+        setDefaultKSLog(
+            KSLog { level: LogLevel, tag: String?, message: Any, throwable: Throwable? ->
+                println(defaultMessageFormatter(level, tag, message, throwable))
+            }
+        )
+    }
+
     val bot = telegramBot(telegramBotAPIUrlsKeeper)
     createKtorServer(
         "0.0.0.0",
@@ -102,8 +117,11 @@ suspend fun main(vararg args: String) {
                     row {
                         webAppButton("Open WebApp", WebAppInfo(args[1]))
                     }
-                }
-
+                },
+                linkPreviewOptions = LinkPreviewOptions.Small(
+                    args[1],
+                    showAboveText = false
+                )
             )
         }
         onCommand("attachment_menu") {
@@ -114,8 +132,11 @@ suspend fun main(vararg args: String) {
                     row {
                         webAppButton("Open WebApp", WebAppInfo(args[1]))
                     }
-                }
-
+                },
+                linkPreviewOptions = LinkPreviewOptions.Large(
+                    args[1],
+                    showAboveText = true
+                )
             )
         }
         onBaseInlineQuery {

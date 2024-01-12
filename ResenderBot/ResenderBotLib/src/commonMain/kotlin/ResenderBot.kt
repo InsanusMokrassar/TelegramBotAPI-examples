@@ -8,6 +8,10 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.filters.CommonMessageFilte
 import dev.inmo.tgbotapi.extensions.behaviour_builder.filters.MessageFilterByChat
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
 import dev.inmo.tgbotapi.extensions.utils.shortcuts.*
+import dev.inmo.tgbotapi.extensions.utils.withContentOrNull
+import dev.inmo.tgbotapi.types.ReplyParameters
+import dev.inmo.tgbotapi.types.message.content.TextContent
+import dev.inmo.tgbotapi.types.quoteEntitiesField
 import dev.inmo.tgbotapi.utils.extensions.threadIdOrNull
 import kotlinx.coroutines.*
 
@@ -26,7 +30,14 @@ suspend fun activateResenderBot(
                     it.content.createResend(
                         chat.id,
                         messageThreadId = it.threadIdOrNull,
-                        replyToMessageId = it.messageId
+                        replyParameters = it.replyInfo ?.messageMeta ?.let { meta ->
+                            val quote = it.withContentOrNull<TextContent>() ?.content ?.quote
+                            ReplyParameters(
+                                meta,
+                                entities = quote ?.textSources ?: emptyList(),
+                                quotePosition = quote ?.position
+                            )
+                        }
                     )
                 ) {
                     it.forEach(print)

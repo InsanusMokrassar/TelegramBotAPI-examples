@@ -7,14 +7,11 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviourWithLongPoll
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onChatShared
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onUserShared
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.replyKeyboard
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.requestBotButton
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.requestChatButton
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.requestGroupButton
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.requestUserButton
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.requestUserOrBotButton
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onUsersShared
+import dev.inmo.tgbotapi.extensions.utils.types.buttons.*
 import dev.inmo.tgbotapi.types.BotCommand
 import dev.inmo.tgbotapi.types.chat.PrivateChat
+import dev.inmo.tgbotapi.types.keyboardButtonRequestUserLimit
 import dev.inmo.tgbotapi.types.message.textsources.mention
 import dev.inmo.tgbotapi.types.request.RequestId
 import dev.inmo.tgbotapi.utils.row
@@ -30,50 +27,88 @@ suspend fun main(args: Array<String>) {
     val requestIdUserPremium = RequestId(3)
     val requestIdBot = RequestId(4)
 
-    val requestIdAnyChat = RequestId(5)
-    val requestIdChannel = RequestId(6)
-    val requestIdPublicChannel = RequestId(7)
-    val requestIdPrivateChannel = RequestId(8)
-    val requestIdChannelUserOwner = RequestId(9)
+    val requestIdUsersOrBots = RequestId(5)
+    val requestIdUsersNonPremium = RequestId(6)
+    val requestIdUsersAny = RequestId(7)
+    val requestIdUsersPremium = RequestId(8)
+    val requestIdBots = RequestId(9)
 
-    val requestIdGroup = RequestId(10)
-    val requestIdPublicGroup = RequestId(11)
-    val requestIdPrivateGroup = RequestId(12)
-    val requestIdGroupUserOwner = RequestId(13)
+    val requestIdAnyChat = RequestId(10)
+    val requestIdChannel = RequestId(11)
+    val requestIdPublicChannel = RequestId(12)
+    val requestIdPrivateChannel = RequestId(13)
+    val requestIdChannelUserOwner = RequestId(14)
 
-    val requestIdForum = RequestId(14)
-    val requestIdPublicForum = RequestId(15)
-    val requestIdPrivateForum = RequestId(16)
-    val requestIdForumUserOwner = RequestId(17)
+    val requestIdGroup = RequestId(15)
+    val requestIdPublicGroup = RequestId(16)
+    val requestIdPrivateGroup = RequestId(17)
+    val requestIdGroupUserOwner = RequestId(18)
+
+    val requestIdForum = RequestId(19)
+    val requestIdPublicForum = RequestId(20)
+    val requestIdPrivateForum = RequestId(21)
+    val requestIdForumUserOwner = RequestId(22)
 
     val keyboard = replyKeyboard(
         resizeKeyboard = true,
     ) {
         row {
             requestUserOrBotButton(
-                "\uD83D\uDC64/\uD83E\uDD16",
+                "\uD83D\uDC64/\uD83E\uDD16 (1)",
                 requestIdUserOrBot
             )
         }
         row {
             requestUserButton(
-                "\uD83D\uDC64☆",
+                "\uD83D\uDC64☆ (1)",
                 requestIdUserNonPremium,
                 premiumUser = false
             )
             requestUserButton(
-                "\uD83D\uDC64",
+                "\uD83D\uDC64 (1)",
                 requestIdUserAny,
                 premiumUser = null
             )
             requestUserButton(
-                "\uD83D\uDC64★",
+                "\uD83D\uDC64★ (1)",
                 requestIdUserPremium,
                 premiumUser = true
             )
             requestBotButton(
-                "\uD83E\uDD16",
+                "\uD83E\uDD16 (1)",
                 requestIdBot
+            )
+        }
+        row {
+            requestUsersOrBotsButton(
+                "\uD83D\uDC64/\uD83E\uDD16",
+                requestIdUsersOrBots,
+                maxCount = keyboardButtonRequestUserLimit.last
+            )
+        }
+        row {
+            requestUsersButton(
+                "\uD83D\uDC64☆",
+                requestIdUsersNonPremium,
+                premiumUser = false,
+                maxCount = keyboardButtonRequestUserLimit.last
+            )
+            requestUsersButton(
+                "\uD83D\uDC64",
+                requestIdUsersAny,
+                premiumUser = null,
+                maxCount = keyboardButtonRequestUserLimit.last
+            )
+            requestUsersButton(
+                "\uD83D\uDC64★",
+                requestIdUsersPremium,
+                premiumUser = true,
+                maxCount = keyboardButtonRequestUserLimit.last
+            )
+            requestBotsButton(
+                "\uD83E\uDD16",
+                requestIdBots,
+                maxCount = keyboardButtonRequestUserLimit.last
             )
         }
         row {
@@ -164,25 +199,26 @@ suspend fun main(args: Array<String>) {
             )
         }
 
-        onUserShared {
-            val userId = it.chatEvent.userId
-            val userInfo = runCatchingSafely { getChat(userId) }.getOrNull()
-            reply(
-                it,
-            ) {
-                +"You have shared "
-                +mention(
-                    when (it.chatEvent.requestId) {
-                        requestIdUserOrBot -> "user or bot"
-                        requestIdUserNonPremium -> "non premium user"
-                        requestIdUserAny -> "any user"
-                        requestIdUserPremium -> "premium user"
-                        requestIdBot -> "bot"
-                        else -> "somebody O.o"
-                    },
-                    userId
-                )
-                +" (user info: $userInfo; user id: $userId)"
+        onUsersShared {
+            it.chatEvent.userIds.forEach { userId ->
+                val userInfo = runCatchingSafely { getChat(userId) }.getOrNull()
+                reply(
+                    it,
+                ) {
+                    +"You have shared "
+                    +mention(
+                        when (it.chatEvent.requestId) {
+                            requestIdUserOrBot -> "user or bot"
+                            requestIdUserNonPremium -> "non premium user"
+                            requestIdUserAny -> "any user"
+                            requestIdUserPremium -> "premium user"
+                            requestIdBot -> "bot"
+                            else -> "somebody O.o"
+                        },
+                        userId
+                    )
+                    +" (user info: $userInfo; user id: $userId)"
+                }
             }
         }
 
