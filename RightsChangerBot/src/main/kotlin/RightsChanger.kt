@@ -1,4 +1,9 @@
+import dev.inmo.kslog.common.KSLog
+import dev.inmo.kslog.common.LogLevel
+import dev.inmo.kslog.common.defaultMessageFormatter
+import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.micro_utils.coroutines.firstOf
+import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.micro_utils.fsm.common.State
 import dev.inmo.tgbotapi.bot.ktor.telegramBot
 import dev.inmo.tgbotapi.extensions.api.bot.setMyCommands
@@ -49,6 +54,16 @@ sealed interface UserRetrievingStep : State {
 
 suspend fun main(args: Array<String>) {
     val botToken = args.first()
+
+    val isDebug = args.getOrNull(2) == "debug"
+
+    if (isDebug) {
+        setDefaultKSLog(
+            KSLog { level: LogLevel, tag: String?, message: Any, throwable: Throwable? ->
+                println(defaultMessageFormatter(level, tag, message, throwable))
+            }
+        )
+    }
 
     val bot = telegramBot(botToken)
 
@@ -517,5 +532,9 @@ suspend fun main(args: Array<String>) {
             BotCommand("rights_in_channel", "Trigger granular keyboard. Use with reply to user"),
             scope = BotCommandScope.AllGroupChats
         )
+
+        allUpdatesFlow.subscribeSafelyWithoutExceptions(this) {
+            println(it)
+        }
     }.join()
 }
