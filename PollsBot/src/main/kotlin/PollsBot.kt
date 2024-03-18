@@ -11,10 +11,7 @@ import dev.inmo.tgbotapi.extensions.utils.formatting.linkMarkdownV2
 import dev.inmo.tgbotapi.extensions.utils.formatting.textMentionMarkdownV2
 import dev.inmo.tgbotapi.extensions.utils.ifChannelChat
 import dev.inmo.tgbotapi.extensions.utils.ifFromChannelGroupContentMessage
-import dev.inmo.tgbotapi.types.ChatId
-import dev.inmo.tgbotapi.types.IdChatIdentifier
-import dev.inmo.tgbotapi.types.PollIdentifier
-import dev.inmo.tgbotapi.types.ReplyParameters
+import dev.inmo.tgbotapi.types.*
 import dev.inmo.tgbotapi.types.chat.*
 import dev.inmo.tgbotapi.types.chat.GroupChat
 import dev.inmo.tgbotapi.types.chat.PrivateChat
@@ -44,7 +41,7 @@ suspend fun main(vararg args: String) {
     telegramBotWithBehaviourAndLongPolling(botToken, CoroutineScope(Dispatchers.IO)) {
         val me = getMe()
 
-        val pollToChat = mutableMapOf<PollIdentifier, IdChatIdentifier>()
+        val pollToChat = mutableMapOf<PollId, IdChatIdentifier>()
         val pollToChatMutex = Mutex()
 
         onCommand("anonymous") {

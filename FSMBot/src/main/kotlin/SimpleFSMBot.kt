@@ -5,7 +5,7 @@ import dev.inmo.tgbotapi.extensions.api.send.sendMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
-import dev.inmo.tgbotapi.extensions.utils.extensions.parseCommandsWithParams
+import dev.inmo.tgbotapi.extensions.utils.extensions.parseCommandsWithArgs
 import dev.inmo.tgbotapi.extensions.utils.extensions.sameThread
 import dev.inmo.tgbotapi.extensions.utils.formatting.*
 import dev.inmo.tgbotapi.types.IdChatIdentifier
@@ -54,7 +54,7 @@ suspend fun main(args: Array<String>) {
             val content = contentMessage.content
 
             when {
-                content is TextContent && content.parseCommandsWithParams().keys.contains("stop") -> StopState(it.context)
+                content is TextContent && content.parseCommandsWithArgs().keys.contains("stop") -> StopState(it.context)
                 else -> {
                     execute(content.createResend(it.context))
                     it

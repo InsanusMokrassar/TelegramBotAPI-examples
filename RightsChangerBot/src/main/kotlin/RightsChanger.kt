@@ -67,7 +67,7 @@ suspend fun main(args: Array<String>) {
 
     val bot = telegramBot(botToken)
 
-    val allowedAdmin = ChatId(args[1].toLong())
+    val allowedAdmin = ChatId(RawChatId(args[1].toLong()))
 
     fun Boolean?.allowedSymbol() = when (this) {
         true -> "✅"
@@ -377,8 +377,8 @@ suspend fun main(args: Array<String>) {
             initialFilter = { it.user.id == allowedAdmin }
         ) {
             val (channelIdString, userIdString) = it.data.split(" ").drop(1)
-            val channelId = ChatId(channelIdString.toLong())
-            val userId = ChatId(userIdString.toLong())
+            val channelId = ChatId(RawChatId(channelIdString.toLong()))
+            val userId = ChatId(RawChatId(userIdString.toLong()))
             val chatMember = getChatMember(channelId, userId)
             val asAdmin = chatMember.administratorChatMemberOrNull()
             val asMember = chatMember.memberChatMemberOrNull()

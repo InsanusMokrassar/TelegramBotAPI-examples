@@ -44,7 +44,7 @@ fun StickerSet?.buildInfo() = buildEntities {
                 StickerType.Regular -> "Regular"
                 is StickerType.Unknown -> "Unknown type \"${stickerType.type}\""
             }
-        ) + " sticker set with title " + bold(title) + " and name " + bold(name)
+        ) + " sticker set with title " + bold(title) + " and name " + bold(name.string)
     }
 }
 

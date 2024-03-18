@@ -18,6 +18,7 @@ import dev.inmo.tgbotapi.requests.answers.InlineQueryResultsButton
 import dev.inmo.tgbotapi.types.BotCommand
 import dev.inmo.tgbotapi.types.InlineQueries.InlineQueryResult.InlineQueryResultArticle
 import dev.inmo.tgbotapi.types.InlineQueries.InputMessageContent.InputTextMessageContent
+import dev.inmo.tgbotapi.types.InlineQueryId
 import dev.inmo.tgbotapi.types.LinkPreviewOptions
 import dev.inmo.tgbotapi.types.webAppQueryIdField
 import dev.inmo.tgbotapi.types.webapps.WebAppInfo
@@ -77,9 +78,9 @@ suspend fun main(vararg args: String) {
             }
             post("inline") {
                 val requestBody = call.receiveText()
-                val queryId = call.parameters[webAppQueryIdField] ?: error("$webAppQueryIdField should be presented")
+                val queryId = call.parameters[webAppQueryIdField] ?.let(::InlineQueryId) ?: error("$webAppQueryIdField should be presented")
 
-                bot.answer(queryId, InlineQueryResultArticle(queryId, "Result", InputTextMessageContent(requestBody)))
+                bot.answerInlineQuery(queryId, listOf(InlineQueryResultArticle(queryId, "Result", InputTextMessageContent(requestBody))))
                 call.respond(HttpStatusCode.OK)
             }
             post("check") {

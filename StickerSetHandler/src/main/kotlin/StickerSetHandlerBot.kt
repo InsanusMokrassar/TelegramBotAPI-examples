@@ -13,6 +13,7 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onSticke
 import dev.inmo.tgbotapi.extensions.utils.extensions.raw.sticker
 import dev.inmo.tgbotapi.requests.abstracts.asMultipartFile
 import dev.inmo.tgbotapi.requests.stickers.InputSticker
+import dev.inmo.tgbotapi.types.StickerSetName
 import dev.inmo.tgbotapi.types.chat.Chat
 import dev.inmo.tgbotapi.types.files.*
 import dev.inmo.tgbotapi.types.toChatId
@@ -32,7 +33,7 @@ suspend fun main(args: Array<String>) {
         }
     ) {
         val me = getMe()
-        fun Chat.stickerSetName() = "s${id.chatId}_by_${me.username ?.usernameWithoutAt}"
+        fun Chat.stickerSetName() = StickerSetName("s${id.chatId}_by_${me.username ?.withoutAt}")
         onCommand("start") {
             reply(it) {
                 botCommand("delete") + " - to clear stickers"
@@ -82,7 +83,7 @@ suspend fun main(args: Array<String>) {
             }.onFailure { _ ->
                 createNewStickerSet(
                     it.chat.id.toChatId(),
-                    stickerSetName,
+                    stickerSetName.string,
                     "Sticker set by ${me.firstName}",
                     it.content.media.stickerFormat,
                     listOf(

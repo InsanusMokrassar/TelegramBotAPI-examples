@@ -15,6 +15,7 @@ import dev.inmo.tgbotapi.extensions.utils.withContent
 import dev.inmo.tgbotapi.types.BotCommand
 import dev.inmo.tgbotapi.types.InlineQueries.InlineQueryResult.InlineQueryResultArticle
 import dev.inmo.tgbotapi.types.InlineQueries.InputMessageContent.InputTextMessageContent
+import dev.inmo.tgbotapi.types.InlineQueryId
 import dev.inmo.tgbotapi.types.message.content.TextContent
 import dev.inmo.tgbotapi.utils.*
 import kotlinx.coroutines.*
@@ -137,7 +138,7 @@ suspend fun activateKeyboardsBot(
                 it,
                 results = listOf(
                     InlineQueryResultArticle(
-                        it.query,
+                        InlineQueryId(it.query),
                         "Send buttons",
                         InputTextMessageContent("It is sent via inline mode inline buttons"),
                         replyMarkup = inlineKeyboard {
