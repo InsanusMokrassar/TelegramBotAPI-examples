@@ -9,16 +9,9 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
 import dev.inmo.tgbotapi.types.StickerFormat
 import dev.inmo.tgbotapi.types.StickerType
 import dev.inmo.tgbotapi.types.message.textsources.*
-import dev.inmo.tgbotapi.types.stickers.AnimatedStickerSet
-import dev.inmo.tgbotapi.types.stickers.CustomEmojiSimpleStickerSet
 import dev.inmo.tgbotapi.types.stickers.CustomEmojiStickerSet
-import dev.inmo.tgbotapi.types.stickers.CustomEmojiVideoStickerSet
-import dev.inmo.tgbotapi.types.stickers.MaskSimpleStickerSet
 import dev.inmo.tgbotapi.types.stickers.MaskStickerSet
-import dev.inmo.tgbotapi.types.stickers.MaskVideoStickerSet
-import dev.inmo.tgbotapi.types.stickers.RegularSimpleStickerSet
 import dev.inmo.tgbotapi.types.stickers.RegularStickerSet
-import dev.inmo.tgbotapi.types.stickers.RegularVideoStickerSet
 import dev.inmo.tgbotapi.types.stickers.StickerSet
 import dev.inmo.tgbotapi.types.stickers.UnknownStickerSet
 import dev.inmo.tgbotapi.utils.bold
@@ -31,12 +24,6 @@ fun StickerSet?.buildInfo() = buildEntities {
     } else {
         bold("StickerSet name: ") + "${name}\n"
         bold("StickerSet title: ") + "${title}\n"
-        bold("Sticker format: ") + when (stickerFormat) {
-            StickerFormat.Animated -> "Animated"
-            StickerFormat.Static -> "Static"
-            is StickerFormat.Unknown -> stickerFormat.type
-            StickerFormat.Video -> "Video"
-        } + "\n"
         bold(
             when (stickerType) {
                 StickerType.CustomEmoji -> "Custom emoji"

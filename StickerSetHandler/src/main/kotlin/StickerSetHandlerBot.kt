@@ -56,16 +56,19 @@ suspend fun main(args: Array<String>) {
             val newSticker = when (sticker) {
                 is CustomEmojiSticker -> InputSticker.WithKeywords.CustomEmoji(
                     downloadFileToTemp(sticker.fileId).asMultipartFile(),
+                    sticker.stickerFormat,
                     listOf(sticker.emoji ?: "\uD83D\uDE0A"),
                     emptyList()
                 )
                 is MaskSticker -> InputSticker.Mask(
                     downloadFileToTemp(sticker.fileId).asMultipartFile(),
+                    sticker.stickerFormat,
                     listOf(sticker.emoji ?: "\uD83D\uDE0A"),
                     sticker.maskPosition
                 )
                 is RegularSticker -> InputSticker.WithKeywords.Regular(
                     downloadFileToTemp(sticker.fileId).asMultipartFile(),
+                    sticker.stickerFormat,
                     listOf(sticker.emoji ?: "\uD83D\uDE0A"),
                     emptyList()
                 )
@@ -85,7 +88,6 @@ suspend fun main(args: Array<String>) {
                     it.chat.id.toChatId(),
                     stickerSetName.string,
                     "Sticker set by ${me.firstName}",
-                    it.content.media.stickerFormat,
                     listOf(
                         newSticker
                     ),
