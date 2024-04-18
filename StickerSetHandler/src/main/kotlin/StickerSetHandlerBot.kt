@@ -83,7 +83,7 @@ suspend fun main(args: Array<String>) {
                         getStickerSet(stickerSetName).stickers.last()
                     )
                 }
-            }.onFailure { _ ->
+            }.onFailure { exception ->
                 createNewStickerSet(
                     it.chat.id.toChatId(),
                     stickerSetName.string,
