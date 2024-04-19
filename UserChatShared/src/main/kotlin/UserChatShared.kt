@@ -1,3 +1,7 @@
+import dev.inmo.kslog.common.KSLog
+import dev.inmo.kslog.common.LogLevel
+import dev.inmo.kslog.common.defaultMessageFormatter
+import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.micro_utils.coroutines.runCatchingSafely
 import dev.inmo.tgbotapi.bot.ktor.telegramBot
 import dev.inmo.tgbotapi.extensions.api.bot.setMyCommands
@@ -18,6 +22,15 @@ import dev.inmo.tgbotapi.utils.row
 
 suspend fun main(args: Array<String>) {
     val botToken = args.first()
+    val isDebug = args.getOrNull(1) == "debug"
+
+    if (isDebug) {
+        setDefaultKSLog(
+            KSLog { level: LogLevel, tag: String?, message: Any, throwable: Throwable? ->
+                println(defaultMessageFormatter(level, tag, message, throwable))
+            }
+        )
+    }
 
     val bot = telegramBot(botToken)
 

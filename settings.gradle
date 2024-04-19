@@ -47,3 +47,5 @@ include ":ReactionsInfoBot"
 include ":LinkPreviewsBot"
 
 include ":BoostsInfoBot"
+
+include ":BusinessConnectionsBot"
