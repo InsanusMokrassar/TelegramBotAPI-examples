@@ -9,6 +9,7 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onDeepLi
 import dev.inmo.tgbotapi.requests.answers.InlineQueryResultsButton
 import dev.inmo.tgbotapi.types.InlineQueries.InlineQueryResult.InlineQueryResultArticle
 import dev.inmo.tgbotapi.types.InlineQueries.InputMessageContent.InputTextMessageContent
+import dev.inmo.tgbotapi.types.InlineQueryId
 import dev.inmo.tgbotapi.types.inlineQueryAnswerResultsLimit
 import dev.inmo.tgbotapi.utils.buildEntities
 
@@ -31,9 +32,9 @@ suspend fun doInlineQueriesBot(token: String) {
             answer(
                 it,
                 results = results.map { resultNumber ->
-                    val resultAsString = resultNumber.toString()
+                    val inlineQueryId = InlineQueryId(resultNumber.toString())
                     InlineQueryResultArticle(
-                        resultAsString,
+                        inlineQueryId,
                         "Title $resultNumber",
                         InputTextMessageContent(
                             buildEntities {
