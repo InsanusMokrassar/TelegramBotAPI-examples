@@ -1,3 +1,7 @@
+import dev.inmo.kslog.common.KSLog
+import dev.inmo.kslog.common.LogLevel
+import dev.inmo.kslog.common.defaultMessageFormatter
+import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.micro_utils.coroutines.runCatchingSafely
 import dev.inmo.tgbotapi.bot.ktor.telegramBot
 import dev.inmo.tgbotapi.extensions.api.bot.setMyCommands
@@ -18,6 +22,15 @@ import dev.inmo.tgbotapi.utils.row
 
 suspend fun main(args: Array<String>) {
     val botToken = args.first()
+    val isDebug = args.getOrNull(1) == "debug"
+
+    if (isDebug) {
+        setDefaultKSLog(
+            KSLog { level: LogLevel, tag: String?, message: Any, throwable: Throwable? ->
+                println(defaultMessageFormatter(level, tag, message, throwable))
+            }
+        )
+    }
 
     val bot = telegramBot(botToken)
 
@@ -55,35 +68,53 @@ suspend fun main(args: Array<String>) {
         row {
             requestUserOrBotButton(
                 "\uD83D\uDC64/\uD83E\uDD16 (1)",
-                requestIdUserOrBot
+                requestIdUserOrBot,
+                requestName = true,
+                requestUsername = true,
+                requestPhoto = true
             )
         }
         row {
             requestUserButton(
                 "\uD83D\uDC64☆ (1)",
                 requestIdUserNonPremium,
-                premiumUser = false
+                premiumUser = false,
+                requestName = true,
+                requestUsername = true,
+                requestPhoto = true
             )
             requestUserButton(
                 "\uD83D\uDC64 (1)",
                 requestIdUserAny,
-                premiumUser = null
+                premiumUser = null,
+                requestName = true,
+                requestUsername = true,
+                requestPhoto = true
             )
             requestUserButton(
                 "\uD83D\uDC64★ (1)",
                 requestIdUserPremium,
-                premiumUser = true
+                premiumUser = true,
+                requestName = true,
+                requestUsername = true,
+                requestPhoto = true
             )
             requestBotButton(
                 "\uD83E\uDD16 (1)",
-                requestIdBot
+                requestIdBot,
+                requestName = true,
+                requestUsername = true,
+                requestPhoto = true
             )
         }
         row {
             requestUsersOrBotsButton(
                 "\uD83D\uDC64/\uD83E\uDD16",
                 requestIdUsersOrBots,
-                maxCount = keyboardButtonRequestUserLimit.last
+                maxCount = keyboardButtonRequestUserLimit.last,
+                requestName = true,
+                requestUsername = true,
+                requestPhoto = true
             )
         }
         row {
@@ -91,101 +122,152 @@ suspend fun main(args: Array<String>) {
                 "\uD83D\uDC64☆",
                 requestIdUsersNonPremium,
                 premiumUser = false,
-                maxCount = keyboardButtonRequestUserLimit.last
+                maxCount = keyboardButtonRequestUserLimit.last,
+                requestName = true,
+                requestUsername = true,
+                requestPhoto = true
             )
             requestUsersButton(
                 "\uD83D\uDC64",
                 requestIdUsersAny,
                 premiumUser = null,
-                maxCount = keyboardButtonRequestUserLimit.last
+                maxCount = keyboardButtonRequestUserLimit.last,
+                requestName = true,
+                requestUsername = true,
+                requestPhoto = true
             )
             requestUsersButton(
                 "\uD83D\uDC64★",
                 requestIdUsersPremium,
                 premiumUser = true,
-                maxCount = keyboardButtonRequestUserLimit.last
+                maxCount = keyboardButtonRequestUserLimit.last,
+                requestName = true,
+                requestUsername = true,
+                requestPhoto = true
             )
             requestBotsButton(
                 "\uD83E\uDD16",
                 requestIdBots,
-                maxCount = keyboardButtonRequestUserLimit.last
+                maxCount = keyboardButtonRequestUserLimit.last,
+                requestName = true,
+                requestUsername = true,
+                requestPhoto = true
             )
         }
         row {
             requestChatButton(
                 "\uD83D\uDDE3/\uD83D\uDC65",
-                requestIdAnyChat
+                requestIdAnyChat,
+                requestTitle = true,
+                requestUsername = true,
+                requestPhoto = true
             )
         }
         row {
             requestChatButton(
                 "\uD83D\uDDE3",
                 requestIdChannel,
-                isChannel = true
+                isChannel = true,
+                requestTitle = true,
+                requestUsername = true,
+                requestPhoto = true
             )
             requestChatButton(
                 "\uD83D\uDDE3\uD83D\uDD17",
                 requestIdPublicChannel,
                 isChannel = true,
-                isPublic = true
+                isPublic = true,
+                requestTitle = true,
+                requestUsername = true,
+                requestPhoto = true
             )
             requestChatButton(
                 "\uD83D\uDDE3❌\uD83D\uDD17",
                 requestIdPrivateChannel,
                 isChannel = true,
-                isPublic = false
+                isPublic = false,
+                requestTitle = true,
+                requestUsername = true,
+                requestPhoto = true
             )
             requestChatButton(
                 "\uD83D\uDDE3\uD83D\uDC6E",
                 requestIdChannelUserOwner,
                 isChannel = true,
-                isOwnedBy = true
+                isOwnedBy = true,
+                requestTitle = true,
+                requestUsername = true,
+                requestPhoto = true
             )
         }
         row {
             requestGroupButton(
                 "👥",
-                requestIdGroup
+                requestIdGroup,
+                requestTitle = true,
+                requestUsername = true,
+                requestPhoto = true
             )
             requestGroupButton(
                 "👥\uD83D\uDD17",
                 requestIdPublicGroup,
-                isPublic = true
+                isPublic = true,
+                requestTitle = true,
+                requestUsername = true,
+                requestPhoto = true
             )
             requestGroupButton(
                 "👥❌\uD83D\uDD17",
                 requestIdPrivateGroup,
-                isPublic = false
+                isPublic = false,
+                requestTitle = true,
+                requestUsername = true,
+                requestPhoto = true
             )
             requestGroupButton(
                 "👥\uD83D\uDC6E",
                 requestIdGroupUserOwner,
-                isOwnedBy = true
+                isOwnedBy = true,
+                requestTitle = true,
+                requestUsername = true,
+                requestPhoto = true
             )
         }
         row {
             requestGroupButton(
                 "🏛",
                 requestIdForum,
-                isForum = true
+                isForum = true,
+                requestTitle = true,
+                requestUsername = true,
+                requestPhoto = true
             )
             requestGroupButton(
                 "🏛\uD83D\uDD17",
                 requestIdPublicForum,
                 isPublic = true,
-                isForum = true
+                isForum = true,
+                requestTitle = true,
+                requestUsername = true,
+                requestPhoto = true
             )
             requestGroupButton(
                 "🏛❌\uD83D\uDD17",
                 requestIdPrivateForum,
                 isPublic = false,
-                isForum = true
+                isForum = true,
+                requestTitle = true,
+                requestUsername = true,
+                requestPhoto = true
             )
             requestGroupButton(
                 "🏛\uD83D\uDC6E",
                 requestIdForumUserOwner,
                 isOwnedBy = true,
-                isForum = true
+                isForum = true,
+                requestTitle = true,
+                requestUsername = true,
+                requestPhoto = true
             )
         }
     }

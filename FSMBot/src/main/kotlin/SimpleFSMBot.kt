@@ -1,4 +1,5 @@
 import dev.inmo.micro_utils.coroutines.AccumulatorFlow
+import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.micro_utils.fsm.common.State
 import dev.inmo.tgbotapi.extensions.api.send.send
 import dev.inmo.tgbotapi.extensions.api.send.sendMessage
@@ -8,6 +9,8 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
 import dev.inmo.tgbotapi.extensions.utils.extensions.parseCommandsWithArgs
 import dev.inmo.tgbotapi.extensions.utils.extensions.sameThread
 import dev.inmo.tgbotapi.extensions.utils.formatting.*
+import dev.inmo.tgbotapi.extensions.utils.textContentOrNull
+import dev.inmo.tgbotapi.extensions.utils.withContentOrNull
 import dev.inmo.tgbotapi.types.IdChatIdentifier
 import dev.inmo.tgbotapi.types.MessageThreadId
 import dev.inmo.tgbotapi.types.message.abstracts.CommonMessage
@@ -54,7 +57,8 @@ suspend fun main(args: Array<String>) {
             val content = contentMessage.content
 
             when {
-                content is TextContent && content.parseCommandsWithArgs().keys.contains("stop") -> StopState(it.context)
+                content is TextContent && content.text == "/stop"
+                || content is TextContent && content.parseCommandsWithArgs().keys.contains("stop") -> StopState(it.context)
                 else -> {
                     execute(content.createResend(it.context))
                     it
@@ -71,6 +75,18 @@ suspend fun main(args: Array<String>) {
             "start"
         ) {
             startChain(ExpectContentOrStopState(it.chat.id, it))
+        }
+
+        onContentMessage(
+            {
+                it.content.textContentOrNull() ?.text == "/start"
+            }
+        ) {
+            startChain(ExpectContentOrStopState(it.chat.id, it.withContentOrNull() ?: return@onContentMessage))
+        }
+
+        allUpdatesFlow.subscribeSafelyWithoutExceptions(this) {
+            println(it)
         }
     }.second.join()
 }

@@ -10,6 +10,7 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
 import dev.inmo.tgbotapi.extensions.utils.shortcuts.*
 import dev.inmo.tgbotapi.extensions.utils.withContentOrNull
 import dev.inmo.tgbotapi.types.ReplyParameters
+import dev.inmo.tgbotapi.types.message.abstracts.BusinessContentMessage
 import dev.inmo.tgbotapi.types.message.content.TextContent
 import dev.inmo.tgbotapi.types.quoteEntitiesField
 import dev.inmo.tgbotapi.utils.extensions.threadIdOrNull
@@ -22,6 +23,7 @@ suspend fun activateResenderBot(
     telegramBotWithBehaviourAndLongPolling(token, scope = CoroutineScope(currentCoroutineContext() + SupervisorJob())) {
         onContentMessage(
             subcontextUpdatesFilter = MessageFilterByChat,
+            initialFilter = { it !is BusinessContentMessage<*> || !it.sentByBusinessConnectionOwner }
         ) {
             val chat = it.chat
 

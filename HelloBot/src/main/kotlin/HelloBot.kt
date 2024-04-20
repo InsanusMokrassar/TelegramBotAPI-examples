@@ -56,6 +56,10 @@ suspend fun main(vararg args: String) {
                         } ?: chat.title
                     }
                 }
+                is PreviewBusinessChat -> {
+                    reply(message, "Hi, " + "${chat.original.firstName} ${chat.original.lastName} (as business chat :) )".textMentionMarkdownV2(chat.original.id), MarkdownV2)
+                    return@onMentionWithAnyContent
+                }
                 is UnknownChatType -> "Unknown :(".escapeMarkdownV2Common()
             }
             reply(
