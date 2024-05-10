@@ -49,3 +49,5 @@ include ":LinkPreviewsBot"
 include ":BoostsInfoBot"
 
 include ":BusinessConnectionsBot"
+
+include ":CustomBot"
