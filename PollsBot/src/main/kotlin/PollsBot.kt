@@ -67,7 +67,12 @@ suspend fun main(vararg args: String) {
                 ?.firstNotNullOfOrNull { it.customEmojiTextSourceOrNull() }
             val sentPoll = sendRegularPoll(
                 it.chat.id,
-                "Test regular anonymous poll",
+                buildEntities {
+                    regular("Test regular anonymous poll")
+                    if (customEmoji != null) {
+                        customEmoji(customEmoji.customEmojiId, customEmoji.subsources)
+                    }
+                },
                 (1 .. 10).map {
                     InputPollOption {
                         regular(it.toString()) + " "
@@ -92,7 +97,12 @@ suspend fun main(vararg args: String) {
                 ?.firstNotNullOfOrNull { it.customEmojiTextSourceOrNull() }
             val sentPoll = sendRegularPoll(
                 it.chat.id,
-                "Test regular non anonymous poll",
+                buildEntities {
+                    regular("Test regular non anonymous poll")
+                    if (customEmoji != null) {
+                        customEmoji(customEmoji.customEmojiId, customEmoji.subsources)
+                    }
+                },
                 (1 .. 10).map {
                     InputPollOption {
                         regular(it.toString()) + " "
@@ -118,7 +128,12 @@ suspend fun main(vararg args: String) {
             val correctAnswer = Random.nextInt(10)
             val sentPoll = sendQuizPoll(
                 it.chat.id,
-                "Test quiz poll",
+                questionEntities = buildEntities {
+                    regular("Test quiz poll")
+                    if (customEmoji != null) {
+                        customEmoji(customEmoji.customEmojiId, customEmoji.subsources)
+                    }
+                },
                 (1 .. 10).map {
                     InputPollOption {
                         regular(it.toString()) + " "
@@ -131,7 +146,10 @@ suspend fun main(vararg args: String) {
                 replyParameters = ReplyParameters(it),
                 correctOptionId = correctAnswer,
                 explanationTextSources = buildEntities {
-                    regular("Random solved it to be ") + underline((correctAnswer + 1).toString())
+                    regular("Random solved it to be ") + underline((correctAnswer + 1).toString()) + " "
+                    if (customEmoji != null) {
+                        customEmoji(customEmoji.customEmojiId, customEmoji.subsources)
+                    }
                 }
             )
             pollToChatMutex.withLock {
