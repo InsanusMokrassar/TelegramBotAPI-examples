@@ -1,33 +1,16 @@
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.tgbotapi.extensions.api.EditLiveLocationInfo
-import dev.inmo.tgbotapi.extensions.api.chat.get.getChat
-import dev.inmo.tgbotapi.extensions.api.edit.edit
 import dev.inmo.tgbotapi.extensions.api.edit.location.live.stopLiveLocation
 import dev.inmo.tgbotapi.extensions.api.handleLiveLocation
-import dev.inmo.tgbotapi.extensions.api.send.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitMessageDataCallbackQuery
-import dev.inmo.tgbotapi.extensions.behaviour_builder.oneOf
-import dev.inmo.tgbotapi.extensions.behaviour_builder.parallel
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
-import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onContentMessage
 import dev.inmo.tgbotapi.extensions.utils.extensions.sameMessage
-import dev.inmo.tgbotapi.extensions.utils.formatting.linkMarkdownV2
-import dev.inmo.tgbotapi.extensions.utils.formatting.textMentionMarkdownV2
-import dev.inmo.tgbotapi.extensions.utils.ifFromChannelGroupContentMessage
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.dataButton
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.flatInlineKeyboard
-import dev.inmo.tgbotapi.types.chat.*
-import dev.inmo.tgbotapi.types.chat.GroupChat
-import dev.inmo.tgbotapi.types.chat.PrivateChat
-import dev.inmo.tgbotapi.types.chat.SupergroupChat
 import dev.inmo.tgbotapi.types.location.LiveLocation
-import dev.inmo.tgbotapi.types.message.MarkdownV2
 import dev.inmo.tgbotapi.types.message.abstracts.ContentMessage
-import dev.inmo.tgbotapi.types.message.content.LiveLocationContent
 import dev.inmo.tgbotapi.types.message.content.LocationContent
-import dev.inmo.tgbotapi.utils.PreviewFeature
-import dev.inmo.tgbotapi.utils.extensions.escapeMarkdownV2Common
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -64,7 +47,7 @@ suspend fun main(vararg args: String) {
                 handleLiveLocation(
                     it.chat.id,
                     locationsFlow,
-                    sentMessageFlow = FlowCollector { currentMessageState.emit(it) }
+                    sentMessageFlow = FlowCollector { currentMessageState.emit(it) },
                 )
             }
 
