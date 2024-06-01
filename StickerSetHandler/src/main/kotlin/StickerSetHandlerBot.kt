@@ -1,4 +1,5 @@
 import dev.inmo.micro_utils.coroutines.runCatchingSafely
+import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.files.downloadFile
 import dev.inmo.tgbotapi.extensions.api.files.downloadFileToTemp
@@ -77,10 +78,18 @@ suspend fun main(args: Array<String>) {
             runCatchingSafely {
                 getStickerSet(stickerSetName)
             }.onSuccess { stickerSet ->
-                addStickerToSet(it.chat.id.toChatId(), stickerSet.name, newSticker).also { _ ->
+                runCatching {
+                    addStickerToSet(it.chat.id.toChatId(), stickerSet.name, newSticker).also { _ ->
+                        reply(
+                            it,
+                            getStickerSet(stickerSetName).stickers.last()
+                        )
+                    }
+                }.onFailure { exception ->
+                    exception.printStackTrace()
                     reply(
                         it,
-                        getStickerSet(stickerSetName).stickers.last()
+                        "Unable to add sticker in stickerset"
                     )
                 }
             }.onFailure { exception ->
@@ -99,6 +108,10 @@ suspend fun main(args: Array<String>) {
                     )
                 }
             }
+        }
+
+        allUpdatesFlow.subscribeSafelyWithoutExceptions(this) {
+            println(it)
         }
     }.second.join()
 }

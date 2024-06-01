@@ -7,6 +7,7 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.*
 import dev.inmo.tgbotapi.extensions.behaviour_builder.filters.CommonMessageFilterExcludeMediaGroups
 import dev.inmo.tgbotapi.extensions.behaviour_builder.filters.MessageFilterByChat
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
+import dev.inmo.tgbotapi.extensions.utils.possiblyWithEffectMessageOrNull
 import dev.inmo.tgbotapi.extensions.utils.shortcuts.*
 import dev.inmo.tgbotapi.extensions.utils.withContentOrNull
 import dev.inmo.tgbotapi.types.ReplyParameters
@@ -39,7 +40,8 @@ suspend fun activateResenderBot(
                                 entities = quote ?.textSources ?: emptyList(),
                                 quotePosition = quote ?.position
                             )
-                        }
+                        },
+                        effectId = it.possiblyWithEffectMessageOrNull() ?.effectId
                     )
                 ) {
                     it.forEach(print)
