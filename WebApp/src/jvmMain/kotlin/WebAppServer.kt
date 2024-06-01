@@ -1,7 +1,4 @@
-import dev.inmo.kslog.common.KSLog
-import dev.inmo.kslog.common.LogLevel
-import dev.inmo.kslog.common.defaultMessageFormatter
-import dev.inmo.kslog.common.setDefaultKSLog
+import dev.inmo.kslog.common.*
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.micro_utils.ktor.server.createKtorServer
 import dev.inmo.tgbotapi.extensions.api.answers.answer
@@ -40,6 +37,7 @@ import java.nio.charset.Charset
  *
  * * Telegram Token
  * * URL where will be placed
+ * * Port (default 8080)
  *
  * Will start the server to share the static (index.html and WebApp.js) on 0.0.0.0:8080
  */
@@ -58,6 +56,7 @@ suspend fun main(vararg args: String) {
             }
         )
     }
+    val initiationLogger = KSLog("Initialization")
 
     val bot = telegramBot(telegramBotAPIUrlsKeeper)
     createKtorServer(
@@ -69,12 +68,28 @@ suspend fun main(vararg args: String) {
     ) {
         routing {
             val baseJsFolder = File("WebApp/build/dist/js/")
-            baseJsFolder.list() ?.forEach {
-                if (it == "productionExecutable" || it == "developmentExecutable") {
-                    staticFiles("", File(baseJsFolder, it)) {
-                        default("WebApp/build/dist/js/$it/index.html")
-                    }
+            val prodSubFolder = File(baseJsFolder, "productionExecutable")
+            val devSubFolder = File(baseJsFolder, "developmentExecutable")
+
+            val staticFolder = when {
+                prodSubFolder.exists() -> {
+                    initiationLogger.i("Folder for static is ${prodSubFolder.absolutePath}")
+                    prodSubFolder
                 }
+                devSubFolder.exists() -> {
+                    initiationLogger.i("Folder for static is ${devSubFolder.absolutePath}")
+                    devSubFolder
+                }
+                else -> error("""
+                    Unable to detect any folder with static. Current working directory: ${File("").absolutePath}.
+                    Searched paths:
+                    * ${prodSubFolder.absolutePath}
+                    * ${devSubFolder.absolutePath}
+                """.trimIndent())
+            }
+
+            staticFiles("", staticFolder) {
+                default("${staticFolder.absolutePath}${File.separator}index.html")
             }
             post("inline") {
                 val requestBody = call.receiveText()
