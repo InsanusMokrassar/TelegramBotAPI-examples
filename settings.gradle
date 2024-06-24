@@ -50,4 +50,6 @@ include ":BoostsInfoBot"
 
 include ":BusinessConnectionsBot"
 
+include ":StarTransactionsBot"
+
 include ":CustomBot"
