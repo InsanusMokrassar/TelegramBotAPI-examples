@@ -5,7 +5,6 @@ import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.tgbotapi.extensions.api.answers.payments.answerPreCheckoutQueryOk
 import dev.inmo.tgbotapi.extensions.api.edit.edit
-import dev.inmo.tgbotapi.extensions.api.files.downloadFile
 import dev.inmo.tgbotapi.extensions.api.files.downloadFileToTemp
 import dev.inmo.tgbotapi.extensions.api.get.getStarTransactions
 import dev.inmo.tgbotapi.extensions.api.send.reply
@@ -29,7 +28,6 @@ import dev.inmo.tgbotapi.types.media.toTelegramPaidMediaPhoto
 import dev.inmo.tgbotapi.types.media.toTelegramPaidMediaVideo
 import dev.inmo.tgbotapi.types.message.content.TextContent
 import dev.inmo.tgbotapi.types.message.textsources.TextSourcesList
-import dev.inmo.tgbotapi.types.message.textsources.textSourcesOrElse
 import dev.inmo.tgbotapi.types.payments.LabeledPrice
 import dev.inmo.tgbotapi.types.payments.stars.StarTransaction
 import dev.inmo.tgbotapi.utils.bold
@@ -39,7 +37,9 @@ import dev.inmo.tgbotapi.utils.row
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
-
+/**
+ * An example bot that interacts with Telegram Stars API (used for payments)
+ */
 suspend fun main(vararg args: String) {
     val botToken = args.first()
     val adminUserId = args.getOrNull(1) ?.toLongOrNull() ?.let(::RawChatId) ?.let(::UserId) ?: error("Pass user-admin for full access to the bot")
