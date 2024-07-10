@@ -174,6 +174,17 @@ suspend fun main(vararg args: String) {
             )
         }
 
+        onPaidMediaInfoContent {
+            println(it)
+        }
+
+        onRefundedPayment {
+            reply(
+                it,
+                "Received your refund: ${it.chatEvent.payment}"
+            )
+        }
+
         allUpdatesFlow.subscribeSafelyWithoutExceptions(this) { println(it) }
     }.second.join()
 }
