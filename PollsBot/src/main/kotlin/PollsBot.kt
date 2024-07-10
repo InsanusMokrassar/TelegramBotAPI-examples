@@ -1,46 +1,41 @@
-import com.benasher44.uuid.uuid4
 import dev.inmo.kslog.common.KSLog
 import dev.inmo.kslog.common.LogLevel
 import dev.inmo.kslog.common.defaultMessageFormatter
 import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
-import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.bot.setMyCommands
-import dev.inmo.tgbotapi.extensions.api.chat.get.getChat
-import dev.inmo.tgbotapi.extensions.api.send.*
 import dev.inmo.tgbotapi.extensions.api.send.polls.sendQuizPoll
 import dev.inmo.tgbotapi.extensions.api.send.polls.sendRegularPoll
+import dev.inmo.tgbotapi.extensions.api.send.send
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
-import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onPollAnswer
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onPollUpdates
 import dev.inmo.tgbotapi.extensions.utils.customEmojiTextSourceOrNull
 import dev.inmo.tgbotapi.extensions.utils.extensions.parseCommandsWithArgsSources
-import dev.inmo.tgbotapi.extensions.utils.extensions.raw.sender_chat
-import dev.inmo.tgbotapi.extensions.utils.formatting.linkMarkdownV2
-import dev.inmo.tgbotapi.extensions.utils.formatting.textMentionMarkdownV2
-import dev.inmo.tgbotapi.extensions.utils.ifChannelChat
-import dev.inmo.tgbotapi.extensions.utils.ifFromChannelGroupContentMessage
-import dev.inmo.tgbotapi.types.*
-import dev.inmo.tgbotapi.types.chat.*
-import dev.inmo.tgbotapi.types.chat.GroupChat
-import dev.inmo.tgbotapi.types.chat.PrivateChat
-import dev.inmo.tgbotapi.types.chat.SupergroupChat
-import dev.inmo.tgbotapi.types.message.MarkdownV2
-import dev.inmo.tgbotapi.types.polls.*
-import dev.inmo.tgbotapi.utils.*
-import dev.inmo.tgbotapi.utils.extensions.escapeMarkdownV2Common
-import kotlinx.coroutines.*
+import dev.inmo.tgbotapi.types.BotCommand
+import dev.inmo.tgbotapi.types.IdChatIdentifier
+import dev.inmo.tgbotapi.types.PollId
+import dev.inmo.tgbotapi.types.ReplyParameters
+import dev.inmo.tgbotapi.types.polls.InputPollOption
+import dev.inmo.tgbotapi.types.polls.PollAnswer
+import dev.inmo.tgbotapi.utils.buildEntities
+import dev.inmo.tgbotapi.utils.customEmoji
+import dev.inmo.tgbotapi.utils.regular
+import dev.inmo.tgbotapi.utils.underline
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.random.Random
 
 /**
  * This bot will answer with anonymous or public poll and send message on
- * updates of any of it.
+ * any update.
  * 
  * * Use `/anonymous` to take anonymous regular poll
  * * Use `/public` to take public regular poll
  */
-@OptIn(PreviewFeature::class)
 suspend fun main(vararg args: String) {
     val botToken = args.first()
     val isDebug = args.any { it == "debug" }
@@ -54,8 +49,6 @@ suspend fun main(vararg args: String) {
     }
 
     telegramBotWithBehaviourAndLongPolling(botToken, CoroutineScope(Dispatchers.IO)) {
-        val me = getMe()
-
         val pollToChat = mutableMapOf<PollId, IdChatIdentifier>()
         val pollToChatMutex = Mutex()
 

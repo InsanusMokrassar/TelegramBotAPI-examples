@@ -16,7 +16,9 @@ import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.send
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
 import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviourWithFSMAndStartLongPolling
-import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.*
+import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitChatSharedEventsMessages
+import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitCommandMessage
+import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitUserSharedEventsMessages
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMessageDataCallbackQuery
 import dev.inmo.tgbotapi.extensions.utils.*
@@ -27,12 +29,12 @@ import dev.inmo.tgbotapi.types.buttons.InlineKeyboardMarkup
 import dev.inmo.tgbotapi.types.chat.ChannelChat
 import dev.inmo.tgbotapi.types.chat.ChatPermissions
 import dev.inmo.tgbotapi.types.chat.PublicChat
-import dev.inmo.tgbotapi.types.chat.member.*
+import dev.inmo.tgbotapi.types.chat.member.AdministratorChatMember
+import dev.inmo.tgbotapi.types.chat.member.ChatCommonAdministratorRights
 import dev.inmo.tgbotapi.types.commands.BotCommandScope
 import dev.inmo.tgbotapi.types.message.abstracts.AccessibleMessage
 import dev.inmo.tgbotapi.types.request.RequestId
 import dev.inmo.tgbotapi.utils.*
-import dev.inmo.tgbotapi.utils.mention
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
@@ -52,6 +54,7 @@ sealed interface UserRetrievingStep : State {
     ) : UserRetrievingStep
 }
 
+@OptIn(PreviewFeature::class)
 suspend fun main(args: Array<String>) {
     val botToken = args.first()
 
@@ -194,7 +197,7 @@ suspend fun main(args: Array<String>) {
         }
     }
 
-    bot.buildBehaviourWithFSMAndStartLongPolling<UserRetrievingStep>(
+    bot.buildBehaviourWithFSMAndStartLongPolling(
         defaultExceptionsHandler = {
             it.printStackTrace()
         },
@@ -224,7 +227,6 @@ suspend fun main(args: Array<String>) {
             }
         ) {
             val replyMessage = it.replyTo
-            val usernameInText = it.content.textSources.firstNotNullOfOrNull { it.mentionTextSourceOrNull() } ?.username
             val userInReply = replyMessage?.fromUserMessageOrNull()?.user?.id ?: return@onCommand
 
             if (replyMessage is AccessibleMessage) {
@@ -381,7 +383,6 @@ suspend fun main(args: Array<String>) {
             val userId = ChatId(RawChatId(userIdString.toLong()))
             val chatMember = getChatMember(channelId, userId)
             val asAdmin = chatMember.administratorChatMemberOrNull()
-            val asMember = chatMember.memberChatMemberOrNull()
 
             val realData = it.data.takeWhile { it != ' ' }
 
@@ -503,10 +504,7 @@ suspend fun main(args: Array<String>) {
 
         strictlyOn<UserRetrievingStep.RetrievingChatInfoDoneState> { state ->
             val chatMember = getChatMember(state.channelId, state.userId).administratorChatMemberOrNull()
-            if (chatMember == null) {
-
-                return@strictlyOn null
-            }
+                ?: return@strictlyOn null
             send(
                 state.context,
                 replyMarkup = buildAdminRightsKeyboard(

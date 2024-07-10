@@ -3,9 +3,7 @@ import dev.inmo.kslog.common.LogLevel
 import dev.inmo.kslog.common.defaultMessageFormatter
 import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
-import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.answers.payments.answerPreCheckoutQueryOk
-import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.edit.edit
 import dev.inmo.tgbotapi.extensions.api.files.downloadFile
 import dev.inmo.tgbotapi.extensions.api.files.downloadFileToTemp
@@ -30,18 +28,18 @@ import dev.inmo.tgbotapi.types.media.TelegramPaidMediaVideo
 import dev.inmo.tgbotapi.types.media.toTelegramPaidMediaPhoto
 import dev.inmo.tgbotapi.types.media.toTelegramPaidMediaVideo
 import dev.inmo.tgbotapi.types.message.content.TextContent
-import dev.inmo.tgbotapi.types.message.textsources.TextSource
 import dev.inmo.tgbotapi.types.message.textsources.TextSourcesList
 import dev.inmo.tgbotapi.types.message.textsources.textSourcesOrElse
 import dev.inmo.tgbotapi.types.payments.LabeledPrice
 import dev.inmo.tgbotapi.types.payments.stars.StarTransaction
-import dev.inmo.tgbotapi.utils.*
-import kotlinx.coroutines.*
+import dev.inmo.tgbotapi.utils.bold
+import dev.inmo.tgbotapi.utils.buildEntities
+import dev.inmo.tgbotapi.utils.regular
+import dev.inmo.tgbotapi.utils.row
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 
-/**
- * The main purpose of this bot is just to answer "Oh, hi, " and add user mention here
- */
-@OptIn(PreviewFeature::class)
+
 suspend fun main(vararg args: String) {
     val botToken = args.first()
     val adminUserId = args.getOrNull(1) ?.toLongOrNull() ?.let(::RawChatId) ?.let(::UserId) ?: error("Pass user-admin for full access to the bot")
@@ -58,8 +56,6 @@ suspend fun main(vararg args: String) {
     }
 
     telegramBotWithBehaviourAndLongPolling(botToken, CoroutineScope(Dispatchers.IO), testServer = isTestServer) {
-        val me = getMe()
-
         val payload = "sample payload"
         command("start") {
             reply(
