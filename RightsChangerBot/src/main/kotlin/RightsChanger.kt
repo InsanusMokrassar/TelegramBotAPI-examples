@@ -197,7 +197,7 @@ suspend fun main(args: Array<String>) {
         }
     }
 
-    bot.buildBehaviourWithFSMAndStartLongPolling(
+    bot.buildBehaviourWithFSMAndStartLongPolling<UserRetrievingStep>(
         defaultExceptionsHandler = {
             it.printStackTrace()
         },
