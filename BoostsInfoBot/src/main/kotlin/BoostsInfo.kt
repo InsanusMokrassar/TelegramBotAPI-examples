@@ -52,12 +52,19 @@ suspend fun main(args: Array<String>) {
         }
 
         onChatShared(initialFilter = { it.chatEvent.requestId == requestChatId }) {
-            val boosts = getUserChatBoosts(it.chatEvent.chatId, it.chat.id)
-            reply(
-                it
-            ) {
-                boosts.boosts.forEach {
-                    regular("Boost added: ${DateFormat.FORMAT1.format(it.addDate.asDate)}; Boost expire: ${DateFormat.FORMAT1.format(it.expirationDate.asDate)}; Unformatted: $it") + "\n"
+            val boostsInfoContrainer = runCatching {
+                getUserChatBoosts(it.chatEvent.chatId, it.chat.id)
+            }.getOrNull()
+
+            reply(it) {
+                when {
+                    boostsInfoContrainer == null -> +"Unable to take info about boosts in shared chat"
+                    boostsInfoContrainer.boosts.isEmpty() -> +"There is no any boosts in passed chat"
+                    else -> {
+                        boostsInfoContrainer.boosts.forEach {
+                            regular("Boost added: ${DateFormat.FORMAT1.format(it.addDate.asDate)}; Boost expire: ${DateFormat.FORMAT1.format(it.expirationDate.asDate)}; Unformatted: $it") + "\n"
+                        }
+                    }
                 }
             }
         }
