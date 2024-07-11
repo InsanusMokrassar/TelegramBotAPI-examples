@@ -1,15 +1,13 @@
 import dev.inmo.kslog.common.KSLog
 import dev.inmo.kslog.common.LogLevel
 import dev.inmo.kslog.common.defaultMessageFormatter
-import dev.inmo.kslog.common.filter.filtered
 import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.tgbotapi.bot.ktor.telegramBot
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.chat.get.getChat
-import dev.inmo.tgbotapi.utils.DefaultKTgBotAPIKSLog
 
 /**
- * This is one of the most easiest bot - it will just print information about itself
+ * This is one of the easiest bots - it will just print information about itself
  */
 suspend fun main(vararg args: String) {
     val botToken = args.first()

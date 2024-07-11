@@ -1,16 +1,20 @@
 import dev.inmo.kslog.common.*
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.micro_utils.ktor.server.createKtorServer
-import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.answers.answerInlineQuery
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.bot.setMyCommands
-import dev.inmo.tgbotapi.extensions.api.send.*
+import dev.inmo.tgbotapi.extensions.api.send.reply
+import dev.inmo.tgbotapi.extensions.api.send.send
 import dev.inmo.tgbotapi.extensions.api.telegramBot
-import dev.inmo.tgbotapi.extensions.behaviour_builder.*
-import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
-import dev.inmo.tgbotapi.extensions.utils.formatting.makeTelegramStartattach
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.*
+import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviourWithLongPolling
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onBaseInlineQuery
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onUnhandledCommand
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onWriteAccessAllowed
+import dev.inmo.tgbotapi.extensions.utils.types.buttons.inlineKeyboard
+import dev.inmo.tgbotapi.extensions.utils.types.buttons.replyKeyboard
+import dev.inmo.tgbotapi.extensions.utils.types.buttons.webAppButton
 import dev.inmo.tgbotapi.requests.answers.InlineQueryResultsButton
 import dev.inmo.tgbotapi.types.BotCommand
 import dev.inmo.tgbotapi.types.InlineQueries.InlineQueryResult.InlineQueryResultArticle
@@ -21,16 +25,14 @@ import dev.inmo.tgbotapi.types.webAppQueryIdField
 import dev.inmo.tgbotapi.types.webapps.WebAppInfo
 import dev.inmo.tgbotapi.utils.*
 import io.ktor.http.*
-import io.ktor.server.application.call
+import io.ktor.server.application.*
 import io.ktor.server.http.content.*
-import io.ktor.server.request.receiveText
-import io.ktor.server.response.respond
-import io.ktor.server.routing.post
-import io.ktor.server.routing.routing
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.json.Json
 import java.io.File
-import java.nio.charset.Charset
 
 /**
  * Accepts two parameters:
@@ -100,7 +102,7 @@ suspend fun main(vararg args: String) {
             }
             post("check") {
                 val requestBody = call.receiveText()
-                val webAppCheckData = Json {  }.decodeFromString(WebAppDataWrapper.serializer(), requestBody)
+                val webAppCheckData = Json.decodeFromString(WebAppDataWrapper.serializer(), requestBody)
 
                 val isSafe = telegramBotAPIUrlsKeeper.checkWebAppData(webAppCheckData.data, webAppCheckData.hash)
 
@@ -112,7 +114,6 @@ suspend fun main(vararg args: String) {
     bot.buildBehaviourWithLongPolling(
         defaultExceptionsHandler = { it.printStackTrace() }
     ) {
-        val me = getMe()
         onCommand("reply_markup") {
             reply(
                 it,

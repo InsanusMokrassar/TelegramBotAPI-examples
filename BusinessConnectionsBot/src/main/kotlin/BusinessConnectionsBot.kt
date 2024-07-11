@@ -49,22 +49,22 @@ suspend fun main(args: Array<String>) {
         }
 
         onContentMessage {
-            it.ifBusinessContentMessage {
-                val sent = execute(it.content.createResend(it.from.id))
-                if (it.sentByBusinessConnectionOwner) {
-                    reply(sent, "You have sent this message to the ${it.businessConnectionId.string} related chat")
+            it.ifBusinessContentMessage { businessContentMessage ->
+                val sent = execute(it.content.createResend(businessContentMessage.from.id))
+                if (businessContentMessage.sentByBusinessConnectionOwner) {
+                    reply(sent, "You have sent this message to the ${businessContentMessage.businessConnectionId.string} related chat")
                 } else {
-                    reply(sent, "User have sent this message to you in the ${it.businessConnectionId.string} related chat")
+                    reply(sent, "User have sent this message to you in the ${businessContentMessage.businessConnectionId.string} related chat")
                 }
             }
         }
         onEditedContentMessage {
-            it.ifBusinessContentMessage {
-                val sent = execute(it.content.createResend(it.from.id))
-                if (it.sentByBusinessConnectionOwner) {
-                    reply(sent, "You have edited this message in the ${it.businessConnectionId.string} related chat")
+            it.ifBusinessContentMessage { businessContentMessage ->
+                val sent = execute(businessContentMessage.content.createResend(businessContentMessage.from.id))
+                if (businessContentMessage.sentByBusinessConnectionOwner) {
+                    reply(sent, "You have edited this message in the ${businessContentMessage.businessConnectionId.string} related chat")
                 } else {
-                    reply(sent, "User have edited this message to you in the ${it.businessConnectionId.string} related chat")
+                    reply(sent, "User have edited this message to you in the ${businessContentMessage.businessConnectionId.string} related chat")
                 }
             }
         }

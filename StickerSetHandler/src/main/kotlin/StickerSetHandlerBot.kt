@@ -1,7 +1,6 @@
 import dev.inmo.micro_utils.coroutines.runCatchingSafely
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
-import dev.inmo.tgbotapi.extensions.api.files.downloadFile
 import dev.inmo.tgbotapi.extensions.api.files.downloadFileToTemp
 import dev.inmo.tgbotapi.extensions.api.get.getStickerSet
 import dev.inmo.tgbotapi.extensions.api.send.reply
@@ -11,12 +10,14 @@ import dev.inmo.tgbotapi.extensions.api.stickers.deleteStickerSet
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onSticker
-import dev.inmo.tgbotapi.extensions.utils.extensions.raw.sticker
 import dev.inmo.tgbotapi.requests.abstracts.asMultipartFile
 import dev.inmo.tgbotapi.requests.stickers.InputSticker
 import dev.inmo.tgbotapi.types.StickerSetName
 import dev.inmo.tgbotapi.types.chat.Chat
-import dev.inmo.tgbotapi.types.files.*
+import dev.inmo.tgbotapi.types.files.CustomEmojiSticker
+import dev.inmo.tgbotapi.types.files.MaskSticker
+import dev.inmo.tgbotapi.types.files.RegularSticker
+import dev.inmo.tgbotapi.types.files.UnknownSticker
 import dev.inmo.tgbotapi.types.toChatId
 import dev.inmo.tgbotapi.utils.botCommand
 import kotlinx.coroutines.CoroutineScope

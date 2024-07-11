@@ -5,13 +5,12 @@ import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
-import dev.inmo.tgbotapi.utils.PreviewFeature
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 
 /**
- * The main purpose of this bot is just to answer "Oh, hi, " and add user mention here
+ * This place can be the playground for your code.
  */
-@OptIn(PreviewFeature::class)
 suspend fun main(vararg args: String) {
     val botToken = args.first()
 
@@ -26,7 +25,9 @@ suspend fun main(vararg args: String) {
     }
 
     telegramBotWithBehaviourAndLongPolling(botToken, CoroutineScope(Dispatchers.IO)) {
+        // start here!!
         val me = getMe()
+        println(me)
 
         allUpdatesFlow.subscribeSafelyWithoutExceptions(this) { println(it) }
     }.second.join()

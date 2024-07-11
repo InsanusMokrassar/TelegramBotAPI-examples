@@ -4,13 +4,13 @@ import dev.inmo.kslog.common.defaultMessageFormatter
 import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.tgbotapi.bot.ktor.telegramBot
 import dev.inmo.tgbotapi.extensions.api.get.getUserChatBoosts
-import dev.inmo.tgbotapi.extensions.api.send.*
+import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviourWithLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onChatBoostUpdated
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onChatShared
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.*
-import dev.inmo.tgbotapi.types.chat.member.ChatCommonAdministratorRights
+import dev.inmo.tgbotapi.extensions.utils.types.buttons.flatReplyKeyboard
+import dev.inmo.tgbotapi.extensions.utils.types.buttons.requestChannelButton
 import dev.inmo.tgbotapi.types.request.RequestId
 import dev.inmo.tgbotapi.utils.regular
 import korlibs.time.DateFormat

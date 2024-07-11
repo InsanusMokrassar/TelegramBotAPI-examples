@@ -26,6 +26,7 @@ fun HTMLElement.log(text: String) {
     appendElement("p", {})
 }
 
+@OptIn(ExperimentalUnsignedTypes::class)
 fun main() {
     console.log("Web app started")
     val client = HttpClient()
@@ -38,7 +39,7 @@ fun main() {
             scope.launchSafelyWithoutExceptions {
                 val response = client.post("$baseUrl/check") {
                     setBody(
-                        Json { }.encodeToString(
+                        Json.encodeToString(
                             WebAppDataWrapper.serializer(),
                             WebAppDataWrapper(webApp.initData, webApp.initDataUnsafe.hash)
                         )
