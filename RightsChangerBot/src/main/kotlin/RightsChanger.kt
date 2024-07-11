@@ -504,7 +504,9 @@ suspend fun main(args: Array<String>) {
 
         strictlyOn<UserRetrievingStep.RetrievingChatInfoDoneState> { state ->
             val chatMember = getChatMember(state.channelId, state.userId).administratorChatMemberOrNull()
-                ?: return@strictlyOn null
+            if (chatMember == null) {
+                return@strictlyOn null
+            }
             send(
                 state.context,
                 replyMarkup = buildAdminRightsKeyboard(
