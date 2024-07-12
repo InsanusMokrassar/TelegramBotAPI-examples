@@ -4,13 +4,13 @@ import dev.inmo.kslog.common.defaultMessageFormatter
 import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.tgbotapi.bot.ktor.telegramBot
 import dev.inmo.tgbotapi.extensions.api.get.getUserChatBoosts
-import dev.inmo.tgbotapi.extensions.api.send.*
+import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviourWithLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onChatBoostUpdated
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onChatShared
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.*
-import dev.inmo.tgbotapi.types.chat.member.ChatCommonAdministratorRights
+import dev.inmo.tgbotapi.extensions.utils.types.buttons.flatReplyKeyboard
+import dev.inmo.tgbotapi.extensions.utils.types.buttons.requestChannelButton
 import dev.inmo.tgbotapi.types.request.RequestId
 import dev.inmo.tgbotapi.utils.regular
 import korlibs.time.DateFormat
@@ -52,12 +52,19 @@ suspend fun main(args: Array<String>) {
         }
 
         onChatShared(initialFilter = { it.chatEvent.requestId == requestChatId }) {
-            val boosts = getUserChatBoosts(it.chatEvent.chatId, it.chat.id)
-            reply(
-                it
-            ) {
-                boosts.boosts.forEach {
-                    regular("Boost added: ${DateFormat.FORMAT1.format(it.addDate.asDate)}; Boost expire: ${DateFormat.FORMAT1.format(it.expirationDate.asDate)}; Unformatted: $it") + "\n"
+            val boostsInfoContrainer = runCatching {
+                getUserChatBoosts(it.chatEvent.chatId, it.chat.id)
+            }.getOrNull()
+
+            reply(it) {
+                when {
+                    boostsInfoContrainer == null -> +"Unable to take info about boosts in shared chat"
+                    boostsInfoContrainer.boosts.isEmpty() -> +"There is no any boosts in passed chat"
+                    else -> {
+                        boostsInfoContrainer.boosts.forEach {
+                            regular("Boost added: ${DateFormat.FORMAT1.format(it.addDate.asDate)}; Boost expire: ${DateFormat.FORMAT1.format(it.expirationDate.asDate)}; Unformatted: $it") + "\n"
+                        }
+                    }
                 }
             }
         }

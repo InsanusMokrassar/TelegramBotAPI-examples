@@ -1,21 +1,19 @@
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
-import dev.inmo.tgbotapi.bot.ktor.telegramBot
-import dev.inmo.tgbotapi.extensions.api.send.*
-import dev.inmo.tgbotapi.extensions.api.send.media.*
-import dev.inmo.tgbotapi.extensions.behaviour_builder.*
-import dev.inmo.tgbotapi.extensions.behaviour_builder.filters.CommonMessageFilterExcludeMediaGroups
+import dev.inmo.tgbotapi.extensions.api.send.withTypingAction
 import dev.inmo.tgbotapi.extensions.behaviour_builder.filters.MessageFilterByChat
-import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
+import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onContentMessage
 import dev.inmo.tgbotapi.extensions.utils.possiblyWithEffectMessageOrNull
-import dev.inmo.tgbotapi.extensions.utils.shortcuts.*
+import dev.inmo.tgbotapi.extensions.utils.shortcuts.executeUnsafe
 import dev.inmo.tgbotapi.extensions.utils.withContentOrNull
 import dev.inmo.tgbotapi.types.ReplyParameters
 import dev.inmo.tgbotapi.types.message.abstracts.BusinessContentMessage
 import dev.inmo.tgbotapi.types.message.content.TextContent
-import dev.inmo.tgbotapi.types.quoteEntitiesField
 import dev.inmo.tgbotapi.utils.extensions.threadIdOrNull
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.currentCoroutineContext
 
 suspend fun activateResenderBot(
     token: String,

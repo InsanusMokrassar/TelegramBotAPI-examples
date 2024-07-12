@@ -3,38 +3,43 @@ import dev.inmo.kslog.common.LogLevel
 import dev.inmo.kslog.common.defaultMessageFormatter
 import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
-import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.answers.payments.answerPreCheckoutQueryOk
-import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.edit.edit
+import dev.inmo.tgbotapi.extensions.api.files.downloadFileToTemp
 import dev.inmo.tgbotapi.extensions.api.get.getStarTransactions
 import dev.inmo.tgbotapi.extensions.api.send.reply
+import dev.inmo.tgbotapi.extensions.api.send.send
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
-import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.command
-import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
-import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMessageDataCallbackQuery
-import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onPreCheckoutQuery
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
 import dev.inmo.tgbotapi.extensions.utils.extensions.sameChat
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.dataButton
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.flatInlineKeyboard
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.inlineKeyboard
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.payButton
 import dev.inmo.tgbotapi.extensions.utils.withContentOrNull
+import dev.inmo.tgbotapi.requests.abstracts.asMultipartFile
 import dev.inmo.tgbotapi.types.RawChatId
 import dev.inmo.tgbotapi.types.UserId
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardMarkup
+import dev.inmo.tgbotapi.types.files.*
+import dev.inmo.tgbotapi.types.media.TelegramPaidMediaPhoto
+import dev.inmo.tgbotapi.types.media.TelegramPaidMediaVideo
+import dev.inmo.tgbotapi.types.media.toTelegramPaidMediaPhoto
+import dev.inmo.tgbotapi.types.media.toTelegramPaidMediaVideo
 import dev.inmo.tgbotapi.types.message.content.TextContent
-import dev.inmo.tgbotapi.types.message.textsources.TextSource
 import dev.inmo.tgbotapi.types.message.textsources.TextSourcesList
 import dev.inmo.tgbotapi.types.payments.LabeledPrice
 import dev.inmo.tgbotapi.types.payments.stars.StarTransaction
-import dev.inmo.tgbotapi.utils.*
-import kotlinx.coroutines.*
+import dev.inmo.tgbotapi.utils.bold
+import dev.inmo.tgbotapi.utils.buildEntities
+import dev.inmo.tgbotapi.utils.regular
+import dev.inmo.tgbotapi.utils.row
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 
 /**
- * The main purpose of this bot is just to answer "Oh, hi, " and add user mention here
+ * An example bot that interacts with Telegram Stars API (used for payments)
  */
-@OptIn(PreviewFeature::class)
 suspend fun main(vararg args: String) {
     val botToken = args.first()
     val adminUserId = args.getOrNull(1) ?.toLongOrNull() ?.let(::RawChatId) ?.let(::UserId) ?: error("Pass user-admin for full access to the bot")
@@ -51,8 +56,6 @@ suspend fun main(vararg args: String) {
     }
 
     telegramBotWithBehaviourAndLongPolling(botToken, CoroutineScope(Dispatchers.IO), testServer = isTestServer) {
-        val me = getMe()
-
         val payload = "sample payload"
         command("start") {
             reply(
@@ -123,6 +126,58 @@ suspend fun main(vararg args: String) {
                 it.message.withContentOrNull<TextContent>() ?: return@onMessageDataCallbackQuery,
                 text,
                 replyMarkup = keyboard,
+            )
+        }
+
+        onVisualGalleryMessages {
+            send(
+                it.chat,
+                1,
+                it.content.group.mapNotNull {
+                    val file = downloadFileToTemp(it.content.media)
+                    when (it.content.media) {
+                        is VideoFile -> {
+                            TelegramPaidMediaVideo(
+                                file.asMultipartFile()
+                            )
+                        }
+                        is PhotoSize -> {
+                            TelegramPaidMediaPhoto(
+                                file.asMultipartFile()
+                            )
+                        }
+                        else -> null
+                    }
+                },
+                it.content.textSources,
+                showCaptionAboveMedia = true
+            )
+        }
+
+        onPhoto {
+            send(
+                it.chat,
+                1,
+                listOf(it.content.media.toTelegramPaidMediaPhoto())
+            )
+        }
+
+        onVideo {
+            send(
+                it.chat,
+                1,
+                listOf(it.content.media.toTelegramPaidMediaVideo())
+            )
+        }
+
+        onPaidMediaInfoContent {
+            println(it)
+        }
+
+        onRefundedPayment {
+            reply(
+                it,
+                "Received your refund: ${it.chatEvent.payment}"
             )
         }
 

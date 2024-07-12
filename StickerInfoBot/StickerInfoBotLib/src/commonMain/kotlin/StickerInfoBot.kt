@@ -1,22 +1,25 @@
 import dev.inmo.micro_utils.coroutines.defaultSafelyWithoutExceptionHandler
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
-import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.bot.ktor.telegramBot
-import dev.inmo.tgbotapi.extensions.api.get.*
-import dev.inmo.tgbotapi.extensions.api.send.*
-import dev.inmo.tgbotapi.extensions.behaviour_builder.*
-import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
-import dev.inmo.tgbotapi.types.StickerFormat
+import dev.inmo.tgbotapi.extensions.api.bot.getMe
+import dev.inmo.tgbotapi.extensions.api.get.getCustomEmojiStickerOrNull
+import dev.inmo.tgbotapi.extensions.api.get.getStickerSet
+import dev.inmo.tgbotapi.extensions.api.get.getStickerSetOrNull
+import dev.inmo.tgbotapi.extensions.api.send.reply
+import dev.inmo.tgbotapi.extensions.api.send.withTypingAction
+import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviourWithLongPolling
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onSticker
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onText
 import dev.inmo.tgbotapi.types.StickerType
-import dev.inmo.tgbotapi.types.message.textsources.*
-import dev.inmo.tgbotapi.types.stickers.CustomEmojiStickerSet
-import dev.inmo.tgbotapi.types.stickers.MaskStickerSet
-import dev.inmo.tgbotapi.types.stickers.RegularStickerSet
+import dev.inmo.tgbotapi.types.message.textsources.CustomEmojiTextSource
+import dev.inmo.tgbotapi.types.message.textsources.regular
+import dev.inmo.tgbotapi.types.message.textsources.separateForText
 import dev.inmo.tgbotapi.types.stickers.StickerSet
-import dev.inmo.tgbotapi.types.stickers.UnknownStickerSet
 import dev.inmo.tgbotapi.utils.bold
 import dev.inmo.tgbotapi.utils.buildEntities
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.currentCoroutineContext
 
 fun StickerSet?.buildInfo() = buildEntities {
     if (this@buildInfo == null) {

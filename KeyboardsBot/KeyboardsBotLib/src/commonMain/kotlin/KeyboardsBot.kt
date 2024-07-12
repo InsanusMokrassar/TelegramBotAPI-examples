@@ -1,14 +1,12 @@
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
-import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.bot.ktor.telegramBot
 import dev.inmo.tgbotapi.extensions.api.answers.answer
+import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.bot.setMyCommands
 import dev.inmo.tgbotapi.extensions.api.edit.edit
-import dev.inmo.tgbotapi.extensions.api.edit.editMessageText
-import dev.inmo.tgbotapi.extensions.api.edit.reply_markup.editMessageReplyMarkup
 import dev.inmo.tgbotapi.extensions.api.edit.text.editMessageText
-import dev.inmo.tgbotapi.extensions.api.send.*
-import dev.inmo.tgbotapi.extensions.behaviour_builder.*
+import dev.inmo.tgbotapi.extensions.api.send.reply
+import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviourWithLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.*
 import dev.inmo.tgbotapi.extensions.utils.withContent
@@ -17,11 +15,13 @@ import dev.inmo.tgbotapi.types.InlineQueries.InlineQueryResult.InlineQueryResult
 import dev.inmo.tgbotapi.types.InlineQueries.InputMessageContent.InputTextMessageContent
 import dev.inmo.tgbotapi.types.InlineQueryId
 import dev.inmo.tgbotapi.types.message.content.TextContent
-import dev.inmo.tgbotapi.utils.*
-import kotlinx.coroutines.*
-
-private const val nextPageData = "next"
-private const val previousPageData = "previous"
+import dev.inmo.tgbotapi.utils.PreviewFeature
+import dev.inmo.tgbotapi.utils.botCommand
+import dev.inmo.tgbotapi.utils.regular
+import dev.inmo.tgbotapi.utils.row
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.currentCoroutineContext
 
 fun String.parsePageAndCount(): Pair<Int, Int>? {
     val (pageString, countString) = split(" ").takeIf { it.count() > 1 } ?: return null
@@ -73,6 +73,7 @@ fun InlineKeyboardBuilder.includePageButtons(page: Int, count: Int) {
     }
 }
 
+@OptIn(PreviewFeature::class)
 suspend fun activateKeyboardsBot(
     token: String,
     print: (Any) -> Unit

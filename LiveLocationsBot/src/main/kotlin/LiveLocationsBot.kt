@@ -8,7 +8,6 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onComman
 import dev.inmo.tgbotapi.extensions.utils.extensions.sameMessage
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.dataButton
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.flatInlineKeyboard
-import dev.inmo.tgbotapi.types.location.LiveLocation
 import dev.inmo.tgbotapi.types.message.abstracts.ContentMessage
 import dev.inmo.tgbotapi.types.message.content.LocationContent
 import kotlinx.coroutines.*
@@ -47,7 +46,7 @@ suspend fun main(vararg args: String) {
                 handleLiveLocation(
                     it.chat.id,
                     locationsFlow,
-                    sentMessageFlow = FlowCollector { currentMessageState.emit(it) },
+                    sentMessageFlow = { currentMessageState.emit(it) },
                 )
             }
 
