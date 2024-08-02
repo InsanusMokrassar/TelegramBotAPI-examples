@@ -11,6 +11,7 @@ import dev.inmo.tgbotapi.extensions.api.send.send
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
 import dev.inmo.tgbotapi.extensions.utils.accessibleMessageOrNull
+import dev.inmo.tgbotapi.extensions.utils.ifAccessibleMessage
 import dev.inmo.tgbotapi.extensions.utils.ifBusinessContentMessage
 import dev.inmo.tgbotapi.extensions.utils.textContentOrNull
 import dev.inmo.tgbotapi.types.ChatId
@@ -55,12 +56,16 @@ suspend fun main(args: Array<String>) {
         onContentMessage {
             it.ifBusinessContentMessage { businessContentMessage ->
                 if (businessContentMessage.content.textContentOrNull() ?.text ?.startsWith("/pin") == true) {
-                    pinChatMessage(businessContentMessage)
-                    return@ifBusinessContentMessage
+                    businessContentMessage.replyTo ?.ifAccessibleMessage {
+                        pinChatMessage(it)
+                        return@ifBusinessContentMessage
+                    }
                 }
                 if (businessContentMessage.content.textContentOrNull() ?.text ?.startsWith("/unpin") == true) {
-                    unpinChatMessage(businessContentMessage)
-                    return@ifBusinessContentMessage
+                    businessContentMessage.replyTo ?.ifAccessibleMessage {
+                        unpinChatMessage(it)
+                        return@ifBusinessContentMessage
+                    }
                 }
                 val sent = execute(it.content.createResend(businessContentMessage.from.id))
                 if (businessContentMessage.sentByBusinessConnectionOwner) {
