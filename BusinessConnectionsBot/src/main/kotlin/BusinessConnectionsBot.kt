@@ -3,12 +3,17 @@ import dev.inmo.kslog.common.LogLevel
 import dev.inmo.kslog.common.defaultMessageFormatter
 import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
+import dev.inmo.tgbotapi.extensions.api.chat.modify.pinChatMessage
+import dev.inmo.tgbotapi.extensions.api.chat.modify.unpinChatMessage
 import dev.inmo.tgbotapi.extensions.api.get.getBusinessConnection
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.send
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
+import dev.inmo.tgbotapi.extensions.utils.accessibleMessageOrNull
+import dev.inmo.tgbotapi.extensions.utils.ifAccessibleMessage
 import dev.inmo.tgbotapi.extensions.utils.ifBusinessContentMessage
+import dev.inmo.tgbotapi.extensions.utils.textContentOrNull
 import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.tgbotapi.types.business_connection.BusinessConnectionId
 import kotlinx.coroutines.CoroutineScope
@@ -50,6 +55,18 @@ suspend fun main(args: Array<String>) {
 
         onContentMessage {
             it.ifBusinessContentMessage { businessContentMessage ->
+                if (businessContentMessage.content.textContentOrNull() ?.text ?.startsWith("/pin") == true) {
+                    businessContentMessage.replyTo ?.ifAccessibleMessage {
+                        pinChatMessage(it)
+                        return@ifBusinessContentMessage
+                    }
+                }
+                if (businessContentMessage.content.textContentOrNull() ?.text ?.startsWith("/unpin") == true) {
+                    businessContentMessage.replyTo ?.ifAccessibleMessage {
+                        unpinChatMessage(it)
+                        return@ifBusinessContentMessage
+                    }
+                }
                 val sent = execute(it.content.createResend(businessContentMessage.from.id))
                 if (businessContentMessage.sentByBusinessConnectionOwner) {
                     reply(sent, "You have sent this message to the ${businessContentMessage.businessConnectionId.string} related chat")
