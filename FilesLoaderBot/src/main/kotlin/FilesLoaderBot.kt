@@ -7,7 +7,7 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAn
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMedia
 import dev.inmo.tgbotapi.requests.abstracts.asMultipartFile
-import dev.inmo.tgbotapi.types.actions.TypingAction
+import dev.inmo.tgbotapi.types.actions.*
 import dev.inmo.tgbotapi.types.media.TelegramMediaAudio
 import dev.inmo.tgbotapi.types.media.TelegramMediaDocument
 import dev.inmo.tgbotapi.types.media.TelegramMediaPhoto
@@ -34,13 +34,27 @@ suspend fun main(args: Array<String>) {
             val content = it.content
             val pathedFile = bot.getFileAdditionalInfo(content.media)
             val outFile = File(directoryOrFile, pathedFile.filePath.filenameFromUrl)
-            runCatching {
-                bot.downloadFile(content.media, outFile)
-            }.onFailure {
-                it.printStackTrace()
+            withTypingAction(it.chat.id) {
+                runCatching {
+                    bot.downloadFile(content.media, outFile)
+                }.onFailure {
+                    it.printStackTrace()
+                }.onSuccess { _ ->
+                    reply(it, "Saved to ${outFile.absolutePath}")
+                }
             }.onSuccess { _ ->
-                reply(it, "Saved to ${outFile.absolutePath}")
-                withAction(it.chat.id, TypingAction) {
+                val action = when (content) {
+                    is PhotoContent -> UploadPhotoAction
+                    is AnimationContent,
+                    is VideoContent -> UploadVideoAction
+                    is StickerContent -> ChooseStickerAction
+                    is MediaGroupContent<*> -> UploadPhotoAction
+                    is DocumentContent -> UploadDocumentAction
+                    is VoiceContent,
+                    is AudioContent -> RecordVoiceAction
+                    is VideoNoteContent -> UploadVideoNoteAction
+                }
+                withAction(it.chat.id, action) {
                     when (content) {
                         is PhotoContent -> replyWithPhoto(
                             it,
