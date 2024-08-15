@@ -3,7 +3,10 @@ import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.chat.get.getChat
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onContentMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMentionWithAnyContent
+import dev.inmo.tgbotapi.extensions.utils.extensions.raw.sender_chat
+import dev.inmo.tgbotapi.extensions.utils.extensions.raw.text
 import dev.inmo.tgbotapi.extensions.utils.formatting.linkMarkdownV2
 import dev.inmo.tgbotapi.extensions.utils.formatting.textMentionMarkdownV2
 import dev.inmo.tgbotapi.extensions.utils.ifFromChannelGroupContentMessage
@@ -23,22 +26,35 @@ suspend fun main(vararg args: String) {
 
     telegramBotWithBehaviourAndLongPolling(botToken, CoroutineScope(Dispatchers.IO)) {
         val me = getMe()
-        onMentionWithAnyContent(me) { message ->
+        onContentMessage(
+            initialFilter = initialFilter@{ it.text ?.contains(me.username ?.full ?: return@initialFilter false) == true }
+        ) { message ->
             val answerText = when (val chat = message.chat) {
                 is PreviewChannelChat -> {
-                    val answer = "Hi everybody in this channel \"${chat.title}\""
-                    reply(message, answer, MarkdownV2)
-                    return@onMentionWithAnyContent
+                    val sender = message.sender_chat
+                    val answer = "Hi everybody in this channel \"${chat.title}\"" + if (sender != null) {
+                        " and you, " + when (sender) {
+                            is BusinessChat -> "business chat (wat) ${sender.original}"
+                            is PrivateChat -> "${sender.lastName} ${sender.firstName}"
+                            is GroupChat -> "group ${sender.title}"
+                            is ChannelChat ->  "channel ${sender.title}"
+                            is UnknownChatType -> "wat chat (${sender})"
+                        }
+                    } else {
+                        ""
+                    }
+                    reply(message, answer.escapeMarkdownV2Common(), MarkdownV2)
+                    return@onContentMessage
                 }
                 is PreviewPrivateChat -> {
                     reply(message, "Hi, " + "${chat.firstName} ${chat.lastName}".textMentionMarkdownV2(chat.id), MarkdownV2)
-                    return@onMentionWithAnyContent
+                    return@onContentMessage
                 }
                 is PreviewGroupChat -> {
                     message.ifFromChannelGroupContentMessage<Unit> {
                         val answer = "Hi, ${it.senderChat.title}"
                         reply(message, answer, MarkdownV2)
-                        return@onMentionWithAnyContent
+                        return@onContentMessage
                     }
                     "Oh, hi, " + when (chat) {
                         is SupergroupChat -> (chat.username ?.username ?: getChat(chat).inviteLink) ?.let {
@@ -51,7 +67,7 @@ suspend fun main(vararg args: String) {
                 }
                 is PreviewBusinessChat -> {
                     reply(message, "Hi, " + "${chat.original.firstName} ${chat.original.lastName} (as business chat :) )".textMentionMarkdownV2(chat.original.id), MarkdownV2)
-                    return@onMentionWithAnyContent
+                    return@onContentMessage
                 }
                 is UnknownChatType -> "Unknown :(".escapeMarkdownV2Common()
             }

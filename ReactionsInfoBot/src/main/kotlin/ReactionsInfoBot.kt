@@ -48,6 +48,7 @@ suspend fun main(vararg args: String) {
                     when (it) {
                         is Reaction.CustomEmoji -> regular("• ") + customEmoji(it.customEmojiId) + regular("(customEmojiId: ${it.customEmojiId})")
                         is Reaction.Emoji -> regular("• ${it.emoji}")
+                        is Reaction.Paid -> regular("• Some paid reaction")
                         is Reaction.Unknown -> regular("• Unknown emoji ($it)")
                     }
                     regular("\n")
