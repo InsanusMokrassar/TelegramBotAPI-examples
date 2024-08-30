@@ -106,7 +106,7 @@ suspend fun main(args: Array<String>) {
 
     suspend fun BehaviourContext.getUserChatPermissions(chatId: ChatId, userId: UserId): ChatPermissions? {
         val chatMember = getChatMember(chatId, userId)
-        return chatMember.restrictedChatMemberOrNull() ?: chatMember.whenMemberChatMember {
+        return chatMember.restrictedMemberChatMemberOrNull() ?: chatMember.whenMemberChatMember {
             getChat(chatId).extendedGroupChatOrNull() ?.permissions
         }
     }
