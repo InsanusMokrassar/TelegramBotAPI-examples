@@ -182,12 +182,44 @@ fun main() {
                     val hex = Color.Hex(r, g, b)
                     webApp.setHeaderColor(hex)
                     (this as? HTMLButtonElement) ?.style ?.backgroundColor = hex.value
-                    textContent = "Header color: ${hex.value.uppercase()} (click to change)"
+                    textContent = "Header color: ${webApp.headerColor ?.uppercase()} (click to change)"
                 }
                 addEventListener("click", {
                     updateHeaderColor()
                 })
                 updateHeaderColor()
+            } ?: window.alert("Unable to load body")
+
+            document.body ?.appendElement("p", {})
+
+            document.body ?.appendElement("button") {
+                fun updateBackgroundColor() {
+                    val (r, g, b) = Random.nextUBytes(3)
+                    val hex = Color.Hex(r, g, b)
+                    webApp.setBackgroundColor(hex)
+                    (this as? HTMLButtonElement) ?.style ?.backgroundColor = hex.value
+                    textContent = "Background color: ${webApp.backgroundColor ?.uppercase()} (click to change)"
+                }
+                addEventListener("click", {
+                    updateBackgroundColor()
+                })
+                updateBackgroundColor()
+            } ?: window.alert("Unable to load body")
+
+            document.body ?.appendElement("p", {})
+
+            document.body ?.appendElement("button") {
+                fun updateBottomBarColor() {
+                    val (r, g, b) = Random.nextUBytes(3)
+                    val hex = Color.Hex(r, g, b)
+                    webApp.setBottomBarColor(hex)
+                    (this as? HTMLButtonElement) ?.style ?.backgroundColor = hex.value
+                    textContent = "Bottom bar color: ${webApp.bottomBarColor ?.uppercase()} (click to change)"
+                }
+                addEventListener("click", {
+                    updateBottomBarColor()
+                })
+                updateBottomBarColor()
             } ?: window.alert("Unable to load body")
 
             document.body ?.appendElement("p", {})
@@ -283,6 +315,16 @@ fun main() {
                         document.body ?.log("Main button clicked")
                         hapticFeedback.notificationOccurred(
                             HapticFeedbackType.Success
+                        )
+                    }
+                    show()
+                }
+                secondaryButton.apply {
+                    setText("Secondary button")
+                    onClick {
+                        document.body ?.log("Secondary button clicked")
+                        hapticFeedback.notificationOccurred(
+                            HapticFeedbackType.Warning
                         )
                     }
                     show()
