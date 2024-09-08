@@ -52,6 +52,8 @@ include ":BusinessConnectionsBot"
 
 include ":StarTransactionsBot"
 
+include ":GiveawaysBot"
+
 include ":CustomBot"
 
 include ":MemberUpdatedWatcherBot"
