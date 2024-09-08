@@ -29,7 +29,7 @@ suspend fun main(vararg args: String) {
         )
     }
 
-    telegramBotWithBehaviourAndLongPolling(botToken, CoroutineScope(Dispatchers.IO), testServer = isTestServer) {
+    telegramBotWithBehaviourAndLongPolling(botToken, testServer = isTestServer) {
         // start here!!
         val me = getMe()
         println(me)
@@ -50,8 +50,8 @@ suspend fun main(vararg args: String) {
             println(it)
         }
 
-        allUpdatesFlow.subscribeSafelyWithoutExceptions(this) {
-            println(it)
-        }
+//        allUpdatesFlow.subscribeSafelyWithoutExceptions(this) {
+//            println(it)
+//        }
     }.second.join()
 }
