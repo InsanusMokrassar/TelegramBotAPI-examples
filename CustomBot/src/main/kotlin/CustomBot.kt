@@ -15,6 +15,7 @@ suspend fun main(vararg args: String) {
     val botToken = args.first()
 
     val isDebug = args.any { it == "debug" }
+    val isTestServer = args.any { it == "testServer" }
 
     if (isDebug) {
         setDefaultKSLog(
@@ -24,11 +25,13 @@ suspend fun main(vararg args: String) {
         )
     }
 
-    telegramBotWithBehaviourAndLongPolling(botToken, CoroutineScope(Dispatchers.IO)) {
+    telegramBotWithBehaviourAndLongPolling(botToken, CoroutineScope(Dispatchers.IO), testServer = isTestServer) {
         // start here!!
         val me = getMe()
         println(me)
 
-        allUpdatesFlow.subscribeSafelyWithoutExceptions(this) { println(it) }
+        allUpdatesFlow.subscribeSafelyWithoutExceptions(this) {
+            println(it)
+        }
     }.second.join()
 }
