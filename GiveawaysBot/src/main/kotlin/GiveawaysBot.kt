@@ -46,7 +46,9 @@ suspend fun main(vararg args: String) {
             println(it)
         }
 
-        onGiveawayContent {  }
+        onGiveawayContent {
+            println(it)
+        }
 
         allUpdatesFlow.subscribeSafelyWithoutExceptions(this) {
             println(it)
