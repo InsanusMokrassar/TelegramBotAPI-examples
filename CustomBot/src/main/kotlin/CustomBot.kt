@@ -25,7 +25,21 @@ suspend fun main(vararg args: String) {
         )
     }
 
-    telegramBotWithBehaviourAndLongPolling(botToken, CoroutineScope(Dispatchers.IO), testServer = isTestServer) {
+    telegramBotWithBehaviourAndLongPolling(
+        botToken,
+        CoroutineScope(Dispatchers.IO),
+        testServer = isTestServer,
+        builder = {
+            includeMiddlewares {
+                addMiddleware {
+                    doOnRequestReturnResult { result, request, _ ->
+                        println("Result of $request:\n\n$result")
+                        null
+                    }
+                }
+            }
+        }
+    ) {
         // start here!!
         val me = getMe()
         println(me)
