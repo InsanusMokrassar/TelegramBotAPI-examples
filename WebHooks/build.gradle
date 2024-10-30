@@ -1,0 +1,23 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+apply plugin: 'kotlin'
+apply plugin: 'application'
+
+mainClassName="WebHooksKt"
+
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+
+    implementation "dev.inmo:tgbotapi:$telegram_bot_api_version"
+    implementation "dev.inmo:micro_utils.ktor.server:$micro_utils_version"
+    implementation "io.ktor:ktor-server-cio:$ktor_version"
+}
