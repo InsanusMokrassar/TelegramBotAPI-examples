@@ -57,3 +57,5 @@ include ":GiveawaysBot"
 include ":CustomBot"
 
 include ":MemberUpdatedWatcherBot"
+
+include ":WebHooks"

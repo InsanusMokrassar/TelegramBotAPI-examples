@@ -63,10 +63,7 @@ suspend fun main(vararg args: String) {
     val bot = telegramBot(telegramBotAPIUrlsKeeper)
     createKtorServer(
         "0.0.0.0",
-        args.getOrNull(2) ?.toIntOrNull() ?: 8080,
-        additionalEngineEnvironmentConfigurator = {
-            parentCoroutineContext += Dispatchers.IO
-        }
+        args.getOrNull(2) ?.toIntOrNull() ?: 8080
     ) {
         routing {
             val baseJsFolder = File("WebApp/build/dist/js/")
