@@ -45,6 +45,9 @@ fun InlineKeyboardBuilder.includePageButtons(page: Int, count: Int) {
             }
         }
     }
+    row {
+        copyTextButton("Command copy button", "/inline $page $count")
+    }
 
     row {
         if (page - 1 > 2) {
@@ -84,11 +87,13 @@ suspend fun activateKeyboardsBot(
 
     bot.buildBehaviourWithLongPolling(CoroutineScope(currentCoroutineContext() + SupervisorJob())) {
         onCommandWithArgs("inline") { message, args ->
-            val numberOfPages = args.firstOrNull() ?.toIntOrNull() ?: 10
+            val numberArgs = args.mapNotNull { it.toIntOrNull() }
+            val numberOfPages = numberArgs.getOrNull(1) ?: numberArgs.firstOrNull() ?: 10
+            val page = numberArgs.firstOrNull() ?.takeIf { numberArgs.size > 1 } ?.coerceAtLeast(1) ?: 1
             reply(
                 message,
                 replyMarkup = inlineKeyboard {
-                    includePageButtons(1, numberOfPages)
+                    includePageButtons(page, numberOfPages)
                 }
             ) {
                 regular("Your inline keyboard with $numberOfPages pages")
