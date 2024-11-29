@@ -4,9 +4,15 @@ import dev.inmo.kslog.common.defaultMessageFormatter
 import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
+import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContextData
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+
+private var BehaviourContextData.update
+    get() = get("update")
+    set(value) = set("update", value)
 
 /**
  * This place can be the playground for your code.
@@ -38,11 +44,18 @@ suspend fun main(vararg args: String) {
                     }
                 }
             }
+        },
+        subcontextInitialAction = {
+            data.update = it
         }
     ) {
         // start here!!
         val me = getMe()
         println(me)
+
+        onCommand("start") {
+            println(data.update)
+        }
 
         allUpdatesFlow.subscribeSafelyWithoutExceptions(this) {
             println(it)
