@@ -4,9 +4,22 @@ import dev.inmo.kslog.common.defaultMessageFormatter
 import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
+import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContextData
+import dev.inmo.tgbotapi.extensions.behaviour_builder.buildSubcontextInitialAction
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
+import dev.inmo.tgbotapi.types.message.abstracts.CommonMessage
+import dev.inmo.tgbotapi.types.update.abstracts.Update
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+
+private var BehaviourContextData.update: Update?
+    get() = get("update") as? Update
+    set(value) = set("update", value)
+
+private var BehaviourContextData.commonMessage: CommonMessage<*>?
+    get() = get("commonMessage") as? CommonMessage<*>
+    set(value) = set("commonMessage", value)
 
 /**
  * This place can be the playground for your code.
@@ -38,11 +51,31 @@ suspend fun main(vararg args: String) {
                     }
                 }
             }
+        },
+        subcontextInitialAction = buildSubcontextInitialAction {
+            add {
+                data.update = it
+            }
         }
     ) {
         // start here!!
         val me = getMe()
         println(me)
+
+        onCommand("start") {
+            println(data.update)
+            println(data.commonMessage)
+        }
+
+        onCommand(
+            "additional_command",
+            additionalSubcontextInitialAction = { update, commonMessage ->
+                data.commonMessage = commonMessage
+            }
+        ) {
+            println(data.update)
+            println(data.commonMessage)
+        }
 
         allUpdatesFlow.subscribeSafelyWithoutExceptions(this) {
             println(it)
