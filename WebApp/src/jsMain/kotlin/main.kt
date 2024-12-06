@@ -2,6 +2,7 @@ import dev.inmo.micro_utils.coroutines.launchSafelyWithoutExceptions
 import dev.inmo.tgbotapi.types.webAppQueryIdField
 import dev.inmo.tgbotapi.webapps.*
 import dev.inmo.tgbotapi.webapps.cloud.*
+import dev.inmo.tgbotapi.webapps.events.*
 import dev.inmo.tgbotapi.webapps.haptic.HapticFeedbackStyle
 import dev.inmo.tgbotapi.webapps.haptic.HapticFeedbackType
 import dev.inmo.tgbotapi.webapps.popup.*
@@ -298,7 +299,7 @@ fun main() {
                     document.body ?.log("Theme changed: ${webApp.themeParams}")
                 }
                 onViewportChanged {
-                    document.body ?.log("Viewport changed: ${it.isStateStable}")
+                    document.body ?.log("Viewport changed: ${it}")
                 }
                 backButton.apply {
                     onClick {
