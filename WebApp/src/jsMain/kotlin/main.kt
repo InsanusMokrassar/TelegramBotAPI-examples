@@ -1,3 +1,4 @@
+import androidx.compose.runtime.*
 import dev.inmo.micro_utils.coroutines.launchSafelyWithoutExceptions
 import dev.inmo.tgbotapi.types.webAppQueryIdField
 import dev.inmo.tgbotapi.webapps.*
@@ -18,6 +19,10 @@ import kotlinx.dom.appendElement
 import kotlinx.dom.appendText
 import kotlinx.dom.clear
 import kotlinx.serialization.json.Json
+import org.jetbrains.compose.web.dom.Button
+import org.jetbrains.compose.web.dom.P
+import org.jetbrains.compose.web.dom.Text
+import org.jetbrains.compose.web.renderComposable
 import org.w3c.dom.*
 import kotlin.random.Random
 import kotlin.random.nextUBytes
@@ -33,117 +38,145 @@ fun main() {
     val client = HttpClient()
     val baseUrl = window.location.origin.removeSuffix("/")
 
+    renderComposable("root") {
+        val scope = rememberCoroutineScope()
+        val isSafeState = remember { mutableStateOf<Boolean?>(null) }
+        val logsState = remember { mutableStateListOf<String>() }
+        LaunchedEffect(baseUrl) {
+            val response = client.post("$baseUrl/check") {
+                setBody(
+                    Json.encodeToString(
+                        WebAppDataWrapper.serializer(),
+                        WebAppDataWrapper(webApp.initData, webApp.initDataUnsafe.hash)
+                    )
+                )
+            }
+            val dataIsSafe = response.bodyAsText().toBoolean()
+
+            document.body ?.log(
+                if (dataIsSafe) {
+                    "Data is safe"
+                } else {
+                    "Data is unsafe"
+                }
+            )
+
+            document.body ?.log(
+                webApp.initDataUnsafe.chat.toString()
+            )
+        }
+
+        Text(
+            when (isSafeState.value) {
+                null -> "Checking safe state..."
+                true -> "Data is safe"
+                false -> "Data is unsafe"
+            }
+        )
+        Text(webApp.initDataUnsafe.chat.toString())
+
+        Button({
+            onClick {
+                scope.launchSafelyWithoutExceptions {
+                    handleResult({ "Clicked" }) {
+                        client.post("${window.location.origin.removeSuffix("/")}/inline") {
+                            parameter(webAppQueryIdField, it)
+                            setBody(TextContent("Clicked", ContentType.Text.Plain))
+                            logsState.add(url.build().toString())
+                        }.coroutineContext.job.join()
+                    }
+                }
+            }
+        }) {
+            Text("Answer in chat button")
+        }
+
+        P()
+        Text("Allow to write in private messages: ${webApp.initDataUnsafe.user ?.allowsWriteToPM ?: "User unavailable"}")
+
+        P()
+        Text("Alerts:")
+        Button({
+            onClick {
+                webApp.showPopup(
+                    PopupParams(
+                        "It is sample title of default button",
+                        "It is sample message of default button",
+                        DefaultPopupButton("default", "Default button"),
+                        OkPopupButton("ok"),
+                        DestructivePopupButton("destructive", "Destructive button")
+                    )
+                ) {
+                    logsState.add(
+                        when (it) {
+                            "default" -> "You have clicked default button in popup"
+                            "ok" -> "You have clicked ok button in popup"
+                            "destructive" -> "You have clicked destructive button in popup"
+                            else -> "I can't imagine where you take button with id $it"
+                        }
+                    )
+                }
+            }
+        }) {
+            Text("Popup")
+        }
+        Button({
+            onClick {
+                webApp.showAlert(
+                    "This is alert message"
+                ) {
+                    logsState.add(
+                        "You have closed alert"
+                    )
+                }
+            }
+        }) {
+            Text("Alert")
+        }
+
+        P()
+        Button({
+            onClick {
+                webApp.requestWriteAccess()
+            }
+        }) {
+            Text("Request write access without callback")
+        }
+        Button({
+            onClick {
+                webApp.requestWriteAccess {
+                    logsState.add("Write access request result: $it")
+                }
+            }
+        }) {
+            Text("Request write access with callback")
+        }
+
+        P()
+        Button({
+            onClick {
+                webApp.requestContact()
+            }
+        }) {
+            Text("Request contact without callback")
+        }
+        Button({
+            onClick {
+                webApp.requestContact { logsState.add("Contact request result: $it") }
+            }
+        }) {
+            Text("Request contact with callback")
+        }
+        P()
+
+        logsState.forEach {
+            P { Text(it) }
+        }
+    }
+
     window.onload = {
         val scope = CoroutineScope(Dispatchers.Default)
         runCatching {
-
-            scope.launchSafelyWithoutExceptions {
-                val response = client.post("$baseUrl/check") {
-                    setBody(
-                        Json.encodeToString(
-                            WebAppDataWrapper.serializer(),
-                            WebAppDataWrapper(webApp.initData, webApp.initDataUnsafe.hash)
-                        )
-                    )
-                }
-                val dataIsSafe = response.bodyAsText().toBoolean()
-
-                document.body ?.log(
-                    if (dataIsSafe) {
-                        "Data is safe"
-                    } else {
-                        "Data is unsafe"
-                    }
-                )
-
-                document.body ?.log(
-                    webApp.initDataUnsafe.chat.toString()
-                )
-            }
-
-            document.body ?.appendElement("button") {
-                addEventListener("click", {
-                    scope.launchSafelyWithoutExceptions {
-                        handleResult({ "Clicked" }) {
-                            client.post("${window.location.origin.removeSuffix("/")}/inline") {
-                                parameter(webAppQueryIdField, it)
-                                setBody(TextContent("Clicked", ContentType.Text.Plain))
-                                document.body ?.log(url.build().toString())
-                            }.coroutineContext.job.join()
-                        }
-                    }
-                })
-                appendText("Answer in chat button")
-            } ?: window.alert("Unable to load body")
-
-            document.body ?.appendElement("p", {})
-            document.body ?.appendText("Allow to write in private messages: ${webApp.initDataUnsafe.user ?.allowsWriteToPM ?: "User unavailable"}")
-
-            document.body ?.appendElement("p", {})
-            document.body ?.appendText("Alerts:")
-
-            document.body ?.appendElement("button") {
-                addEventListener("click", {
-                    webApp.showPopup(
-                        PopupParams(
-                            "It is sample title of default button",
-                            "It is sample message of default button",
-                            DefaultPopupButton("default", "Default button"),
-                            OkPopupButton("ok"),
-                            DestructivePopupButton("destructive", "Destructive button")
-                        )
-                    ) {
-                        document.body ?.log(
-                            when (it) {
-                                "default" -> "You have clicked default button in popup"
-                                "ok" -> "You have clicked ok button in popup"
-                                "destructive" -> "You have clicked destructive button in popup"
-                                else -> "I can't imagine where you take button with id $it"
-                            }
-                        )
-                    }
-                })
-                appendText("Popup")
-            } ?: window.alert("Unable to load body")
-
-            document.body ?.appendElement("button") {
-                addEventListener("click", {
-                    webApp.showAlert(
-                        "This is alert message"
-                    ) {
-                        document.body ?.log(
-                            "You have closed alert"
-                        )
-                    }
-                })
-                appendText("Alert")
-            } ?: window.alert("Unable to load body")
-
-            document.body ?.appendElement("p", {})
-
-            document.body ?.appendElement("button") {
-                addEventListener("click", { webApp.requestWriteAccess() })
-                appendText("Request write access without callback")
-            } ?: window.alert("Unable to load body")
-
-            document.body ?.appendElement("button") {
-                addEventListener("click", { webApp.requestWriteAccess { document.body ?.log("Write access request result: $it") } })
-                appendText("Request write access with callback")
-            } ?: window.alert("Unable to load body")
-
-            document.body ?.appendElement("p", {})
-
-            document.body ?.appendElement("button") {
-                addEventListener("click", { webApp.requestContact() })
-                appendText("Request contact without callback")
-            } ?: window.alert("Unable to load body")
-
-            document.body ?.appendElement("button") {
-                addEventListener("click", { webApp.requestContact { document.body ?.log("Contact request result: $it") } })
-                appendText("Request contact with callback")
-            } ?: window.alert("Unable to load body")
-
-            document.body ?.appendElement("p", {})
 
             document.body ?.appendElement("button") {
                 addEventListener("click", {

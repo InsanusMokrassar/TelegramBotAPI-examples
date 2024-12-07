@@ -11,6 +11,9 @@ buildscript {
 plugins {
     id "org.jetbrains.kotlin.multiplatform"
     id "org.jetbrains.kotlin.plugin.serialization"
+
+    id "org.jetbrains.kotlin.plugin.compose" version "$kotlin_version"
+    id "org.jetbrains.compose" version "$compose_version"
 }
 
 apply plugin: 'application'
@@ -27,12 +30,14 @@ kotlin {
             dependencies {
                 implementation kotlin('stdlib')
                 implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:$serialization_version"
+                implementation compose.runtime
             }
         }
 
         jsMain {
             dependencies {
                 implementation "dev.inmo:tgbotapi.webapps:$telegram_bot_api_version"
+                implementation compose.web.core
             }
         }
 
@@ -41,6 +46,7 @@ kotlin {
                 implementation "dev.inmo:tgbotapi:$telegram_bot_api_version"
                 implementation "dev.inmo:micro_utils.ktor.server:$micro_utils_version"
                 implementation "io.ktor:ktor-server-cio:$ktor_version"
+                implementation compose.desktop.currentOs
             }
         }
     }
