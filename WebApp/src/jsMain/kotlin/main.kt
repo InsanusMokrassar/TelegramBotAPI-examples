@@ -2,10 +2,13 @@ import androidx.compose.runtime.*
 import dev.inmo.micro_utils.coroutines.launchSafelyWithoutExceptions
 import dev.inmo.tgbotapi.types.webAppQueryIdField
 import dev.inmo.tgbotapi.webapps.*
+import dev.inmo.tgbotapi.webapps.accelerometer.AccelerometerStartParams
 import dev.inmo.tgbotapi.webapps.cloud.*
 import dev.inmo.tgbotapi.webapps.events.*
+import dev.inmo.tgbotapi.webapps.gyroscope.GyroscopeStartParams
 import dev.inmo.tgbotapi.webapps.haptic.HapticFeedbackStyle
 import dev.inmo.tgbotapi.webapps.haptic.HapticFeedbackType
+import dev.inmo.tgbotapi.webapps.orientation.DeviceOrientationStartParams
 import dev.inmo.tgbotapi.webapps.popup.*
 import io.ktor.client.HttpClient
 import io.ktor.client.request.*
@@ -18,11 +21,11 @@ import kotlinx.dom.appendElement
 import kotlinx.dom.appendText
 import kotlinx.serialization.json.Json
 import org.jetbrains.compose.web.attributes.InputType
+import org.jetbrains.compose.web.css.DisplayStyle
 import org.jetbrains.compose.web.css.Color as ComposeColor
 import org.jetbrains.compose.web.css.backgroundColor
-import org.jetbrains.compose.web.dom.Button
-import org.jetbrains.compose.web.dom.Input
-import org.jetbrains.compose.web.dom.P
+import org.jetbrains.compose.web.css.display
+import org.jetbrains.compose.web.dom.*
 import org.jetbrains.compose.web.dom.Text
 import org.jetbrains.compose.web.renderComposable
 import org.w3c.dom.*
@@ -43,10 +46,10 @@ fun main() {
     renderComposable("root") {
         val scope = rememberCoroutineScope()
         val isSafeState = remember { mutableStateOf<Boolean?>(null) }
-        val logsState = remember { mutableStateListOf<String>() }
+        val logsState = remember { mutableStateListOf<Any?>() }
 
-        Text(window.location.href)
-        P()
+//        Text(window.location.href)
+//        P()
 
         LaunchedEffect(baseUrl) {
             val response = client.post("$baseUrl/check") {
@@ -386,9 +389,221 @@ fun main() {
                 }
             }
         }
+        P()
+
+        let { // Accelerometer
+            val enabledState = remember { mutableStateOf(webApp.accelerometer.isStarted) }
+            webApp.onAccelerometerStarted { enabledState.value = true }
+            webApp.onAccelerometerStopped { enabledState.value = false }
+            Button({
+                onClick {
+                    if (enabledState.value) {
+                        webApp.accelerometer.stop {  }
+                    } else {
+                        webApp.accelerometer.start(AccelerometerStartParams(200))
+                    }
+                }
+            }) {
+                Text("${if (enabledState.value) "Stop" else "Start"} accelerometer")
+            }
+            val xState = remember { mutableStateOf(webApp.accelerometer.x) }
+            val yState = remember { mutableStateOf(webApp.accelerometer.y) }
+            val zState = remember { mutableStateOf(webApp.accelerometer.z) }
+            fun updateValues() {
+                xState.value = webApp.accelerometer.x
+                yState.value = webApp.accelerometer.y
+                zState.value = webApp.accelerometer.z
+            }
+            remember {
+                updateValues()
+            }
+
+            webApp.onAccelerometerChanged {
+                updateValues()
+            }
+            if (enabledState.value) {
+                P()
+                Text("x: ${xState.value}")
+                P()
+                Text("y: ${yState.value}")
+                P()
+                Text("z: ${zState.value}")
+            }
+        }
+        P()
+
+        let { // Gyroscope
+            val enabledState = remember { mutableStateOf(webApp.gyroscope.isStarted) }
+            webApp.onGyroscopeStarted { enabledState.value = true }
+            webApp.onGyroscopeStopped { enabledState.value = false }
+            Button({
+                onClick {
+                    if (enabledState.value) {
+                        webApp.gyroscope.stop {  }
+                    } else {
+                        webApp.gyroscope.start(GyroscopeStartParams(200))
+                    }
+                }
+            }) {
+                Text("${if (enabledState.value) "Stop" else "Start"} gyroscope")
+            }
+            val xState = remember { mutableStateOf(webApp.gyroscope.x) }
+            val yState = remember { mutableStateOf(webApp.gyroscope.y) }
+            val zState = remember { mutableStateOf(webApp.gyroscope.z) }
+            fun updateValues() {
+                xState.value = webApp.gyroscope.x
+                yState.value = webApp.gyroscope.y
+                zState.value = webApp.gyroscope.z
+            }
+            remember {
+                updateValues()
+            }
+
+            webApp.onGyroscopeChanged {
+                updateValues()
+            }
+            if (enabledState.value) {
+                P()
+                Text("x: ${xState.value}")
+                P()
+                Text("y: ${yState.value}")
+                P()
+                Text("z: ${zState.value}")
+            }
+        }
+        P()
+
+        let { // DeviceOrientation
+            val enabledState = remember { mutableStateOf(webApp.deviceOrientation.isStarted) }
+            webApp.onDeviceOrientationStarted { enabledState.value = true }
+            webApp.onDeviceOrientationStopped { enabledState.value = false }
+            Button({
+                onClick {
+                    if (enabledState.value) {
+                        webApp.deviceOrientation.stop {  }
+                    } else {
+                        webApp.deviceOrientation.start(DeviceOrientationStartParams(200))
+                    }
+                }
+            }) {
+                Text("${if (enabledState.value) "Stop" else "Start"} deviceOrientation")
+            }
+            val alphaState = remember { mutableStateOf(webApp.deviceOrientation.alpha) }
+            val betaState = remember { mutableStateOf(webApp.deviceOrientation.beta) }
+            val gammaState = remember { mutableStateOf(webApp.deviceOrientation.gamma) }
+            fun updateValues() {
+                alphaState.value = webApp.deviceOrientation.alpha
+                betaState.value = webApp.deviceOrientation.beta
+                gammaState.value = webApp.deviceOrientation.gamma
+            }
+            remember {
+                updateValues()
+            }
+
+            webApp.onDeviceOrientationChanged {
+                updateValues()
+            }
+            if (enabledState.value) {
+                P()
+                Text("alpha: ${alphaState.value}")
+                P()
+                Text("beta: ${betaState.value}")
+                P()
+                Text("gamma: ${gammaState.value}")
+            }
+        }
+        P()
+
+        EventType.values().forEach { eventType ->
+            when (eventType) {
+                EventType.AccelerometerChanged -> webApp.onAccelerometerChanged { /*logsState.add("AccelerometerChanged") /* see accelerometer block */ */ }
+                EventType.AccelerometerFailed -> webApp.onAccelerometerFailed {
+                    logsState.add(it.error)
+                }
+                EventType.AccelerometerStarted -> webApp.onAccelerometerStarted { logsState.add("AccelerometerStarted") }
+                EventType.AccelerometerStopped -> webApp.onAccelerometerStopped { logsState.add("AccelerometerStopped") }
+                EventType.Activated -> webApp.onActivated { logsState.add("Activated") }
+                EventType.BackButtonClicked -> webApp.onBackButtonClicked { logsState.add("BackButtonClicked") }
+                EventType.BiometricAuthRequested -> webApp.onBiometricAuthRequested {
+                    logsState.add(it.isAuthenticated)
+                }
+                EventType.BiometricManagerUpdated -> webApp.onBiometricManagerUpdated { logsState.add("BiometricManagerUpdated") }
+                EventType.BiometricTokenUpdated -> webApp.onBiometricTokenUpdated {
+                    logsState.add(it.isUpdated)
+                }
+                EventType.ClipboardTextReceived -> webApp.onClipboardTextReceived {
+                    logsState.add(it.data)
+                }
+                EventType.ContactRequested -> webApp.onContactRequested {
+                    logsState.add(it.status)
+                }
+                EventType.ContentSafeAreaChanged -> webApp.onContentSafeAreaChanged { logsState.add("ContentSafeAreaChanged") }
+                EventType.Deactivated -> webApp.onDeactivated { logsState.add("Deactivated") }
+                EventType.DeviceOrientationChanged -> webApp.onDeviceOrientationChanged { /*logsState.add("DeviceOrientationChanged")*//* see accelerometer block */ }
+                EventType.DeviceOrientationFailed -> webApp.onDeviceOrientationFailed {
+                    logsState.add(it.error)
+                }
+                EventType.DeviceOrientationStarted -> webApp.onDeviceOrientationStarted { logsState.add("DeviceOrientationStarted") }
+                EventType.DeviceOrientationStopped -> webApp.onDeviceOrientationStopped { logsState.add("DeviceOrientationStopped") }
+                EventType.EmojiStatusAccessRequested -> webApp.onEmojiStatusAccessRequested {
+                    logsState.add(it.status)
+                }
+                EventType.EmojiStatusFailed -> webApp.onEmojiStatusFailed {
+                    logsState.add(it.error)
+                }
+                EventType.EmojiStatusSet -> webApp.onEmojiStatusSet { logsState.add("EmojiStatusSet") }
+                EventType.FileDownloadRequested -> webApp.onFileDownloadRequested {
+                    logsState.add(it.status)
+                }
+                EventType.FullscreenChanged -> webApp.onFullscreenChanged { logsState.add("FullscreenChanged") }
+                EventType.FullscreenFailed -> webApp.onFullscreenFailed {
+                    logsState.add(it.error)
+                }
+                EventType.GyroscopeChanged -> webApp.onGyroscopeChanged { /*logsState.add("GyroscopeChanged")*//* see gyroscope block */ }
+                EventType.GyroscopeFailed -> webApp.onGyroscopeFailed {
+                    logsState.add(it.error)
+                }
+                EventType.GyroscopeStarted -> webApp.onGyroscopeStarted { logsState.add("GyroscopeStarted")/* see accelerometer block */ }
+                EventType.GyroscopeStopped -> webApp.onGyroscopeStopped { logsState.add("GyroscopeStopped") }
+                EventType.HomeScreenAdded -> webApp.onHomeScreenAdded { logsState.add("HomeScreenAdded") }
+                EventType.HomeScreenChecked -> webApp.onHomeScreenChecked {
+                    logsState.add(it.status)
+                }
+                EventType.InvoiceClosed -> webApp.onInvoiceClosed { url, status ->
+                    logsState.add(url)
+                    logsState.add(status)
+                }
+                EventType.LocationManagerUpdated -> webApp.onLocationManagerUpdated { logsState.add("LocationManagerUpdated") }
+                EventType.LocationRequested -> webApp.onLocationRequested {
+                    logsState.add(it.locationData)
+                }
+                EventType.MainButtonClicked -> webApp.onMainButtonClicked { logsState.add("MainButtonClicked") }
+                EventType.PopupClosed -> webApp.onPopupClosed {
+                    logsState.add(it.buttonId)
+                }
+                EventType.QrTextReceived -> webApp.onQrTextReceived {
+                    logsState.add(it.data)
+                }
+                EventType.SafeAreaChanged -> webApp.onSafeAreaChanged { logsState.add("SafeAreaChanged") }
+                EventType.ScanQrPopupClosed -> webApp.onScanQrPopupClosed { logsState.add("ScanQrPopupClosed") }
+                EventType.SecondaryButtonClicked -> webApp.onSecondaryButtonClicked { logsState.add("SecondaryButtonClicked") }
+                EventType.SettingsButtonClicked -> webApp.onSettingsButtonClicked { logsState.add("SettingsButtonClicked") }
+                EventType.ShareMessageFailed -> webApp.onShareMessageFailed {
+                    logsState.add(it.error)
+                }
+                EventType.ShareMessageSent -> webApp.onShareMessageSent { logsState.add("ShareMessageSent") }
+                EventType.ThemeChanged -> webApp.onThemeChanged { logsState.add("ThemeChanged") }
+                EventType.ViewportChanged -> webApp.onViewportChanged {
+                    logsState.add(it)
+                }
+                EventType.WriteAccessRequested -> webApp.onWriteAccessRequested {
+                    logsState.add(it.status)
+                }
+            }
+        }
 
         logsState.forEach {
-            P { Text(it) }
+            P { Text(it.toString()) }
         }
     }
 }
