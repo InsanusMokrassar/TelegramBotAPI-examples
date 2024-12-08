@@ -79,7 +79,8 @@ fun main() {
                 false -> "Data is unsafe"
             }
         )
-        Text(webApp.initDataUnsafe.chat.toString())
+        P()
+        Text("Chat from WebAppInitData: ${webApp.initDataUnsafe.chat}")
 
         Button({
             onClick {
