@@ -6,6 +6,7 @@ import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.bot.setMyCommands
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.send
+import dev.inmo.tgbotapi.extensions.api.set.setUserEmojiStatus
 import dev.inmo.tgbotapi.extensions.api.telegramBot
 import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviourWithLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onBaseInlineQuery
@@ -16,12 +17,9 @@ import dev.inmo.tgbotapi.extensions.utils.types.buttons.inlineKeyboard
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.replyKeyboard
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.webAppButton
 import dev.inmo.tgbotapi.requests.answers.InlineQueryResultsButton
-import dev.inmo.tgbotapi.types.BotCommand
+import dev.inmo.tgbotapi.types.*
 import dev.inmo.tgbotapi.types.InlineQueries.InlineQueryResult.InlineQueryResultArticle
 import dev.inmo.tgbotapi.types.InlineQueries.InputMessageContent.InputTextMessageContent
-import dev.inmo.tgbotapi.types.InlineQueryId
-import dev.inmo.tgbotapi.types.LinkPreviewOptions
-import dev.inmo.tgbotapi.types.webAppQueryIdField
 import dev.inmo.tgbotapi.types.webapps.WebAppInfo
 import dev.inmo.tgbotapi.utils.*
 import io.ktor.http.*
@@ -30,7 +28,6 @@ import io.ktor.server.http.content.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.json.Json
 import java.io.File
 
@@ -104,6 +101,26 @@ suspend fun main(vararg args: String) {
                 val isSafe = telegramBotAPIUrlsKeeper.checkWebAppData(webAppCheckData.data, webAppCheckData.hash)
 
                 call.respond(HttpStatusCode.OK, isSafe.toString())
+            }
+            post("setCustomEmoji") {
+                val requestBody = call.receiveText()
+                val webAppCheckData = Json.decodeFromString(WebAppDataWrapper.serializer(), requestBody)
+
+                val isSafe = telegramBotAPIUrlsKeeper.checkWebAppData(webAppCheckData.data, webAppCheckData.hash)
+                val rawUserId = call.parameters[userIdField] ?.toLongOrNull() ?.let(::RawChatId) ?: error("$userIdField should be presented as long value")
+
+                val set = if (isSafe) {
+                    runCatching {
+                        bot.setUserEmojiStatus(
+                            UserId(rawUserId),
+                            CustomEmojiIdToSet
+                        )
+                    }.getOrElse { false }
+                } else {
+                    false
+                }
+
+                call.respond(HttpStatusCode.OK, set.toString())
             }
         }
     }.start(false)

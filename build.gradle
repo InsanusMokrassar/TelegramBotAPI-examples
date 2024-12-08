@@ -29,3 +29,8 @@ allprojects {
         maven { url "https://nexus.inmo.dev/repository/maven-releases/" }
     }
 }
+
+// Fix of https://youtrack.jetbrains.com/issue/KTOR-7912/Module-not-found-errors-when-executing-browserProductionWebpack-task-since-3.0.2
+rootProject.plugins.withType(org.jetbrains.kotlin.gradle.targets.js.yarn.YarnPlugin.class) {
+    rootProject.kotlinYarn.resolution("ws", "8.18.0")
+}
