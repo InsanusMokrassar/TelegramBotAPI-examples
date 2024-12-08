@@ -30,6 +30,7 @@ kotlin {
             dependencies {
                 implementation kotlin('stdlib')
                 implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:$serialization_version"
+                implementation "dev.inmo:tgbotapi.core:$telegram_bot_api_version"
                 implementation compose.runtime
             }
         }

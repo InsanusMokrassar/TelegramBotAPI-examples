@@ -1,5 +1,7 @@
 import androidx.compose.runtime.*
 import dev.inmo.micro_utils.coroutines.launchSafelyWithoutExceptions
+import dev.inmo.tgbotapi.types.CustomEmojiId
+import dev.inmo.tgbotapi.types.userIdField
 import dev.inmo.tgbotapi.types.webAppQueryIdField
 import dev.inmo.tgbotapi.webapps.*
 import dev.inmo.tgbotapi.webapps.accelerometer.AccelerometerStartParams
@@ -84,6 +86,47 @@ fun main() {
         )
         P()
         Text("Chat from WebAppInitData: ${webApp.initDataUnsafe.chat}")
+
+        val emojiStatusAccessState = remember { mutableStateOf(false) }
+        webApp.onEmojiStatusAccessRequested {
+            emojiStatusAccessState.value = it.isAllowed
+        }
+        Button({
+            onClick {
+                webApp.requestEmojiStatusAccess()
+            }
+        }) {
+            Text("Request custom emoji status access")
+        }
+        if (emojiStatusAccessState.value) {
+            Button({
+                onClick {
+                    webApp.setEmojiStatus(CustomEmojiIdToSet/* android custom emoji id */)
+                }
+            }) {
+                Text("Set custom emoji status")
+            }
+            val userId = webApp.initDataUnsafe.user ?.id
+            userId ?.let { userId ->
+                Button({
+                    onClick {
+                        scope.launchSafelyWithoutExceptions {
+                            client.post("$baseUrl/setCustomEmoji") {
+                                parameter(userIdField, userId.long)
+                                setBody(
+                                    Json.encodeToString(
+                                        WebAppDataWrapper.serializer(),
+                                        WebAppDataWrapper(webApp.initData, webApp.initDataUnsafe.hash)
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }) {
+                    Text("Set custom emoji status via bot")
+                }
+            }
+        }
 
         Button({
             onClick {
