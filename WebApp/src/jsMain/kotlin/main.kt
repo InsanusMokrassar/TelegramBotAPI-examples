@@ -12,14 +12,16 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
 import io.ktor.http.content.TextContent
-import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.*
 import kotlinx.dom.appendElement
 import kotlinx.dom.appendText
-import kotlinx.dom.clear
 import kotlinx.serialization.json.Json
+import org.jetbrains.compose.web.attributes.InputType
+import org.jetbrains.compose.web.css.Color as ComposeColor
+import org.jetbrains.compose.web.css.backgroundColor
 import org.jetbrains.compose.web.dom.Button
+import org.jetbrains.compose.web.dom.Input
 import org.jetbrains.compose.web.dom.P
 import org.jetbrains.compose.web.dom.Text
 import org.jetbrains.compose.web.renderComposable
@@ -42,6 +44,10 @@ fun main() {
         val scope = rememberCoroutineScope()
         val isSafeState = remember { mutableStateOf<Boolean?>(null) }
         val logsState = remember { mutableStateListOf<String>() }
+
+        Text(window.location.href)
+        P()
+
         LaunchedEffect(baseUrl) {
             val response = client.post("$baseUrl/check") {
                 setBody(
@@ -53,15 +59,15 @@ fun main() {
             }
             val dataIsSafe = response.bodyAsText().toBoolean()
 
-            document.body ?.log(
-                if (dataIsSafe) {
-                    "Data is safe"
-                } else {
-                    "Data is unsafe"
-                }
-            )
+            if (dataIsSafe) {
+                isSafeState.value = true
+                logsState.add("Data is safe")
+            } else {
+                isSafeState.value = false
+                logsState.add("Data is unsafe")
+            }
 
-            document.body ?.log(
+            logsState.add(
                 webApp.initDataUnsafe.chat.toString()
             )
         }
@@ -169,174 +175,179 @@ fun main() {
         }
         P()
 
-        logsState.forEach {
-            P { Text(it) }
-        }
-    }
-
-    window.onload = {
-        val scope = CoroutineScope(Dispatchers.Default)
-        runCatching {
-
-            document.body ?.appendElement("button") {
-                addEventListener("click", {
-                    webApp.showConfirm(
-                        "This is confirm message"
-                    ) {
-                        document.body ?.log(
-                            "You have pressed \"${if (it) "Ok" else "Cancel"}\" in confirm"
-                        )
-                    }
-                })
-                appendText("Confirm")
-            } ?: window.alert("Unable to load body")
-
-            document.body ?.appendElement("p", {})
-
-            document.body ?.appendElement("button") {
-                fun updateText() {
-                    textContent = if (webApp.isClosingConfirmationEnabled) {
-                        "Disable closing confirmation"
-                    } else {
-                        "Enable closing confirmation"
-                    }
-                }
-                addEventListener("click", {
-                    webApp.toggleClosingConfirmation()
-                    updateText()
-                })
-                updateText()
-            } ?: window.alert("Unable to load body")
-
-            document.body ?.appendElement("p", {})
-
-            document.body ?.appendElement("button") {
-                fun updateHeaderColor() {
-                    val (r, g, b) = Random.nextUBytes(3)
-                    val hex = Color.Hex(r, g, b)
-                    webApp.setHeaderColor(hex)
-                    (this as? HTMLButtonElement) ?.style ?.backgroundColor = hex.value
-                    textContent = "Header color: ${webApp.headerColor ?.uppercase()} (click to change)"
-                }
-                addEventListener("click", {
-                    updateHeaderColor()
-                })
-                updateHeaderColor()
-            } ?: window.alert("Unable to load body")
-
-            document.body ?.appendElement("p", {})
-
-            document.body ?.appendElement("button") {
-                fun updateBackgroundColor() {
-                    val (r, g, b) = Random.nextUBytes(3)
-                    val hex = Color.Hex(r, g, b)
-                    webApp.setBackgroundColor(hex)
-                    (this as? HTMLButtonElement) ?.style ?.backgroundColor = hex.value
-                    textContent = "Background color: ${webApp.backgroundColor ?.uppercase()} (click to change)"
-                }
-                addEventListener("click", {
-                    updateBackgroundColor()
-                })
-                updateBackgroundColor()
-            } ?: window.alert("Unable to load body")
-
-            document.body ?.appendElement("p", {})
-
-            document.body ?.appendElement("button") {
-                fun updateBottomBarColor() {
-                    val (r, g, b) = Random.nextUBytes(3)
-                    val hex = Color.Hex(r, g, b)
-                    webApp.setBottomBarColor(hex)
-                    (this as? HTMLButtonElement) ?.style ?.backgroundColor = hex.value
-                    textContent = "Bottom bar color: ${webApp.bottomBarColor ?.uppercase()} (click to change)"
-                }
-                addEventListener("click", {
-                    updateBottomBarColor()
-                })
-                updateBottomBarColor()
-            } ?: window.alert("Unable to load body")
-
-            document.body ?.appendElement("p", {})
-
-            fun Element.updateCloudStorageContent() {
-                clear()
-                webApp.cloudStorage.getAll {
-                    it.onSuccess {
-                        document.body ?.log(it.toString())
-                        appendElement("label") { textContent = "Cloud storage" }
-
-                        appendElement("p", {})
-
-                        it.forEach { (k, v) ->
-                            appendElement("div") {
-                                val kInput = appendElement("input", {}) as HTMLInputElement
-                                val vInput = appendElement("input", {}) as HTMLInputElement
-
-                                kInput.value = k.key
-                                vInput.value = v.value
-
-                                appendElement("button") {
-                                    addEventListener("click", {
-                                        if (k.key == kInput.value) {
-                                            webApp.cloudStorage.set(k.key, vInput.value) {
-                                                document.body ?.log(it.toString())
-                                                this@updateCloudStorageContent.updateCloudStorageContent()
-                                            }
-                                        } else {
-                                            webApp.cloudStorage.remove(k.key) {
-                                                it.onSuccess {
-                                                    webApp.cloudStorage.set(kInput.value, vInput.value) {
-                                                        document.body ?.log(it.toString())
-                                                        this@updateCloudStorageContent.updateCloudStorageContent()
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    })
-                                    this.textContent = "Save"
-                                }
-                            }
-
-                            appendElement("p", {})
-                        }
-                        appendElement("label") { textContent = "Cloud storage: add new" }
-
-                        appendElement("p", {})
-
-                        appendElement("div") {
-                            val kInput = appendElement("input", {}) as HTMLInputElement
-
-                            appendElement("button") {
-                                textContent = "Add key"
-                                addEventListener("click", {
-                                    webApp.cloudStorage.set(kInput.value, kInput.value) {
-                                        document.body ?.log(it.toString())
-                                        this@updateCloudStorageContent.updateCloudStorageContent()
-                                    }
-                                })
-                            }
-                        }
-
-                        appendElement("p", {})
-                    }.onFailure {
-                        document.body ?.log(it.stackTraceToString())
-                    }
+        Button({
+            onClick {
+                webApp.showConfirm(
+                    "This is confirm message"
+                ) {
+                    logsState.add(
+                        "You have pressed \"${if (it) "Ok" else "Cancel"}\" in confirm"
+                    )
                 }
             }
-            val cloudStorageContentDiv = document.body ?.appendElement("div") {} as HTMLDivElement
+        }) {
+            Text("Confirm")
+        }
 
-            document.body ?.appendElement("p", {})
+        P()
 
+        val isClosingConfirmationEnabledState = remember { mutableStateOf(webApp.isClosingConfirmationEnabled) }
+        Button({
+            onClick {
+                webApp.toggleClosingConfirmation()
+                isClosingConfirmationEnabledState.value = webApp.isClosingConfirmationEnabled
+            }
+        }) {
+            Text(
+                if (isClosingConfirmationEnabledState.value) {
+                    "Disable closing confirmation"
+                } else {
+                    "Enable closing confirmation"
+                }
+            )
+        }
+
+        P()
+
+        val headerColor = remember { mutableStateOf<Color.Hex>(Color.Hex("#000000")) }
+        fun updateHeaderColor() {
+            val (r, g, b) = Random.nextUBytes(3)
+            headerColor.value = Color.Hex(r, g, b)
+            webApp.setHeaderColor(headerColor.value)
+        }
+        DisposableEffect(0) {
+            updateHeaderColor()
+            onDispose {  }
+        }
+        Button({
+            style {
+                backgroundColor(ComposeColor(headerColor.value.value))
+            }
+            onClick {
+                updateHeaderColor()
+            }
+        }) {
+            key(headerColor.value) {
+                Text("Header color: ${webApp.headerColor ?.uppercase()} (click to change)")
+            }
+        }
+
+        P()
+
+        val backgroundColor = remember { mutableStateOf<Color.Hex>(Color.Hex("#000000")) }
+        fun updateBackgroundColor() {
+            val (r, g, b) = Random.nextUBytes(3)
+            backgroundColor.value = Color.Hex(r, g, b)
+            webApp.setBackgroundColor(backgroundColor.value)
+        }
+        DisposableEffect(0) {
+            updateBackgroundColor()
+            onDispose {  }
+        }
+        Button({
+            style {
+                backgroundColor(ComposeColor(backgroundColor.value.value))
+            }
+            onClick {
+                updateBackgroundColor()
+            }
+        }) {
+            key(backgroundColor.value) {
+                Text("Background color: ${webApp.backgroundColor ?.uppercase()} (click to change)")
+            }
+        }
+
+        P()
+
+        val bottomBarColor = remember { mutableStateOf<Color.Hex>(Color.Hex("#000000")) }
+        fun updateBottomBarColor() {
+            val (r, g, b) = Random.nextUBytes(3)
+            bottomBarColor.value = Color.Hex(r, g, b)
+            webApp.setBottomBarColor(bottomBarColor.value)
+        }
+        DisposableEffect(0) {
+            updateBottomBarColor()
+            onDispose {  }
+        }
+        Button({
+            style {
+                backgroundColor(ComposeColor(bottomBarColor.value.value))
+            }
+            onClick {
+                updateBottomBarColor()
+            }
+        }) {
+            key(bottomBarColor.value) {
+                Text("Bottom bar color: ${webApp.bottomBarColor ?.uppercase()} (click to change)")
+            }
+        }
+
+        P()
+
+        val storageTrigger = remember { mutableStateOf<List<Pair<CloudStorageKey, CloudStorageValue>>>(emptyList()) }
+        fun updateCloudStorage() {
+            webApp.cloudStorage.getAll {
+                it.onSuccess {
+                    storageTrigger.value = it.toList().sortedBy { it.first.key }
+                }
+            }
+        }
+        key(storageTrigger.value) {
+            storageTrigger.value.forEach { (key, value) ->
+                val keyState = remember { mutableStateOf(key.key) }
+                val valueState = remember { mutableStateOf(value.value) }
+                Input(InputType.Text) {
+                    value(key.key)
+                    onInput { keyState.value = it.value }
+                }
+                Input(InputType.Text) {
+                    value(value.value)
+                    onInput { valueState.value = it.value }
+                }
+                Button({
+                    onClick {
+                        if (key.key != keyState.value) {
+                            webApp.cloudStorage.remove(key)
+                        }
+                        webApp.cloudStorage.set(keyState.value, valueState.value)
+                        updateCloudStorage()
+                    }
+                }) {
+                    Text("Save")
+                }
+            }
+            let { // new element adding
+                val keyState = remember { mutableStateOf("") }
+                val valueState = remember { mutableStateOf("") }
+                Input(InputType.Text) {
+                    onInput { keyState.value = it.value }
+                }
+                Input(InputType.Text) {
+                    onInput { valueState.value = it.value }
+                }
+                Button({
+                    onClick {
+                        webApp.cloudStorage.set(keyState.value, valueState.value)
+                        updateCloudStorage()
+                    }
+                }) {
+                    Text("Save")
+                }
+            }
+        }
+
+        remember {
             webApp.apply {
+
                 onThemeChanged {
-                    document.body ?.log("Theme changed: ${webApp.themeParams}")
+                    logsState.add("Theme changed: ${webApp.themeParams}")
                 }
                 onViewportChanged {
-                    document.body ?.log("Viewport changed: ${it}")
+                    logsState.add("Viewport changed: ${it}")
                 }
                 backButton.apply {
                     onClick {
-                        document.body ?.log("Back button clicked")
+                        logsState.add("Back button clicked")
                         hapticFeedback.impactOccurred(
                             HapticFeedbackStyle.Heavy
                         )
@@ -346,7 +357,7 @@ fun main() {
                 mainButton.apply {
                     setText("Main button")
                     onClick {
-                        document.body ?.log("Main button clicked")
+                        logsState.add("Main button clicked")
                         hapticFeedback.notificationOccurred(
                             HapticFeedbackType.Success
                         )
@@ -356,7 +367,7 @@ fun main() {
                 secondaryButton.apply {
                     setText("Secondary button")
                     onClick {
-                        document.body ?.log("Secondary button clicked")
+                        logsState.add("Secondary button clicked")
                         hapticFeedback.notificationOccurred(
                             HapticFeedbackType.Warning
                         )
@@ -364,22 +375,19 @@ fun main() {
                     show()
                 }
                 onSettingsButtonClicked {
-                    document.body ?.log("Settings button clicked")
+                    logsState.add("Settings button clicked")
                 }
                 onWriteAccessRequested {
-                    document.body ?.log("Write access request result: $it")
+                    logsState.add("Write access request result: $it")
                 }
                 onContactRequested {
-                    document.body ?.log("Contact request result: $it")
+                    logsState.add("Contact request result: $it")
                 }
             }
-            webApp.ready()
-            document.body ?.appendElement("input", {
-                (this as HTMLInputElement).value = window.location.href
-            })
-            cloudStorageContentDiv.updateCloudStorageContent()
-        }.onFailure {
-            window.alert(it.stackTraceToString())
+        }
+
+        logsState.forEach {
+            P { Text(it) }
         }
     }
 }
