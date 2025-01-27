@@ -15,8 +15,8 @@ import dev.inmo.tgbotapi.extensions.utils.types.buttons.*
 import dev.inmo.tgbotapi.types.BotCommand
 import dev.inmo.tgbotapi.types.chat.PrivateChat
 import dev.inmo.tgbotapi.types.keyboardButtonRequestUserLimit
-import dev.inmo.tgbotapi.types.message.textsources.mention
 import dev.inmo.tgbotapi.types.request.RequestId
+import dev.inmo.tgbotapi.utils.mention
 import dev.inmo.tgbotapi.utils.row
 
 suspend fun main(args: Array<String>) {
@@ -287,7 +287,7 @@ suspend fun main(args: Array<String>) {
                     it,
                 ) {
                     +"You have shared "
-                    +mention(
+                    mention(
                         when (it.chatEvent.requestId) {
                             requestIdUserOrBot -> "user or bot"
                             requestIdUserNonPremium -> "non premium user"
