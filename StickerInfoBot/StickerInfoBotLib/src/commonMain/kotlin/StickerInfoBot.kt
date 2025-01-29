@@ -12,7 +12,7 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onSticke
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onText
 import dev.inmo.tgbotapi.types.StickerType
 import dev.inmo.tgbotapi.types.message.textsources.CustomEmojiTextSource
-import dev.inmo.tgbotapi.types.message.textsources.regular
+import dev.inmo.tgbotapi.types.message.textsources.regularTextSource
 import dev.inmo.tgbotapi.types.message.textsources.separateForText
 import dev.inmo.tgbotapi.types.stickers.StickerSet
 import dev.inmo.tgbotapi.utils.bold
@@ -62,7 +62,7 @@ suspend fun activateStickerInfoBot(
                 }.distinct().map {
                     getStickerSet(it)
                 }.distinct().flatMap {
-                    it.buildInfo() + regular("\n")
+                    it.buildInfo() + regularTextSource("\n")
                 }.separateForText().map { entities ->
                     reply(it, entities)
                 }
