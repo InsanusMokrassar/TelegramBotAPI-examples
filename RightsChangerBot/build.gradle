@@ -18,5 +18,5 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
     implementation "dev.inmo:tgbotapi:$telegram_bot_api_version"
-    implementation 'io.ktor:ktor-client-logging-jvm:3.0.3'
+    implementation 'io.ktor:ktor-client-logging-jvm:3.1.0'
 }
