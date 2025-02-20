@@ -7,11 +7,13 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onConten
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMentionWithAnyContent
 import dev.inmo.tgbotapi.extensions.utils.extensions.raw.sender_chat
 import dev.inmo.tgbotapi.extensions.utils.extensions.raw.text
+import dev.inmo.tgbotapi.extensions.utils.formatting.chatLink
 import dev.inmo.tgbotapi.extensions.utils.formatting.linkMarkdownV2
 import dev.inmo.tgbotapi.extensions.utils.formatting.textMentionMarkdownV2
 import dev.inmo.tgbotapi.extensions.utils.ifFromChannelGroupContentMessage
 import dev.inmo.tgbotapi.types.chat.*
 import dev.inmo.tgbotapi.types.message.MarkdownV2
+import dev.inmo.tgbotapi.types.message.abstracts.ForumContentMessage
 import dev.inmo.tgbotapi.utils.PreviewFeature
 import dev.inmo.tgbotapi.utils.extensions.escapeMarkdownV2Common
 import kotlinx.coroutines.CoroutineScope
@@ -56,8 +58,17 @@ suspend fun main(vararg args: String) {
                         reply(message, answer, MarkdownV2)
                         return@onContentMessage
                     }
-                    "Oh, hi, " + when (chat) {
-                        is SupergroupChat -> (chat.username ?.username ?: getChat(chat).inviteLink) ?.let {
+                    "Oh, hi, " + when {
+                        chat is ForumChat && message is ForumContentMessage<*> -> {
+                            val baseTitle = (chat.username ?.username ?: getChat(chat).inviteLink) ?.let {
+                                chat.title.linkMarkdownV2(it)
+                            } ?: chat.title
+                            val additionalTitle = message.threadCreatingInfo ?.let {
+                                it.name.linkMarkdownV2(message.chat.id.chatLink)
+                            } ?: "Main topic"
+                            "$baseTitle \\($additionalTitle\\)"
+                        }
+                        chat is SupergroupChat -> (chat.username ?.username ?: getChat(chat).inviteLink) ?.let {
                             chat.title.linkMarkdownV2(it)
                         } ?: chat.title
                         else -> bot.getChat(chat).inviteLink ?.let {
