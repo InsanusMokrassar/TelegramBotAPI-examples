@@ -12,14 +12,16 @@ plugins {
     id "org.jetbrains.kotlin.multiplatform"
 }
 
-apply plugin: 'application'
-
-mainClassName="InlineQueriesBotKt"
-
 apply from: "$nativePartTemplate"
 
 kotlin {
-    jvm()
+    jvm {
+        binaries {
+            executable {
+                mainClass.set("InlineQueriesBotKt")
+            }
+        }
+    }
 
     sourceSets {
         commonMain {
@@ -27,12 +29,14 @@ kotlin {
                 implementation kotlin('stdlib')
 
                 api "dev.inmo:tgbotapi:$telegram_bot_api_version"
+                api "dev.inmo:tgbotapi:$telegram_bot_api_version"
+            }
+        }
+        jvmMain {
+            dependencies {
+                api "io.ktor:ktor-client-logging-jvm:$ktor_version"
             }
         }
     }
-}
-
-dependencies {
-    implementation 'io.ktor:ktor-client-logging-jvm:3.0.3'
 }
 
