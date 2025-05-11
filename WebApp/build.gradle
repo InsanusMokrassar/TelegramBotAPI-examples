@@ -16,10 +16,14 @@ plugins {
     id "org.jetbrains.compose" version "$compose_version"
 }
 
-apply plugin: 'application'
-
 kotlin {
-    jvm()
+    jvm {
+        binaries {
+            executable {
+                mainClass.set("WebAppServerKt")
+            }
+        }
+    }
     js(IR) {
         browser()
         binaries.executable()
@@ -51,10 +55,6 @@ kotlin {
             }
         }
     }
-}
-
-application {
-    mainClassName = "WebAppServerKt"
 }
 
 tasks.getByName("compileKotlinJvm")

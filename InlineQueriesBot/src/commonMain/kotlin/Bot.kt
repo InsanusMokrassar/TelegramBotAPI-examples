@@ -1,4 +1,4 @@
-import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
+import dev.inmo.micro_utils.coroutines.subscribeLoggingDropExceptions
 import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.send.reply
@@ -59,7 +59,7 @@ suspend fun doInlineQueriesBot(token: String) {
             reply(message, deepLink)
         }
 
-        allUpdatesFlow.subscribeSafelyWithoutExceptions(this) {
+        allUpdatesFlow.subscribeLoggingDropExceptions(scope = this) {
             println(it)
         }
 

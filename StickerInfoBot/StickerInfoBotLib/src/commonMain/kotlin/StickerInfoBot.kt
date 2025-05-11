@@ -1,5 +1,5 @@
 import dev.inmo.micro_utils.coroutines.defaultSafelyWithoutExceptionHandler
-import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
+import dev.inmo.micro_utils.coroutines.subscribeLoggingDropExceptions
 import dev.inmo.tgbotapi.bot.ktor.telegramBot
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.get.getCustomEmojiStickerOrNull
@@ -55,7 +55,7 @@ suspend fun activateStickerInfoBot(
             withTypingAction(it.chat) {
                 it.content.textSources.mapNotNull {
                     if (it is CustomEmojiTextSource) {
-                        getCustomEmojiStickerOrNull(it.customEmojiId) ?.stickerSetName
+                        getCustomEmojiStickerOrNull(it.customEmojiId)?.stickerSetName
                     } else {
                         null
                     }
@@ -76,7 +76,7 @@ suspend fun activateStickerInfoBot(
             )
         }
 
-        allUpdatesFlow.subscribeSafelyWithoutExceptions(this) {
+        allUpdatesFlow.subscribeLoggingDropExceptions(scope = this) {
             println(it)
         }
     }.join()

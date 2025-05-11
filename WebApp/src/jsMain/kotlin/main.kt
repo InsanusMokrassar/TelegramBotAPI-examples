@@ -1,4 +1,5 @@
 import androidx.compose.runtime.*
+import dev.inmo.micro_utils.coroutines.launchLoggingDropExceptions
 import dev.inmo.micro_utils.coroutines.launchSafelyWithoutExceptions
 import dev.inmo.tgbotapi.types.CustomEmojiId
 import dev.inmo.tgbotapi.types.userIdField
@@ -110,7 +111,7 @@ fun main() {
             userId ?.let { userId ->
                 Button({
                     onClick {
-                        scope.launchSafelyWithoutExceptions {
+                        scope.launchLoggingDropExceptions {
                             client.post("$baseUrl/setCustomEmoji") {
                                 parameter(userIdField, userId.long)
                                 setBody(
@@ -130,7 +131,7 @@ fun main() {
 
         Button({
             onClick {
-                scope.launchSafelyWithoutExceptions {
+                scope.launchLoggingDropExceptions {
                     handleResult({ "Clicked" }) {
                         client.post("${window.location.origin.removeSuffix("/")}/inline") {
                             parameter(webAppQueryIdField, it)

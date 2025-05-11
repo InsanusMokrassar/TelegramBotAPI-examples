@@ -1,4 +1,4 @@
-import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
+import dev.inmo.micro_utils.coroutines.subscribeLoggingDropExceptions
 import dev.inmo.tgbotapi.bot.ktor.telegramBot
 import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
@@ -89,7 +89,7 @@ suspend fun activateKeyboardsBot(
         onCommandWithArgs("inline") { message, args ->
             val numberArgs = args.mapNotNull { it.toIntOrNull() }
             val numberOfPages = numberArgs.getOrNull(1) ?: numberArgs.firstOrNull() ?: 10
-            val page = numberArgs.firstOrNull() ?.takeIf { numberArgs.size > 1 } ?.coerceAtLeast(1) ?: 1
+            val page = numberArgs.firstOrNull()?.takeIf { numberArgs.size > 1 }?.coerceAtLeast(1) ?: 1
             reply(
                 message,
                 replyMarkup = inlineKeyboard {
@@ -138,7 +138,8 @@ suspend fun activateKeyboardsBot(
 
         onBaseInlineQuery {
             val page = it.query.takeWhile { it.isDigit() }.toIntOrNull() ?: return@onBaseInlineQuery
-            val count = it.query.removePrefix(page.toString()).dropWhile { !it.isDigit() }.takeWhile { it.isDigit() }.toIntOrNull() ?: return@onBaseInlineQuery
+            val count = it.query.removePrefix(page.toString()).dropWhile { !it.isDigit() }.takeWhile { it.isDigit() }
+                .toIntOrNull() ?: return@onBaseInlineQuery
 
             answer(
                 it,
@@ -170,7 +171,7 @@ suspend fun activateKeyboardsBot(
 
         setMyCommands(BotCommand("inline", "Creates message with pagination inline keyboard"))
 
-        allUpdatesFlow.subscribeSafelyWithoutExceptions(this) {
+        allUpdatesFlow.subscribeLoggingDropExceptions(scope = this) {
             println(it)
         }
     }.join()
