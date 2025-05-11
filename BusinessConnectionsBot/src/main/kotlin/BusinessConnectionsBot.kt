@@ -15,11 +15,15 @@ import dev.inmo.tgbotapi.extensions.utils.ifAccessibleMessage
 import dev.inmo.tgbotapi.extensions.utils.ifBusinessContentMessage
 import dev.inmo.tgbotapi.extensions.utils.textContentOrNull
 import dev.inmo.tgbotapi.types.ChatId
+import dev.inmo.tgbotapi.types.business_connection.BusinessConnection
 import dev.inmo.tgbotapi.types.business_connection.BusinessConnectionId
+import dev.inmo.tgbotapi.types.chat.PrivateChat
+import dev.inmo.tgbotapi.utils.toJson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.json.Json
 
 suspend fun main(args: Array<String>) {
     val botToken = args.first()
@@ -34,6 +38,7 @@ suspend fun main(args: Array<String>) {
     }
 
     val businessConnectionsChats = mutableMapOf<BusinessConnectionId, ChatId>()
+    val chatsBusinessConnections = mutableMapOf<ChatId, BusinessConnectionId>()
     val businessConnectionsChatsMutex = Mutex()
 
     telegramBotWithBehaviourAndLongPolling(botToken, CoroutineScope(Dispatchers.IO)) {
@@ -43,12 +48,14 @@ suspend fun main(args: Array<String>) {
         onBusinessConnectionEnabled {
             businessConnectionsChatsMutex.withLock {
                 businessConnectionsChats[it.id] = it.userChatId
+                chatsBusinessConnections[it.userChatId] = it.id
             }
             send(it.userChatId, "Business connection ${it.businessConnectionId.string} has been enabled")
         }
         onBusinessConnectionDisabled {
             businessConnectionsChatsMutex.withLock {
                 businessConnectionsChats.remove(it.id)
+                chatsBusinessConnections.remove(it.userChatId)
             }
             send(it.userChatId, "Business connection ${it.businessConnectionId.string} has been disabled")
         }
@@ -97,6 +104,17 @@ suspend fun main(args: Array<String>) {
                 businessConnectionOwnerChat = businessConnection.userChatId
             }
             send(businessConnectionOwnerChat, "There are several removed messages in chat ${it.chat.id}: ${it.messageIds}")
+        }
+        onCommand("get_business_account_info", initialFilter = { it.chat is PrivateChat }) {
+            val businessConnectionId = chatsBusinessConnections[it.chat.id]
+            val businessConnectionInfo = businessConnectionId ?.let { getBusinessConnection(it) }
+            reply(it) {
+                if (businessConnectionInfo == null) {
+                    +"There is no business connection for current chat"
+                } else {
+                    +(Json { prettyPrint = true; encodeDefaults = true }.encodeToString(businessConnectionInfo))
+                }
+            }
         }
     }.second.join()
 }
