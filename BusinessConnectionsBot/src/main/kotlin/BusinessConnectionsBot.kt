@@ -2,7 +2,10 @@ import dev.inmo.kslog.common.KSLog
 import dev.inmo.kslog.common.LogLevel
 import dev.inmo.kslog.common.defaultMessageFormatter
 import dev.inmo.kslog.common.setDefaultKSLog
+import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
+import dev.inmo.tgbotapi.extensions.api.business.deleteBusinessMessages
+import dev.inmo.tgbotapi.extensions.api.business.readBusinessMessage
 import dev.inmo.tgbotapi.extensions.api.chat.modify.pinChatMessage
 import dev.inmo.tgbotapi.extensions.api.chat.modify.unpinChatMessage
 import dev.inmo.tgbotapi.extensions.api.get.getBusinessConnection
@@ -14,10 +17,15 @@ import dev.inmo.tgbotapi.extensions.utils.accessibleMessageOrNull
 import dev.inmo.tgbotapi.extensions.utils.ifAccessibleMessage
 import dev.inmo.tgbotapi.extensions.utils.ifBusinessContentMessage
 import dev.inmo.tgbotapi.extensions.utils.textContentOrNull
+import dev.inmo.tgbotapi.extensions.utils.types.buttons.dataButton
+import dev.inmo.tgbotapi.extensions.utils.types.buttons.inlineKeyboard
 import dev.inmo.tgbotapi.types.ChatId
+import dev.inmo.tgbotapi.types.MessageId
+import dev.inmo.tgbotapi.types.RawChatId
 import dev.inmo.tgbotapi.types.business_connection.BusinessConnection
 import dev.inmo.tgbotapi.types.business_connection.BusinessConnectionId
 import dev.inmo.tgbotapi.types.chat.PrivateChat
+import dev.inmo.tgbotapi.utils.row
 import dev.inmo.tgbotapi.utils.toJson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -78,7 +86,20 @@ suspend fun main(args: Array<String>) {
                 if (businessContentMessage.sentByBusinessConnectionOwner) {
                     reply(sent, "You have sent this message to the ${businessContentMessage.businessConnectionId.string} related chat")
                 } else {
-                    reply(sent, "User have sent this message to you in the ${businessContentMessage.businessConnectionId.string} related chat")
+                    reply(
+                        to = sent,
+                        text = "User have sent this message to you in the ${businessContentMessage.businessConnectionId.string} related chat",
+                    )
+                    send(
+                        chatId = businessConnectionsChats[it.businessConnectionId] ?: return@ifBusinessContentMessage,
+                        text = "User have sent this message to you in the ${businessContentMessage.businessConnectionId.string} related chat",
+                        replyMarkup = inlineKeyboard {
+                            row {
+                                dataButton("Read message", "read ${it.chat.id.chatId.long} ${it.messageId.long}")
+                                dataButton("Delete message", "delete ${it.chat.id.chatId.long} ${it.messageId.long}")
+                            }
+                        }
+                    )
                 }
             }
         }
@@ -115,6 +136,38 @@ suspend fun main(args: Array<String>) {
                     +(Json { prettyPrint = true; encodeDefaults = true }.encodeToString(businessConnectionInfo))
                 }
             }
+        }
+        onMessageDataCallbackQuery(Regex("read \\d+ \\d+")) {
+            val (_, chatIdString, messageIdString) = it.data.split(" ")
+            val chatId = chatIdString.toLongOrNull() ?.let(::RawChatId) ?.let(::ChatId) ?: return@onMessageDataCallbackQuery
+            val messageId = messageIdString.toLongOrNull() ?.let(::MessageId) ?: return@onMessageDataCallbackQuery
+            val businessConnectionId = chatsBusinessConnections[it.message.chat.id]
+
+            val readResponse = businessConnectionId ?.let { readBusinessMessage(it, chatId, messageId) }
+            answer(
+                it,
+                if (readResponse == null) {
+                    "There is no business connection for current chat"
+                } else {
+                    "Message has been read"
+                }
+            )
+        }
+        onMessageDataCallbackQuery(Regex("delete \\d+ \\d+")) {
+            val (_, chatIdString, messageIdString) = it.data.split(" ")
+            val chatId = chatIdString.toLongOrNull() ?.let(::RawChatId) ?.let(::ChatId) ?: return@onMessageDataCallbackQuery
+            val messageId = messageIdString.toLongOrNull() ?.let(::MessageId) ?: return@onMessageDataCallbackQuery
+            val businessConnectionId = chatsBusinessConnections[it.message.chat.id]
+
+            val readResponse = businessConnectionId ?.let { deleteBusinessMessages(it, listOf(messageId)) }
+            answer(
+                it,
+                if (readResponse == null) {
+                    "There is no business connection for current chat"
+                } else {
+                    "Message has been deleted"
+                }
+            )
         }
     }.second.join()
 }
