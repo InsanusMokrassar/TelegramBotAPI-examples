@@ -6,6 +6,7 @@ import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.business.deleteBusinessMessages
 import dev.inmo.tgbotapi.extensions.api.business.readBusinessMessage
+import dev.inmo.tgbotapi.extensions.api.business.setBusinessAccountName
 import dev.inmo.tgbotapi.extensions.api.chat.modify.pinChatMessage
 import dev.inmo.tgbotapi.extensions.api.chat.modify.unpinChatMessage
 import dev.inmo.tgbotapi.extensions.api.get.getBusinessConnection
@@ -168,6 +169,25 @@ suspend fun main(args: Array<String>) {
                     "Message has been deleted"
                 }
             )
+        }
+        onCommandWithArgs("set_business_account_name", initialFilter = { it.chat is PrivateChat }) { it, args ->
+            val firstName = args[0]
+            val secondName = args.getOrNull(1)
+            val businessConnectionId = chatsBusinessConnections[it.chat.id] ?: return@onCommandWithArgs
+            val set = runCatching {
+                setBusinessAccountName(
+                    businessConnectionId,
+                    firstName,
+                    secondName
+                )
+            }.getOrElse { false }
+            reply(it) {
+                if (set) {
+                    +"Account name has been set"
+                } else {
+                    +"Account name has not been set"
+                }
+            }
         }
     }.second.join()
 }
