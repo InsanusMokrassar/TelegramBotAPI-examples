@@ -7,6 +7,7 @@ import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.business.deleteBusinessMessages
 import dev.inmo.tgbotapi.extensions.api.business.readBusinessMessage
 import dev.inmo.tgbotapi.extensions.api.business.setBusinessAccountName
+import dev.inmo.tgbotapi.extensions.api.business.setBusinessAccountUsername
 import dev.inmo.tgbotapi.extensions.api.chat.modify.pinChatMessage
 import dev.inmo.tgbotapi.extensions.api.chat.modify.unpinChatMessage
 import dev.inmo.tgbotapi.extensions.api.get.getBusinessConnection
@@ -23,6 +24,7 @@ import dev.inmo.tgbotapi.extensions.utils.types.buttons.inlineKeyboard
 import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.tgbotapi.types.MessageId
 import dev.inmo.tgbotapi.types.RawChatId
+import dev.inmo.tgbotapi.types.Username
 import dev.inmo.tgbotapi.types.business_connection.BusinessConnection
 import dev.inmo.tgbotapi.types.business_connection.BusinessConnectionId
 import dev.inmo.tgbotapi.types.chat.PrivateChat
@@ -186,6 +188,26 @@ suspend fun main(args: Array<String>) {
                     +"Account name has been set"
                 } else {
                     +"Account name has not been set"
+                }
+            }
+        }
+        onCommandWithArgs("set_business_account_username", initialFilter = { it.chat is PrivateChat }) { it, args ->
+            val username = args[0]
+            val businessConnectionId = chatsBusinessConnections[it.chat.id] ?: return@onCommandWithArgs
+            val set = runCatching {
+                setBusinessAccountUsername(
+                    businessConnectionId,
+                    username
+                )
+            }.getOrElse {
+                it.printStackTrace()
+                false
+            }
+            reply(it) {
+                if (set) {
+                    +"Account username has been set"
+                } else {
+                    +"Account username has not been set"
                 }
             }
         }
