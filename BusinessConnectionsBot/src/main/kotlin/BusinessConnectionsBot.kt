@@ -6,8 +6,10 @@ import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.business.deleteBusinessMessages
 import dev.inmo.tgbotapi.extensions.api.business.readBusinessMessage
+import dev.inmo.tgbotapi.extensions.api.business.setBusinessAccountBio
 import dev.inmo.tgbotapi.extensions.api.business.setBusinessAccountName
 import dev.inmo.tgbotapi.extensions.api.business.setBusinessAccountUsername
+import dev.inmo.tgbotapi.extensions.api.chat.get.getChat
 import dev.inmo.tgbotapi.extensions.api.chat.modify.pinChatMessage
 import dev.inmo.tgbotapi.extensions.api.chat.modify.unpinChatMessage
 import dev.inmo.tgbotapi.extensions.api.get.getBusinessConnection
@@ -15,7 +17,7 @@ import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.send
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
-import dev.inmo.tgbotapi.extensions.utils.accessibleMessageOrNull
+import dev.inmo.tgbotapi.extensions.utils.extendedPrivateChatOrThrow
 import dev.inmo.tgbotapi.extensions.utils.ifAccessibleMessage
 import dev.inmo.tgbotapi.extensions.utils.ifBusinessContentMessage
 import dev.inmo.tgbotapi.extensions.utils.textContentOrNull
@@ -24,14 +26,14 @@ import dev.inmo.tgbotapi.extensions.utils.types.buttons.inlineKeyboard
 import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.tgbotapi.types.MessageId
 import dev.inmo.tgbotapi.types.RawChatId
-import dev.inmo.tgbotapi.types.Username
-import dev.inmo.tgbotapi.types.business_connection.BusinessConnection
 import dev.inmo.tgbotapi.types.business_connection.BusinessConnectionId
 import dev.inmo.tgbotapi.types.chat.PrivateChat
+import dev.inmo.tgbotapi.utils.code
 import dev.inmo.tgbotapi.utils.row
-import dev.inmo.tgbotapi.utils.toJson
+import korlibs.time.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
@@ -208,6 +210,44 @@ suspend fun main(args: Array<String>) {
                     +"Account username has been set"
                 } else {
                     +"Account username has not been set"
+                }
+            }
+        }
+        onCommand("set_business_account_bio", requireOnlyCommandInMessage = false, initialFilter = { it.chat is PrivateChat }) {
+            val initialBio = getChat(it.chat).extendedPrivateChatOrThrow().bio
+            val bio = it.content.text.removePrefix("/set_business_account_bio").trim()
+            val businessConnectionId = chatsBusinessConnections[it.chat.id] ?: return@onCommand
+            val set = runCatching {
+                setBusinessAccountBio(
+                    businessConnectionId,
+                    bio
+                )
+            }.getOrElse {
+                it.printStackTrace()
+                false
+            }
+            reply(it) {
+                if (set) {
+                    +"Account bio has been set. It will be reset within 15 seconds.\n\nInitial bio: " + code(initialBio)
+                } else {
+                    +"Account bio has not been set"
+                }
+            }
+            delay(15.seconds)
+            val reset = runCatching {
+                setBusinessAccountBio(
+                    businessConnectionId,
+                    initialBio
+                )
+            }.getOrElse {
+                it.printStackTrace()
+                false
+            }
+            reply(it) {
+                if (set) {
+                    +"Account bio has been reset"
+                } else {
+                    +"Account bio has not been set. Set it manually: " + code(initialBio)
                 }
             }
         }
