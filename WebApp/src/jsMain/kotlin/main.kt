@@ -13,6 +13,7 @@ import dev.inmo.tgbotapi.webapps.haptic.HapticFeedbackStyle
 import dev.inmo.tgbotapi.webapps.haptic.HapticFeedbackType
 import dev.inmo.tgbotapi.webapps.orientation.DeviceOrientationStartParams
 import dev.inmo.tgbotapi.webapps.popup.*
+import dev.inmo.tgbotapi.webapps.storage.getWithResult
 import io.ktor.client.HttpClient
 import io.ktor.client.request.*
 import io.ktor.client.statement.bodyAsText
@@ -24,9 +25,13 @@ import kotlinx.dom.appendElement
 import kotlinx.dom.appendText
 import kotlinx.serialization.json.Json
 import org.jetbrains.compose.web.attributes.InputType
+import org.jetbrains.compose.web.attributes.placeholder
 import org.jetbrains.compose.web.css.DisplayStyle
+import org.jetbrains.compose.web.css.Style
+import org.jetbrains.compose.web.css.StyleSheet
 import org.jetbrains.compose.web.css.Color as ComposeColor
 import org.jetbrains.compose.web.css.backgroundColor
+import org.jetbrains.compose.web.css.color
 import org.jetbrains.compose.web.css.display
 import org.jetbrains.compose.web.dom.*
 import org.jetbrains.compose.web.dom.Text
@@ -40,6 +45,13 @@ fun HTMLElement.log(text: String) {
     appendElement("p", {})
 }
 
+private object RootStyleSheet : StyleSheet() {
+    val rootClass by style {
+        color(ComposeColor("var(--tg-theme-text-color)"))
+        backgroundColor(ComposeColor("var(--tg-theme-bg-color)"))
+    }
+}
+
 @OptIn(ExperimentalUnsignedTypes::class)
 fun main() {
     console.log("Web app started")
@@ -47,6 +59,14 @@ fun main() {
     val baseUrl = window.location.origin.removeSuffix("/")
 
     renderComposable("root") {
+        Style(RootStyleSheet)
+        DisposableEffect(null) {
+            scopeElement.classList.add(RootStyleSheet.rootClass)
+
+            onDispose {
+                scopeElement.classList.remove(RootStyleSheet.rootClass)
+            }
+        }
         val scope = rememberCoroutineScope()
         val isSafeState = remember { mutableStateOf<Boolean?>(null) }
         val logsState = remember { mutableStateListOf<Any?>() }
@@ -554,6 +574,52 @@ fun main() {
                 Text("beta: ${betaState.value}")
                 P()
                 Text("gamma: ${gammaState.value}")
+            }
+        }
+        P()
+
+        let { // DeviceStorage
+            val fieldKey = remember { mutableStateOf("") }
+            val fieldValue = remember { mutableStateOf("") }
+            val message = remember { mutableStateOf("") }
+            Div {
+                Text("Start type title of key. If value will be found in device storage, it will be shown in value input")
+            }
+
+            Input(InputType.Text) {
+                placeholder("Key")
+                value(fieldKey.value)
+                onInput {
+                    fieldKey.value = it.value
+                    webApp.deviceStorage.getItem(it.value) { e, v ->
+                        fieldValue.value = v ?: ""
+                        if (v == null) {
+                            message.value = "Value for key \"${it.value}\" has not been found"
+                        } else {
+                            message.value = "Value for key \"${it.value}\" has been found: \"$v\""
+                        }
+                    }
+                }
+            }
+            Div {
+                Text("If you want to change value if typed key - just put it here")
+            }
+            Input(InputType.Text) {
+                placeholder("Value")
+                value(fieldValue.value)
+                onInput {
+                    fieldValue.value = it.value
+                    webApp.deviceStorage.setItem(fieldKey.value, it.value) { e, v ->
+                        if (v == true) {
+                            fieldValue.value = it.value
+                            message.value = "Value \"${it.value}\" has been saved"
+                        }
+                    }
+                }
+            }
+
+            if (message.value.isNotEmpty()) {
+                Div { Text(message.value) }
             }
         }
         P()
