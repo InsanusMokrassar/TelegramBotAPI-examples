@@ -5,13 +5,17 @@ import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.micro_utils.common.Percentage
 import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
+import dev.inmo.tgbotapi.extensions.api.business.getBusinessAccountStarBalance
 import dev.inmo.tgbotapi.extensions.api.business.deleteBusinessMessages
+import dev.inmo.tgbotapi.extensions.api.business.getBusinessAccountGifts
+import dev.inmo.tgbotapi.extensions.api.business.getBusinessAccountGiftsFlow
 import dev.inmo.tgbotapi.extensions.api.business.readBusinessMessage
 import dev.inmo.tgbotapi.extensions.api.business.removeBusinessAccountProfilePhoto
 import dev.inmo.tgbotapi.extensions.api.business.setBusinessAccountBio
 import dev.inmo.tgbotapi.extensions.api.business.setBusinessAccountName
 import dev.inmo.tgbotapi.extensions.api.business.setBusinessAccountProfilePhoto
 import dev.inmo.tgbotapi.extensions.api.business.setBusinessAccountUsername
+import dev.inmo.tgbotapi.extensions.api.business.transferBusinessAccountStars
 import dev.inmo.tgbotapi.extensions.api.chat.get.getChat
 import dev.inmo.tgbotapi.extensions.api.chat.modify.pinChatMessage
 import dev.inmo.tgbotapi.extensions.api.chat.modify.unpinChatMessage
@@ -51,6 +55,7 @@ import dev.inmo.tgbotapi.types.stories.StoryAreaPosition
 import dev.inmo.tgbotapi.types.stories.StoryAreaType
 import dev.inmo.tgbotapi.utils.botCommand
 import dev.inmo.tgbotapi.utils.code
+import dev.inmo.tgbotapi.utils.extensions.splitForText
 import dev.inmo.tgbotapi.utils.row
 import korlibs.time.seconds
 import kotlinx.coroutines.CoroutineScope
@@ -232,6 +237,65 @@ suspend fun main(args: Array<String>) {
                     +"Account username has been set"
                 } else {
                     +"Account username has not been set"
+                }
+            }
+        }
+        onCommand("get_business_account_star_balance", initialFilter = { it.chat is PrivateChat }) {
+            val businessConnectionId = chatsBusinessConnections[it.chat.id] ?: return@onCommand
+            val starAmount = runCatching {
+                getBusinessAccountStarBalance(businessConnectionId)
+            }.getOrElse {
+                it.printStackTrace()
+                null
+            }
+            reply(it) {
+                if (starAmount != null) {
+                    +"Account stars amount: $starAmount"
+                } else {
+                    +"Account stars amount has not been got"
+                }
+            }
+        }
+        onCommandWithArgs("transfer_business_account_stars", initialFilter = { it.chat is PrivateChat }) { it, args ->
+            val businessConnectionId = chatsBusinessConnections[it.chat.id] ?: return@onCommandWithArgs
+            val count = args.firstOrNull() ?.toIntOrNull() ?: reply(it) {
+                "Pass amount of stars to transfer to bot with command"
+            }.let {
+                return@onCommandWithArgs
+            }
+            val transferred = runCatching {
+                transferBusinessAccountStars(businessConnectionId, count)
+            }.getOrElse {
+                it.printStackTrace()
+                false
+            }
+            reply(it) {
+                if (transferred) {
+                    +"Stars have been transferred"
+                } else {
+                    +"Stars have not been transferred"
+                }
+            }
+        }
+        onCommand("get_business_account_gifts", initialFilter = { it.chat is PrivateChat }) {
+            val businessConnectionId = chatsBusinessConnections[it.chat.id] ?: return@onCommand
+            val giftsFlow = runCatching {
+                getBusinessAccountGiftsFlow(businessConnectionId)
+            }.getOrElse {
+                it.printStackTrace()
+                null
+            }
+            if (giftsFlow == null) {
+                reply(it) {
+                    +"Error in receiving of gifts"
+                }
+            } else {
+                giftsFlow.collect { giftsPage ->
+                    giftsPage.gifts.joinToString {
+                        it.toString()
+                    }.splitForText().forEach { message ->
+                        reply(it, message)
+                    }
                 }
             }
         }

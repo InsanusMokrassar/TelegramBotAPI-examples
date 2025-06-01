@@ -4,6 +4,7 @@ import dev.inmo.kslog.common.defaultMessageFormatter
 import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
+import dev.inmo.tgbotapi.extensions.api.chat.get.getChat
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContextData
 import dev.inmo.tgbotapi.extensions.behaviour_builder.buildSubcontextInitialAction
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
@@ -65,6 +66,7 @@ suspend fun main(vararg args: String) {
         onCommand("start") {
             println(data.update)
             println(data.commonMessage)
+            println(getChat(it.chat))
         }
 
         onCommand(
