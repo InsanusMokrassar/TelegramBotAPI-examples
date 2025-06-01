@@ -6,28 +6,38 @@ import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.business.deleteBusinessMessages
 import dev.inmo.tgbotapi.extensions.api.business.readBusinessMessage
+import dev.inmo.tgbotapi.extensions.api.business.removeBusinessAccountProfilePhoto
 import dev.inmo.tgbotapi.extensions.api.business.setBusinessAccountBio
 import dev.inmo.tgbotapi.extensions.api.business.setBusinessAccountName
+import dev.inmo.tgbotapi.extensions.api.business.setBusinessAccountProfilePhoto
 import dev.inmo.tgbotapi.extensions.api.business.setBusinessAccountUsername
 import dev.inmo.tgbotapi.extensions.api.chat.get.getChat
 import dev.inmo.tgbotapi.extensions.api.chat.modify.pinChatMessage
 import dev.inmo.tgbotapi.extensions.api.chat.modify.unpinChatMessage
+import dev.inmo.tgbotapi.extensions.api.files.downloadFileToTemp
 import dev.inmo.tgbotapi.extensions.api.get.getBusinessConnection
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.send
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
+import dev.inmo.tgbotapi.extensions.utils.commonMessageOrNull
 import dev.inmo.tgbotapi.extensions.utils.extendedPrivateChatOrThrow
 import dev.inmo.tgbotapi.extensions.utils.ifAccessibleMessage
 import dev.inmo.tgbotapi.extensions.utils.ifBusinessContentMessage
 import dev.inmo.tgbotapi.extensions.utils.textContentOrNull
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.dataButton
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.inlineKeyboard
+import dev.inmo.tgbotapi.extensions.utils.withContentOrNull
+import dev.inmo.tgbotapi.requests.abstracts.multipartFile
+import dev.inmo.tgbotapi.requests.business_connection.InputProfilePhoto
 import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.tgbotapi.types.MessageId
 import dev.inmo.tgbotapi.types.RawChatId
 import dev.inmo.tgbotapi.types.business_connection.BusinessConnectionId
 import dev.inmo.tgbotapi.types.chat.PrivateChat
+import dev.inmo.tgbotapi.types.message.abstracts.CommonMessage
+import dev.inmo.tgbotapi.types.message.content.PhotoContent
+import dev.inmo.tgbotapi.types.message.content.TextContent
 import dev.inmo.tgbotapi.utils.code
 import dev.inmo.tgbotapi.utils.row
 import korlibs.time.seconds
@@ -244,12 +254,67 @@ suspend fun main(args: Array<String>) {
                 false
             }
             reply(it) {
-                if (set) {
+                if (reset) {
                     +"Account bio has been reset"
                 } else {
                     +"Account bio has not been set. Set it manually: " + code(initialBio)
                 }
             }
+        }
+        suspend fun handleSetProfilePhoto(it: CommonMessage<TextContent>, isPublic: Boolean) {
+            val businessConnectionId = chatsBusinessConnections[it.chat.id] ?: return@handleSetProfilePhoto
+            val replyTo = it.replyTo ?.commonMessageOrNull() ?.withContentOrNull<PhotoContent>()
+            if (replyTo == null) {
+                reply(it) {
+                    +"Reply to photo for using of this command"
+                }
+                return@handleSetProfilePhoto
+            }
+
+            val set = runCatching {
+                val file = downloadFileToTemp(replyTo.content)
+                setBusinessAccountProfilePhoto(
+                    businessConnectionId,
+                    InputProfilePhoto.Static(
+                        file.multipartFile()
+                    ),
+                    isPublic = isPublic
+                )
+            }.getOrElse {
+                it.printStackTrace()
+                false
+            }
+            reply(it) {
+                if (set) {
+                    +"Account profile photo has been set. It will be reset within 15 seconds"
+                } else {
+                    +"Account profile photo has not been set"
+                }
+            }
+            if (set == false) { return@handleSetProfilePhoto }
+            delay(15.seconds)
+            val reset = runCatching {
+                removeBusinessAccountProfilePhoto(
+                    businessConnectionId,
+                    isPublic = isPublic
+                )
+            }.getOrElse {
+                it.printStackTrace()
+                false
+            }
+            reply(it) {
+                if (reset) {
+                    +"Account profile photo has been reset"
+                } else {
+                    +"Account profile photo has not been set. Set it manually"
+                }
+            }
+        }
+        onCommand("set_business_account_profile_photo", initialFilter = { it.chat is PrivateChat }) {
+            handleSetProfilePhoto(it, false)
+        }
+        onCommand("set_business_account_profile_photo_public", initialFilter = { it.chat is PrivateChat }) {
+            handleSetProfilePhoto(it, true)
         }
     }.second.join()
 }
