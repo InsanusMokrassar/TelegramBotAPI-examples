@@ -19,6 +19,7 @@ import dev.inmo.tgbotapi.extensions.api.files.downloadFileToTemp
 import dev.inmo.tgbotapi.extensions.api.get.getBusinessConnection
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.send
+import dev.inmo.tgbotapi.extensions.api.stories.deleteStory
 import dev.inmo.tgbotapi.extensions.api.stories.postStory
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
@@ -40,7 +41,10 @@ import dev.inmo.tgbotapi.types.business_connection.BusinessConnectionId
 import dev.inmo.tgbotapi.types.chat.PrivateChat
 import dev.inmo.tgbotapi.types.message.abstracts.CommonMessage
 import dev.inmo.tgbotapi.types.message.content.PhotoContent
+import dev.inmo.tgbotapi.types.message.content.StoryContent
 import dev.inmo.tgbotapi.types.message.content.TextContent
+import dev.inmo.tgbotapi.types.message.content.VideoContent
+import dev.inmo.tgbotapi.types.message.content.VisualMediaGroupPartContent
 import dev.inmo.tgbotapi.types.stories.InputStoryContent
 import dev.inmo.tgbotapi.types.stories.StoryArea
 import dev.inmo.tgbotapi.types.stories.StoryAreaPosition
@@ -325,23 +329,28 @@ suspend fun main(args: Array<String>) {
             handleSetProfilePhoto(it, true)
         }
 
-        onCommand("postStory", initialFilter = { it.chat is PrivateChat }) {
+        onCommand("post_story", initialFilter = { it.chat is PrivateChat }) {
             val businessConnectionId = chatsBusinessConnections[it.chat.id] ?: return@onCommand
-            val replyTo = it.replyTo ?.commonMessageOrNull() ?.withContentOrNull<PhotoContent>()
+            val replyTo = it.replyTo ?.commonMessageOrNull() ?.withContentOrNull<VisualMediaGroupPartContent>()
             if (replyTo == null) {
                 reply(it) {
-                    +"Reply to photo for using of this command"
+                    +"Reply to photo or video for using of this command"
                 }
                 return@onCommand
             }
 
-            val set = runCatching {
+            val posted = runCatching {
                 val file = downloadFileToTemp(replyTo.content)
                 postStory(
                     businessConnectionId,
-                    InputStoryContent.Photo(
-                        file.multipartFile()
-                    ),
+                    when (replyTo.content) {
+                        is PhotoContent -> InputStoryContent.Photo(
+                            file.multipartFile()
+                        )
+                        is VideoContent -> InputStoryContent.Video(
+                            file.multipartFile()
+                        )
+                    },
                     activePeriod = PostStory.ACTIVE_PERIOD_6_HOURS,
                     areas = listOf(
                         StoryArea(
@@ -366,10 +375,35 @@ suspend fun main(args: Array<String>) {
                 null
             }
             reply(it) {
-                if (set != null) {
+                if (posted != null) {
                     +"Story has been posted. You may unpost it with " + botCommand("remove_story")
                 } else {
                     +"Story has not been posted"
+                }
+            }
+        }
+
+        onCommand("delete_story", initialFilter = { it.chat is PrivateChat }) {
+            val businessConnectionId = chatsBusinessConnections[it.chat.id] ?: return@onCommand
+            val replyTo = it.replyTo ?.commonMessageOrNull() ?.withContentOrNull<StoryContent>()
+            if (replyTo == null) {
+                reply(it) {
+                    +"Reply to photo or video for using of this command"
+                }
+                return@onCommand
+            }
+
+            val deleted = runCatching {
+                deleteStory(businessConnectionId, replyTo.content.story.id)
+            }.getOrElse {
+                it.printStackTrace()
+                false
+            }
+            reply(it) {
+                if (deleted) {
+                    +"Story has been deleted"
+                } else {
+                    +"Story has not been deleted"
                 }
             }
         }
