@@ -2,6 +2,7 @@ import dev.inmo.kslog.common.KSLog
 import dev.inmo.kslog.common.LogLevel
 import dev.inmo.kslog.common.defaultMessageFormatter
 import dev.inmo.kslog.common.setDefaultKSLog
+import dev.inmo.micro_utils.common.Percentage
 import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.business.deleteBusinessMessages
@@ -18,6 +19,7 @@ import dev.inmo.tgbotapi.extensions.api.files.downloadFileToTemp
 import dev.inmo.tgbotapi.extensions.api.get.getBusinessConnection
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.send
+import dev.inmo.tgbotapi.extensions.api.stories.postStory
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
 import dev.inmo.tgbotapi.extensions.utils.commonMessageOrNull
@@ -30,6 +32,7 @@ import dev.inmo.tgbotapi.extensions.utils.types.buttons.inlineKeyboard
 import dev.inmo.tgbotapi.extensions.utils.withContentOrNull
 import dev.inmo.tgbotapi.requests.abstracts.multipartFile
 import dev.inmo.tgbotapi.requests.business_connection.InputProfilePhoto
+import dev.inmo.tgbotapi.requests.stories.PostStory
 import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.tgbotapi.types.MessageId
 import dev.inmo.tgbotapi.types.RawChatId
@@ -38,6 +41,11 @@ import dev.inmo.tgbotapi.types.chat.PrivateChat
 import dev.inmo.tgbotapi.types.message.abstracts.CommonMessage
 import dev.inmo.tgbotapi.types.message.content.PhotoContent
 import dev.inmo.tgbotapi.types.message.content.TextContent
+import dev.inmo.tgbotapi.types.stories.InputStoryContent
+import dev.inmo.tgbotapi.types.stories.StoryArea
+import dev.inmo.tgbotapi.types.stories.StoryAreaPosition
+import dev.inmo.tgbotapi.types.stories.StoryAreaType
+import dev.inmo.tgbotapi.utils.botCommand
 import dev.inmo.tgbotapi.utils.code
 import dev.inmo.tgbotapi.utils.row
 import korlibs.time.seconds
@@ -315,6 +323,55 @@ suspend fun main(args: Array<String>) {
         }
         onCommand("set_business_account_profile_photo_public", initialFilter = { it.chat is PrivateChat }) {
             handleSetProfilePhoto(it, true)
+        }
+
+        onCommand("postStory", initialFilter = { it.chat is PrivateChat }) {
+            val businessConnectionId = chatsBusinessConnections[it.chat.id] ?: return@onCommand
+            val replyTo = it.replyTo ?.commonMessageOrNull() ?.withContentOrNull<PhotoContent>()
+            if (replyTo == null) {
+                reply(it) {
+                    +"Reply to photo for using of this command"
+                }
+                return@onCommand
+            }
+
+            val set = runCatching {
+                val file = downloadFileToTemp(replyTo.content)
+                postStory(
+                    businessConnectionId,
+                    InputStoryContent.Photo(
+                        file.multipartFile()
+                    ),
+                    activePeriod = PostStory.ACTIVE_PERIOD_6_HOURS,
+                    areas = listOf(
+                        StoryArea(
+                            StoryAreaPosition(
+                                x = Percentage.of100(50.0),
+                                y = Percentage.of100(50.0),
+                                width = Percentage.of100(8.0),
+                                height = Percentage.of100(8.0),
+                                rotationAngle = 45.0,
+                                cornerRadius = Percentage.of100(4.0),
+                            ),
+                            StoryAreaType.Link(
+                                "https://github.com/InsanusMokrassar/TelegramBotAPI-examples/blob/master/BusinessConnectionsBot/src/main/kotlin/BusinessConnectionsBot.kt"
+                            )
+                        )
+                    )
+                ) {
+                    +"It is test of postStory :)"
+                }
+            }.getOrElse {
+                it.printStackTrace()
+                null
+            }
+            reply(it) {
+                if (set != null) {
+                    +"Story has been posted. You may unpost it with " + botCommand("remove_story")
+                } else {
+                    +"Story has not been posted"
+                }
+            }
         }
     }.second.join()
 }
