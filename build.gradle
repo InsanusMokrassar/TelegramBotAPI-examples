@@ -14,8 +14,8 @@ allprojects {
         nativePartTemplate = "${rootProject.projectDir.absolutePath}/native_template.gradle"
     }
     repositories {
-        mavenLocal()
         mavenCentral()
+        google()
         if (project.hasProperty("GITHUB_USER") && project.hasProperty("GITHUB_TOKEN")) {
             maven {
                 url "https://maven.pkg.github.com/InsanusMokrassar/TelegramBotAPI"
@@ -27,6 +27,7 @@ allprojects {
         }
 
         maven { url "https://proxy.nexus.inmo.dev/repository/maven-releases/" }
+        mavenLocal()
     }
 }
 
