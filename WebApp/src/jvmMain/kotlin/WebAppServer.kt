@@ -1,4 +1,5 @@
 import dev.inmo.kslog.common.*
+import dev.inmo.micro_utils.coroutines.subscribeLoggingDropExceptions
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.micro_utils.ktor.server.createKtorServer
 import dev.inmo.tgbotapi.extensions.api.answers.answerInlineQuery
@@ -195,7 +196,7 @@ suspend fun main(vararg args: String) {
             BotCommand("reply_markup", "Use to get reply markup keyboard with web app trigger"),
             BotCommand("inline", "Use to get inline keyboard with web app trigger"),
         )
-        allUpdatesFlow.subscribeSafelyWithoutExceptions(this) {
+        allUpdatesFlow.subscribeLoggingDropExceptions(this) {
             println(it)
         }
         println(getMe())

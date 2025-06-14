@@ -1,6 +1,5 @@
 import androidx.compose.runtime.*
-import dev.inmo.micro_utils.coroutines.launchSafelyWithoutExceptions
-import dev.inmo.tgbotapi.types.CustomEmojiId
+import dev.inmo.micro_utils.coroutines.launchLoggingDropExceptions
 import dev.inmo.tgbotapi.types.userIdField
 import dev.inmo.tgbotapi.types.webAppQueryIdField
 import dev.inmo.tgbotapi.webapps.*
@@ -23,10 +22,12 @@ import kotlinx.dom.appendElement
 import kotlinx.dom.appendText
 import kotlinx.serialization.json.Json
 import org.jetbrains.compose.web.attributes.InputType
-import org.jetbrains.compose.web.css.DisplayStyle
+import org.jetbrains.compose.web.attributes.placeholder
+import org.jetbrains.compose.web.css.Style
+import org.jetbrains.compose.web.css.StyleSheet
 import org.jetbrains.compose.web.css.Color as ComposeColor
 import org.jetbrains.compose.web.css.backgroundColor
-import org.jetbrains.compose.web.css.display
+import org.jetbrains.compose.web.css.color
 import org.jetbrains.compose.web.dom.*
 import org.jetbrains.compose.web.dom.Text
 import org.jetbrains.compose.web.renderComposable
@@ -39,6 +40,13 @@ fun HTMLElement.log(text: String) {
     appendElement("p", {})
 }
 
+private object RootStyleSheet : StyleSheet() {
+    val rootClass by style {
+        color(ComposeColor("var(--tg-theme-text-color)"))
+        backgroundColor(ComposeColor("var(--tg-theme-bg-color)"))
+    }
+}
+
 @OptIn(ExperimentalUnsignedTypes::class)
 fun main() {
     console.log("Web app started")
@@ -46,6 +54,14 @@ fun main() {
     val baseUrl = window.location.origin.removeSuffix("/")
 
     renderComposable("root") {
+        Style(RootStyleSheet)
+        DisposableEffect(null) {
+            scopeElement.classList.add(RootStyleSheet.rootClass)
+
+            onDispose {
+                scopeElement.classList.remove(RootStyleSheet.rootClass)
+            }
+        }
         val scope = rememberCoroutineScope()
         val isSafeState = remember { mutableStateOf<Boolean?>(null) }
         val logsState = remember { mutableStateListOf<Any?>() }
@@ -87,6 +103,7 @@ fun main() {
         P()
         Text("Chat from WebAppInitData: ${webApp.initDataUnsafe.chat}")
 
+        H3 { Text("Emoji status management") }
         val emojiStatusAccessState = remember { mutableStateOf(false) }
         webApp.onEmojiStatusAccessRequested {
             emojiStatusAccessState.value = it.isAllowed
@@ -110,7 +127,7 @@ fun main() {
             userId ?.let { userId ->
                 Button({
                     onClick {
-                        scope.launchSafelyWithoutExceptions {
+                        scope.launchLoggingDropExceptions {
                             client.post("$baseUrl/setCustomEmoji") {
                                 parameter(userIdField, userId.long)
                                 setBody(
@@ -127,10 +144,12 @@ fun main() {
                 }
             }
         }
+        P()
 
+        H3 { Text("Call server method with webAppQueryIdField") }
         Button({
             onClick {
-                scope.launchSafelyWithoutExceptions {
+                scope.launchLoggingDropExceptions {
                     handleResult({ "Clicked" }) {
                         client.post("${window.location.origin.removeSuffix("/")}/inline") {
                             parameter(webAppQueryIdField, it)
@@ -145,10 +164,11 @@ fun main() {
         }
 
         P()
+        H3 { Text("User info") }
         Text("Allow to write in private messages: ${webApp.initDataUnsafe.user ?.allowsWriteToPM ?: "User unavailable"}")
 
         P()
-        Text("Alerts:")
+        H3 { Text("Alerts") }
         Button({
             onClick {
                 webApp.showPopup(
@@ -186,8 +206,22 @@ fun main() {
         }) {
             Text("Alert")
         }
+        Button({
+            onClick {
+                webApp.showConfirm(
+                    "This is confirm message"
+                ) {
+                    logsState.add(
+                        "You have pressed \"${if (it) "Ok" else "Cancel"}\" in confirm"
+                    )
+                }
+            }
+        }) {
+            Text("Confirm")
+        }
 
         P()
+        H3 { Text("Write access callbacks") }
         Button({
             onClick {
                 webApp.requestWriteAccess()
@@ -206,6 +240,7 @@ fun main() {
         }
 
         P()
+        H3 { Text("Request contact") }
         Button({
             onClick {
                 webApp.requestContact()
@@ -220,24 +255,9 @@ fun main() {
         }) {
             Text("Request contact with callback")
         }
-        P()
-
-        Button({
-            onClick {
-                webApp.showConfirm(
-                    "This is confirm message"
-                ) {
-                    logsState.add(
-                        "You have pressed \"${if (it) "Ok" else "Cancel"}\" in confirm"
-                    )
-                }
-            }
-        }) {
-            Text("Confirm")
-        }
 
         P()
-
+        H3 { Text("Closing confirmation") }
         val isClosingConfirmationEnabledState = remember { mutableStateOf(webApp.isClosingConfirmationEnabled) }
         Button({
             onClick {
@@ -255,7 +275,7 @@ fun main() {
         }
 
         P()
-
+        H3 { Text("Colors") }
         val headerColor = remember { mutableStateOf<Color.Hex>(Color.Hex("#000000")) }
         fun updateHeaderColor() {
             val (r, g, b) = Random.nextUBytes(3)
@@ -280,7 +300,6 @@ fun main() {
         }
 
         P()
-
         val backgroundColor = remember { mutableStateOf<Color.Hex>(Color.Hex("#000000")) }
         fun updateBackgroundColor() {
             val (r, g, b) = Random.nextUBytes(3)
@@ -305,7 +324,6 @@ fun main() {
         }
 
         P()
-
         val bottomBarColor = remember { mutableStateOf<Color.Hex>(Color.Hex("#000000")) }
         fun updateBottomBarColor() {
             val (r, g, b) = Random.nextUBytes(3)
@@ -326,60 +344,6 @@ fun main() {
         }) {
             key(bottomBarColor.value) {
                 Text("Bottom bar color: ${webApp.bottomBarColor ?.uppercase()} (click to change)")
-            }
-        }
-
-        P()
-
-        val storageTrigger = remember { mutableStateOf<List<Pair<CloudStorageKey, CloudStorageValue>>>(emptyList()) }
-        fun updateCloudStorage() {
-            webApp.cloudStorage.getAll {
-                it.onSuccess {
-                    storageTrigger.value = it.toList().sortedBy { it.first.key }
-                }
-            }
-        }
-        key(storageTrigger.value) {
-            storageTrigger.value.forEach { (key, value) ->
-                val keyState = remember { mutableStateOf(key.key) }
-                val valueState = remember { mutableStateOf(value.value) }
-                Input(InputType.Text) {
-                    value(key.key)
-                    onInput { keyState.value = it.value }
-                }
-                Input(InputType.Text) {
-                    value(value.value)
-                    onInput { valueState.value = it.value }
-                }
-                Button({
-                    onClick {
-                        if (key.key != keyState.value) {
-                            webApp.cloudStorage.remove(key)
-                        }
-                        webApp.cloudStorage.set(keyState.value, valueState.value)
-                        updateCloudStorage()
-                    }
-                }) {
-                    Text("Save")
-                }
-            }
-            let { // new element adding
-                val keyState = remember { mutableStateOf("") }
-                val valueState = remember { mutableStateOf("") }
-                Input(InputType.Text) {
-                    onInput { keyState.value = it.value }
-                }
-                Input(InputType.Text) {
-                    onInput { valueState.value = it.value }
-                }
-                Button({
-                    onClick {
-                        webApp.cloudStorage.set(keyState.value, valueState.value)
-                        updateCloudStorage()
-                    }
-                }) {
-                    Text("Save")
-                }
             }
         }
 
@@ -432,9 +396,10 @@ fun main() {
                 }
             }
         }
-        P()
 
-        let { // Accelerometer
+        P()
+        let {
+            H3 { Text("Accelerometer") }
             val enabledState = remember { mutableStateOf(webApp.accelerometer.isStarted) }
             webApp.onAccelerometerStarted { enabledState.value = true }
             webApp.onAccelerometerStopped { enabledState.value = false }
@@ -475,7 +440,8 @@ fun main() {
         }
         P()
 
-        let { // Gyroscope
+        let {
+            H3 { Text("Gyroscope") }
             val enabledState = remember { mutableStateOf(webApp.gyroscope.isStarted) }
             webApp.onGyroscopeStarted { enabledState.value = true }
             webApp.onGyroscopeStopped { enabledState.value = false }
@@ -514,9 +480,10 @@ fun main() {
                 Text("z: ${zState.value}")
             }
         }
-        P()
 
-        let { // DeviceOrientation
+        P()
+        let {
+            H3 { Text("Device Orientation") }
             val enabledState = remember { mutableStateOf(webApp.deviceOrientation.isStarted) }
             webApp.onDeviceOrientationStarted { enabledState.value = true }
             webApp.onDeviceOrientationStopped { enabledState.value = false }
@@ -555,8 +522,181 @@ fun main() {
                 Text("gamma: ${gammaState.value}")
             }
         }
+
+        P()
+        H3 { Text("Cloud storage") }
+        val storageTrigger = remember { mutableStateOf<List<Pair<CloudStorageKey, CloudStorageValue>>>(emptyList()) }
+        fun updateCloudStorage() {
+            webApp.cloudStorage.getAll {
+                it.onSuccess {
+                    storageTrigger.value = it.toList().sortedBy { it.first.key }
+                }
+            }
+        }
+        key(storageTrigger.value) {
+            storageTrigger.value.forEach { (key, value) ->
+                val keyState = remember { mutableStateOf(key.key) }
+                val valueState = remember { mutableStateOf(value.value) }
+                Input(InputType.Text) {
+                    value(key.key)
+                    onInput { keyState.value = it.value }
+                }
+                Input(InputType.Text) {
+                    value(value.value)
+                    onInput { valueState.value = it.value }
+                }
+                Button({
+                    onClick {
+                        if (key.key != keyState.value) {
+                            webApp.cloudStorage.remove(key)
+                        }
+                        webApp.cloudStorage.set(keyState.value, valueState.value)
+                        updateCloudStorage()
+                    }
+                }) {
+                    Text("Save")
+                }
+            }
+            let { // new element adding
+                val keyState = remember { mutableStateOf("") }
+                val valueState = remember { mutableStateOf("") }
+                Input(InputType.Text) {
+                    onInput { keyState.value = it.value }
+                }
+                Input(InputType.Text) {
+                    onInput { valueState.value = it.value }
+                }
+                Button({
+                    onClick {
+                        webApp.cloudStorage.set(keyState.value, valueState.value)
+                        updateCloudStorage()
+                    }
+                }) {
+                    Text("Save")
+                }
+            }
+        }
+
+        P()
+        let { // DeviceStorage
+            H3 { Text("Device storage") }
+            val fieldKey = remember { mutableStateOf("") }
+            val fieldValue = remember { mutableStateOf("") }
+            val message = remember { mutableStateOf("") }
+            Div {
+                Text("Start type title of key. If value will be found in device storage, it will be shown in value input")
+            }
+
+            Input(InputType.Text) {
+                placeholder("Key")
+                value(fieldKey.value)
+                onInput {
+                    fieldKey.value = it.value
+                    webApp.deviceStorage.getItem(it.value) { e, v ->
+                        fieldValue.value = v ?: ""
+                        if (v == null) {
+                            message.value = "Value for key \"${it.value}\" has not been found"
+                        } else {
+                            message.value = "Value for key \"${it.value}\" has been found: \"$v\""
+                        }
+                    }
+                }
+            }
+            Div {
+                Text("If you want to change value if typed key - just put it here")
+            }
+            Input(InputType.Text) {
+                placeholder("Value")
+                value(fieldValue.value)
+                onInput {
+                    fieldValue.value = it.value
+                    webApp.deviceStorage.setItem(fieldKey.value, it.value) { e, v ->
+                        if (v == true) {
+                            fieldValue.value = it.value
+                            message.value = "Value \"${it.value}\" has been saved"
+                        }
+                    }
+                }
+            }
+
+            if (message.value.isNotEmpty()) {
+                Div { Text(message.value) }
+            }
+        }
         P()
 
+        let { // DeviceStorage
+            H3 { Text("Secure storage") }
+            val fieldKey = remember { mutableStateOf("") }
+            val fieldValue = remember { mutableStateOf("") }
+            val message = remember { mutableStateOf("") }
+            val restorableState = remember { mutableStateOf(false) }
+            Div {
+                Text("Start type title of key. If value will be found in device storage, it will be shown in value input")
+            }
+
+            Input(InputType.Text) {
+                placeholder("Key")
+                value(fieldKey.value)
+                onInput {
+                    fieldKey.value = it.value
+                    webApp.secureStorage.getItem(it.value) { e, v, restorable ->
+                        fieldValue.value = v ?: ""
+                        restorableState.value = restorable == true
+                        if (v == null) {
+                            if (restorable == true) {
+                                message.value = "Value for key \"${it.value}\" has not been found, but can be restored"
+                            } else {
+                                message.value = "Value for key \"${it.value}\" has not been found. Error: $e"
+                            }
+                        } else {
+                            message.value = "Value for key \"${it.value}\" has been found: \"$v\""
+                        }
+                    }
+                }
+            }
+            if (restorableState.value) {
+                Button({
+                    onClick {
+                        webApp.secureStorage.restoreItem(fieldKey.value) { e, v ->
+                            fieldValue.value = v ?: ""
+                            if (v == null) {
+                                message.value = "Value for key \"${fieldKey.value}\" has not been restored. Error: $e"
+                            } else {
+                                message.value = "Value for key \"${fieldKey.value}\" has been restored: \"$v\""
+                            }
+                        }
+                    }
+                }) {
+                    Text("Restore")
+                }
+            }
+            Div {
+                Text("If you want to change value if typed key - just put it here")
+            }
+            Input(InputType.Text) {
+                placeholder("Value")
+                value(fieldValue.value)
+                onInput {
+                    fieldValue.value = it.value
+                    webApp.secureStorage.setItem(fieldKey.value, it.value) { e, v ->
+                        if (v) {
+                            fieldValue.value = it.value
+                            message.value = "Value \"${it.value}\" has been saved"
+                        } else {
+                            message.value = "Value \"${it.value}\" has not been saved. Error: $e"
+                        }
+                    }
+                }
+            }
+
+            if (message.value.isNotEmpty()) {
+                Div { Text(message.value) }
+            }
+        }
+        P()
+
+        H3 { Text("Events") }
         EventType.values().forEach { eventType ->
             when (eventType) {
                 EventType.AccelerometerChanged -> webApp.onAccelerometerChanged { /*logsState.add("AccelerometerChanged") /* see accelerometer block */ */ }

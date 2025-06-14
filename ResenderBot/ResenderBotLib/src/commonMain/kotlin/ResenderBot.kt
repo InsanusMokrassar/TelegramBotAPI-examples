@@ -1,4 +1,4 @@
-import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
+import dev.inmo.micro_utils.coroutines.subscribeLoggingDropExceptions
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.send.withTypingAction
 import dev.inmo.tgbotapi.extensions.behaviour_builder.filters.MessageFilterByChat
@@ -31,15 +31,15 @@ suspend fun activateResenderBot(
                     it.content.createResend(
                         chat.id,
                         messageThreadId = it.threadIdOrNull,
-                        replyParameters = it.replyInfo ?.messageMeta ?.let { meta ->
-                            val quote = it.withContentOrNull<TextContent>() ?.content ?.quote
+                        replyParameters = it.replyInfo?.messageMeta?.let { meta ->
+                            val quote = it.withContentOrNull<TextContent>()?.content?.quote
                             ReplyParameters(
                                 meta,
-                                entities = quote ?.textSources ?: emptyList(),
-                                quotePosition = quote ?.position
+                                entities = quote?.textSources ?: emptyList(),
+                                quotePosition = quote?.position
                             )
                         },
-                        effectId = it.possiblyWithEffectMessageOrNull() ?.effectId
+                        effectId = it.possiblyWithEffectMessageOrNull()?.effectId
                     )
                 ) {
                     it.forEach(print)
@@ -49,7 +49,7 @@ suspend fun activateResenderBot(
             println("Answer info: $answer")
         }
 
-        allUpdatesFlow.subscribeSafelyWithoutExceptions(this) {
+        allUpdatesFlow.subscribeLoggingDropExceptions(scope = this) {
             println(it)
         }
         print(bot.getMe())

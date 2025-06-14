@@ -12,12 +12,14 @@ plugins {
     id "org.jetbrains.kotlin.multiplatform"
 }
 
-apply plugin: 'application'
-
-mainClassName="RandomFileSenderBotKt"
-
 kotlin {
-    jvm()
+    jvm {
+        binaries {
+            executable {
+                mainClass.set("RandomFileSenderBotKt")
+            }
+        }
+    }
 
     sourceSets {
         commonMain {
