@@ -471,5 +471,15 @@ suspend fun main(args: Array<String>) {
                 }
             }
         }
+
+        onChecklistContent {
+            val businessConnectionId = chatsBusinessConnections[it.chat.id] ?: return@onChecklistContent
+            execute(
+                it.content.createResend(
+                    it.chat.id,
+                    businessConnectionId = businessConnectionId
+                )
+            )
+        }
     }.second.join()
 }
