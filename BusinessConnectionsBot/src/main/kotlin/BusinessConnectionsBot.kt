@@ -34,6 +34,7 @@ import dev.inmo.tgbotapi.extensions.utils.ifBusinessContentMessage
 import dev.inmo.tgbotapi.extensions.utils.textContentOrNull
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.dataButton
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.inlineKeyboard
+import dev.inmo.tgbotapi.extensions.utils.updates.retrieving.flushAccumulatedUpdates
 import dev.inmo.tgbotapi.extensions.utils.withContentOrNull
 import dev.inmo.tgbotapi.requests.abstracts.multipartFile
 import dev.inmo.tgbotapi.requests.business_connection.InputProfilePhoto
@@ -84,6 +85,7 @@ suspend fun main(args: Array<String>) {
     telegramBotWithBehaviourAndLongPolling(botToken, CoroutineScope(Dispatchers.IO)) {
         val me = getMe()
         println(me)
+        flushAccumulatedUpdates()
 
         onBusinessConnectionEnabled {
             businessConnectionsChatsMutex.withLock {
@@ -472,12 +474,12 @@ suspend fun main(args: Array<String>) {
             }
         }
 
+        // Will work when some premium user sending to some other user checklist
         onChecklistContent {
-            val businessConnectionId = chatsBusinessConnections[it.chat.id] ?: return@onChecklistContent
             execute(
                 it.content.createResend(
                     it.chat.id,
-                    businessConnectionId = businessConnectionId
+                    businessConnectionId = it.chat.id.businessConnectionId ?: chatsBusinessConnections[it.chat.id] ?: return@onChecklistContent
                 )
             )
         }

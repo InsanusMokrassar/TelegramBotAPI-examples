@@ -4,10 +4,13 @@ import dev.inmo.kslog.common.defaultMessageFormatter
 import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
+import dev.inmo.tgbotapi.extensions.api.bot.getMyStarBalance
 import dev.inmo.tgbotapi.extensions.api.chat.get.getChat
+import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContextData
 import dev.inmo.tgbotapi.extensions.behaviour_builder.buildSubcontextInitialAction
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onChannelDirectMessagesConfigurationChanged
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.types.message.abstracts.CommonMessage
 import dev.inmo.tgbotapi.types.update.abstracts.Update
@@ -77,6 +80,17 @@ suspend fun main(vararg args: String) {
         ) {
             println(data.update)
             println(data.commonMessage)
+        }
+
+        onCommand("getMyStarBalance") {
+            reply(
+                to = it,
+                text = getMyStarBalance().toString()
+            )
+        }
+
+        onChannelDirectMessagesConfigurationChanged {
+            println(it.chatEvent)
         }
 
         allUpdatesFlow.subscribeSafelyWithoutExceptions(this) {
