@@ -163,6 +163,34 @@ fun main() {
             Text("Answer in chat button")
         }
 
+        H3 { Text("Hide keyboard") }
+        val hideCountdown = remember { mutableStateOf<Int?>(null) }
+        Button({
+            onClick {
+                hideCountdown.value = 5
+            }
+        }) {
+            if (hideCountdown.value == null) {
+                Text("Hide")
+            } else {
+                Text("Hide in ${hideCountdown.value} seconds")
+            }
+        }
+        LaunchedEffect(hideCountdown.value) {
+            val value = hideCountdown.value
+            when {
+                value == null -> return@LaunchedEffect
+                value > 0 -> {
+                    delay(1000)
+                    hideCountdown.value = hideCountdown.value ?.minus(1)
+                }
+                else -> {
+                    webApp.hideKeyboard()
+                    hideCountdown.value = null
+                }
+            }
+        }
+
         P()
         H3 { Text("User info") }
         Text("Allow to write in private messages: ${webApp.initDataUnsafe.user ?.allowsWriteToPM ?: "User unavailable"}")
