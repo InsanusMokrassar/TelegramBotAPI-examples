@@ -1,3 +1,6 @@
+import dev.inmo.kslog.common.KSLog
+import dev.inmo.kslog.common.defaultMessageFormatter
+import dev.inmo.kslog.common.filter.filtered
 import dev.inmo.micro_utils.coroutines.subscribeLoggingDropExceptions
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.send.withTypingAction
@@ -10,7 +13,9 @@ import dev.inmo.tgbotapi.extensions.utils.withContentOrNull
 import dev.inmo.tgbotapi.types.ReplyParameters
 import dev.inmo.tgbotapi.types.message.abstracts.BusinessContentMessage
 import dev.inmo.tgbotapi.types.message.content.TextContent
+import dev.inmo.tgbotapi.utils.DefaultKTgBotAPIKSLog
 import dev.inmo.tgbotapi.utils.extensions.threadIdOrNull
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.currentCoroutineContext
@@ -19,7 +24,10 @@ suspend fun activateResenderBot(
     token: String,
     print: (Any) -> Unit
 ) {
-    telegramBotWithBehaviourAndLongPolling(token, scope = CoroutineScope(currentCoroutineContext() + SupervisorJob())) {
+    telegramBotWithBehaviourAndLongPolling(
+        token,
+        scope = CoroutineScope(currentCoroutineContext() + SupervisorJob()),
+    ) {
         onContentMessage(
             subcontextUpdatesFilter = MessageFilterByChat,
             initialFilter = { it !is BusinessContentMessage<*> || !it.sentByBusinessConnectionOwner }
