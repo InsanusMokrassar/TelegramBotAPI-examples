@@ -64,9 +64,10 @@ suspend fun main(args: Array<String>) {
                     waitAnyContentMessage().filter { message ->
                         message.sameThread(it.sourceMessage)
                     }.filter {
-                        it.withContentOrNull<TextContent>() ?.content ?.textSources ?.run {
-                            containsCommand("stop")
-                        } != true
+                        containsCommand(
+                            "stop",
+                            it.withContentOrNull<TextContent>() ?.content ?.textSources ?: return@filter false
+                        ) == false
                     }.first()
                 }
             ) ?: return@strictlyOn StopState(it.context)
