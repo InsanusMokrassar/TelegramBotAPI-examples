@@ -20,6 +20,7 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAn
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onChannelDirectMessagesConfigurationChanged
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onContentMessage
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onSuggestedPostApprovalFailed
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onSuggestedPostApproved
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onSuggestedPostDeclined
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onSuggestedPostPaid
@@ -119,6 +120,10 @@ suspend fun main(vararg args: String) {
         onSuggestedPostRefunded {
             println(it)
             reply(it, "Refunded")
+        }
+        onSuggestedPostApprovalFailed {
+            println(it)
+            reply(it, "Approval failed")
         }
 
         allUpdatesFlow.subscribeLoggingDropExceptions(this) {
