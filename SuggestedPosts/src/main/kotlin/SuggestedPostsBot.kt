@@ -12,6 +12,7 @@ import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.resend
 import dev.inmo.tgbotapi.extensions.api.send.send
 import dev.inmo.tgbotapi.extensions.api.suggested.approveSuggestedPost
+import dev.inmo.tgbotapi.extensions.api.suggested.declineSuggestedPost
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContextData
 import dev.inmo.tgbotapi.extensions.behaviour_builder.buildSubcontextInitialAction
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitSuggestedPostApproved
@@ -29,6 +30,7 @@ import dev.inmo.tgbotapi.extensions.utils.channelDirectMessagesContentMessageOrN
 import dev.inmo.tgbotapi.extensions.utils.previewChannelDirectMessagesChatOrNull
 import dev.inmo.tgbotapi.extensions.utils.suggestedChannelDirectMessagesContentMessageOrNull
 import dev.inmo.tgbotapi.types.message.SuggestedPostParameters
+import dev.inmo.tgbotapi.types.message.abstracts.ChannelPaidPost
 import dev.inmo.tgbotapi.types.message.abstracts.CommonMessage
 import dev.inmo.tgbotapi.types.update.abstracts.Update
 import dev.inmo.tgbotapi.utils.firstOf
@@ -84,7 +86,6 @@ suspend fun main(vararg args: String) {
             subcontextUpdatesFilter = { _, _ -> true } // important to not miss updates in channel for waitSuggestedPost events
         ) { message ->
             val suggestedPost = message.suggestedChannelDirectMessagesContentMessageOrNull() ?: return@onContentMessage
-            val chat = getChat(message.chat)
 
             firstOf(
                 {
@@ -102,9 +103,13 @@ suspend fun main(vararg args: String) {
                         delay(1000L)
                         send(suggestedPost.chat, "${3 - i}")
                     }
-                    approveSuggestedPost(suggestedPost)
+                    declineSuggestedPost(suggestedPost)
                 },
             )
+        }
+
+        onContentMessage(initialFilter = { it is ChannelPaidPost<*> }) {
+            println(it)
         }
 
         onSuggestedPostPaid {
