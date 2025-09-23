@@ -14,19 +14,28 @@ import dev.inmo.tgbotapi.extensions.api.send.send
 import dev.inmo.tgbotapi.extensions.api.suggested.approveSuggestedPost
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContextData
 import dev.inmo.tgbotapi.extensions.behaviour_builder.buildSubcontextInitialAction
+import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitSuggestedPostApproved
+import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitSuggestedPostDeclined
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onChannelDirectMessagesConfigurationChanged
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onContentMessage
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onSuggestedPostApproved
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onSuggestedPostDeclined
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onSuggestedPostPaid
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onSuggestedPostRefunded
 import dev.inmo.tgbotapi.extensions.utils.channelDirectMessagesContentMessageOrNull
 import dev.inmo.tgbotapi.extensions.utils.previewChannelDirectMessagesChatOrNull
 import dev.inmo.tgbotapi.extensions.utils.suggestedChannelDirectMessagesContentMessageOrNull
 import dev.inmo.tgbotapi.types.message.SuggestedPostParameters
 import dev.inmo.tgbotapi.types.message.abstracts.CommonMessage
 import dev.inmo.tgbotapi.types.update.abstracts.Update
+import dev.inmo.tgbotapi.utils.firstOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 
 /**
  * This place can be the playground for your code.
@@ -60,6 +69,8 @@ suspend fun main(vararg args: String) {
 
         onContentMessage {
             val message = it.channelDirectMessagesContentMessageOrNull() ?: return@onContentMessage
+            val chat = getChat(it.chat)
+            println(chat)
 
             resend(
                 message.chat.id,
@@ -68,14 +79,46 @@ suspend fun main(vararg args: String) {
             )
         }
 
-        onContentMessage {
-            val suggestedPost = it.suggestedChannelDirectMessagesContentMessageOrNull() ?: return@onContentMessage
+        onContentMessage { message ->
+            val suggestedPost = message.suggestedChannelDirectMessagesContentMessageOrNull() ?: return@onContentMessage
+            val chat = getChat(message.chat)
 
-            for (i in 0 until 3) {
-                delay(1000L)
-                send(suggestedPost.chat, "${3 - i}")
-            }
-            approveSuggestedPost(suggestedPost)
+            firstOf(
+                {
+                    waitSuggestedPostApproved().filter {
+                        it.suggestedPostMessage ?.chat ?.id == message.chat.id
+                    }.first()
+                },
+                {
+                    waitSuggestedPostDeclined().filter {
+                        it.suggestedPostMessage ?.chat ?.id == message.chat.id
+                    }.first()
+                },
+                {
+                    for (i in 0 until 3) {
+                        delay(1000L)
+                        send(suggestedPost.chat, "${3 - i}")
+                    }
+                    approveSuggestedPost(suggestedPost)
+                },
+            )
+        }
+
+        onSuggestedPostPaid {
+            println(it)
+            reply(it, "Paid")
+        }
+        onSuggestedPostApproved {
+            println(it)
+            reply(it, "Approved")
+        }
+        onSuggestedPostDeclined {
+            println(it)
+            reply(it, "Declined")
+        }
+        onSuggestedPostRefunded {
+            println(it)
+            reply(it, "Refunded")
         }
 
         allUpdatesFlow.subscribeLoggingDropExceptions(this) {
