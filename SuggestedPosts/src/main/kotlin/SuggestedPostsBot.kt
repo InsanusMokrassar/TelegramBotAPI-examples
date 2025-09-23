@@ -80,7 +80,9 @@ suspend fun main(vararg args: String) {
             )
         }
 
-        onContentMessage { message ->
+        onContentMessage(
+            subcontextUpdatesFilter = { _, _ -> true } // important to not miss updates in channel for waitSuggestedPost events
+        ) { message ->
             val suggestedPost = message.suggestedChannelDirectMessagesContentMessageOrNull() ?: return@onContentMessage
             val chat = getChat(message.chat)
 
