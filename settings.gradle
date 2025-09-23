@@ -61,3 +61,5 @@ include ":MemberUpdatedWatcherBot"
 include ":WebHooks"
 
 include ":SuggestedPosts"
+
+include ":ChecklistsBot"
