@@ -1,4 +1,4 @@
-# CustomBot
+# StarTransactionsBot
 
 This bot basically have no any useful behaviour, but you may customize it as a playground
 
