@@ -63,3 +63,5 @@ include ":WebHooks"
 include ":SuggestedPosts"
 
 include ":ChecklistsBot"
+
+include ":DraftsBot"
