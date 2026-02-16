@@ -38,7 +38,6 @@ suspend fun activateResenderBot(
                 executeUnsafe(
                     it.content.createResend(
                         chat.id,
-                        messageThreadId = it.threadIdOrNull,
                         replyParameters = it.replyInfo?.messageMeta?.let { meta ->
                             val quote = it.withContentOrNull<TextContent>()?.content?.quote
                             ReplyParameters(

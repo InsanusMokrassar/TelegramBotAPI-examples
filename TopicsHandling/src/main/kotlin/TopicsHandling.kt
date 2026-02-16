@@ -11,6 +11,14 @@ import dev.inmo.tgbotapi.extensions.api.chat.forum.*
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onForumTopicClosed
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onForumTopicCreated
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onForumTopicEdited
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onForumTopicReopened
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onGeneralForumTopicHidden
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onGeneralForumTopicUnhidden
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onPrivateForumTopicCreated
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onPrivateForumTopicEdited
 import dev.inmo.tgbotapi.extensions.utils.forumChatOrNull
 import dev.inmo.tgbotapi.extensions.utils.forumContentMessageOrNull
 import dev.inmo.tgbotapi.extensions.utils.privateChatOrNull
@@ -168,9 +176,40 @@ suspend fun main(vararg args: String) {
             deleteForumTopic(chat, chat.id.threadId ?: return@onCommand)
         }
 
+        onCommand("unpin_all_forum_topic_messages") {
+            val chat = it.chat.forumChatOrNull() ?: return@onCommand
+
+            unpinAllForumTopicMessages(chat, chat.id.threadId ?: return@onCommand)
+        }
+
+        onForumTopicCreated {
+            reply(it, "Topic has been created")
+        }
+        onPrivateForumTopicCreated {
+            reply(it, "Private topic has been created")
+        }
+
+        onForumTopicEdited {
+            reply(it, "Topic has been edited")
+        }
+        onPrivateForumTopicEdited {
+            reply(it, "Private topic has been edited")
+        }
+
+        onForumTopicReopened {
+            reply(it, "Topic has been reopened")
+        }
+        onGeneralForumTopicHidden {
+            reply(it, "General topic has been hidden")
+        }
+        onGeneralForumTopicUnhidden {
+            reply(it, "General topic has been unhidden")
+        }
+
         setMyCommands(
             BotCommand("start_test_topics", "start test topics"),
             BotCommand("delete_topic", "delete topic where message have been sent"),
+            BotCommand("unpin_all_forum_topic_messages", "delete topic where message have been sent"),
             scope = BotCommandScope.AllGroupChats
         )
         allUpdatesFlow.subscribeLoggingDropExceptions(this) {
