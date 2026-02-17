@@ -163,7 +163,7 @@ suspend fun activateKeyboardsBot(
                 it,
                 replyMarkup = replyKeyboard(resizeKeyboard = true, oneTimeKeyboard = true) {
                     row {
-                        simpleButton("/inline")
+                        simpleButton("/inline", style = KeyboardButtonStyle.Primary)
                     }
                 }
             ) {
