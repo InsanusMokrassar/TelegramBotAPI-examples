@@ -11,6 +11,8 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContextData
 import dev.inmo.tgbotapi.extensions.behaviour_builder.buildSubcontextInitialAction
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onChannelDirectMessagesConfigurationChanged
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onChatOwnerChanged
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onChatOwnerLeft
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.types.message.abstracts.CommonMessage
 import dev.inmo.tgbotapi.types.update.abstracts.Update

@@ -6,7 +6,7 @@ include ":HelloBot"
 
 include ":PollsBot"
 
-include ":GetMeBot"
+include ":MyBot"
 
 include ":DeepLinksBot"
 
