@@ -7,6 +7,7 @@ import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.bot.getMyStarBalance
 import dev.inmo.tgbotapi.extensions.api.chat.get.getChat
 import dev.inmo.tgbotapi.extensions.api.get.getUserProfileAudios
+import dev.inmo.tgbotapi.extensions.api.send.media.sendPaidMedia
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.replyWithAudio
 import dev.inmo.tgbotapi.extensions.api.send.replyWithPlaylist
@@ -17,8 +18,10 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onChanne
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onChatOwnerChanged
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onChatOwnerLeft
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onPhoto
 import dev.inmo.tgbotapi.types.media.AudioMediaGroupMemberTelegramMedia
 import dev.inmo.tgbotapi.types.media.toTelegramMediaAudio
+import dev.inmo.tgbotapi.types.media.toTelegramPaidMediaPhoto
 import dev.inmo.tgbotapi.types.message.abstracts.CommonMessage
 import dev.inmo.tgbotapi.types.update.abstracts.Update
 import kotlinx.coroutines.CoroutineScope
