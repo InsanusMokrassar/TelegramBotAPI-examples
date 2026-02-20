@@ -15,6 +15,7 @@ import dev.inmo.tgbotapi.extensions.utils.extensions.sameChat
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.*
 import dev.inmo.tgbotapi.extensions.utils.withContentOrNull
 import dev.inmo.tgbotapi.requests.abstracts.asMultipartFile
+import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.tgbotapi.types.RawChatId
 import dev.inmo.tgbotapi.types.UserId
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardMarkup
@@ -40,7 +41,7 @@ import kotlinx.coroutines.Dispatchers
  */
 suspend fun main(vararg args: String) {
     val botToken = args.first()
-    val adminUserId = args.getOrNull(1) ?.toLongOrNull() ?.let(::RawChatId) ?.let(::UserId) ?: error("Pass user-admin for full access to the bot")
+    val adminUserId = args.getOrNull(1) ?.toLongOrNull() ?.let(::RawChatId) ?.let(::ChatId) ?: error("Pass user-admin for full access to the bot")
 
     val isDebug = args.any { it == "debug" }
     val isTestServer = args.any { it == "testServer" }
