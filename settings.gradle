@@ -65,3 +65,5 @@ include ":SuggestedPosts"
 include ":ChecklistsBot"
 
 include ":DraftsBot"
+
+include ":GiftsBot"
