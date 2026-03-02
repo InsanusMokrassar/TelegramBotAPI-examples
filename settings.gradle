@@ -67,3 +67,5 @@ include ":ChecklistsBot"
 include ":DraftsBot"
 
 include ":GiftsBot"
+
+include ":TagsBot"
