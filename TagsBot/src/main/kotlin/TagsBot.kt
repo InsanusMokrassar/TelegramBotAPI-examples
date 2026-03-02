@@ -2,10 +2,13 @@ import dev.inmo.kslog.common.KSLog
 import dev.inmo.kslog.common.LogLevel
 import dev.inmo.kslog.common.defaultMessageFormatter
 import dev.inmo.kslog.common.setDefaultKSLog
+import dev.inmo.micro_utils.coroutines.subscribeLoggingDropExceptions
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.tgbotapi.abstracts.FromUser
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.business.getBusinessAccountGiftsFlow
+import dev.inmo.tgbotapi.extensions.api.chat.members.promoteChatAdministrator
+import dev.inmo.tgbotapi.extensions.api.chat.members.promoteChatMember
 import dev.inmo.tgbotapi.extensions.api.chat.members.setChatMemberTag
 import dev.inmo.tgbotapi.extensions.api.gifts.getChatGiftsFlow
 import dev.inmo.tgbotapi.extensions.api.gifts.getUserGiftsFlow
@@ -66,6 +69,16 @@ suspend fun main(vararg args: String) {
             )
         }
 
+        onCommand("setCanManageTags", requireOnlyCommandInMessage = false) {
+            val reply = it.replyTo ?.groupContentMessageOrNull() ?: return@onCommand
+            val setOrUnset = it.content.text.removePrefix("/setCanManageTags").removePrefix(" ") == "true"
+            promoteChatAdministrator(
+                it.chat.id,
+                reply.fromUserOrNull() ?.user ?.id ?: return@onCommand,
+                canManageTags = setOrUnset
+            )
+        }
+
         onCommand("removeChatMemberTag") {
             val reply = it.replyTo ?.groupContentMessageOrNull() ?: return@onCommand
             setChatMemberTag(
@@ -81,8 +94,8 @@ suspend fun main(vararg args: String) {
             reply(it, "Tag by getting via risk API: ${it.sender_tag}")
         }
 
-//        allUpdatesFlow.subscribeSafelyWithoutExceptions(this) {
-//            println(it)
-//        }
+        allUpdatesFlow.subscribeLoggingDropExceptions(this) {
+            println(it)
+        }
     }.second.join()
 }
