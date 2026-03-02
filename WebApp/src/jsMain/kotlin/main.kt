@@ -1,5 +1,6 @@
 import androidx.compose.runtime.*
 import dev.inmo.micro_utils.coroutines.launchLoggingDropExceptions
+import dev.inmo.tgbotapi.types.CustomEmojiId
 import dev.inmo.tgbotapi.types.userIdField
 import dev.inmo.tgbotapi.types.webAppQueryIdField
 import dev.inmo.tgbotapi.webapps.*
@@ -395,6 +396,11 @@ fun main() {
                 }
                 mainButton.apply {
                     setText("Main button")
+                    setParams(
+                        BottomButtonParams(
+                            iconCustomEmojiId = CustomEmojiId("5370976574969486150") // 😏
+                        )
+                    )
                     onClick {
                         logsState.add("Main button clicked")
                         hapticFeedback.notificationOccurred(
@@ -405,6 +411,11 @@ fun main() {
                 }
                 secondaryButton.apply {
                     setText("Secondary button")
+                    setParams(
+                        BottomButtonParams(
+                            iconCustomEmojiId = CustomEmojiId("5370763368497944736") // 😒
+                        )
+                    )
                     onClick {
                         logsState.add("Secondary button clicked")
                         hapticFeedback.notificationOccurred(
