@@ -11,9 +11,11 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.*
 import dev.inmo.tgbotapi.extensions.utils.withContent
 import dev.inmo.tgbotapi.types.BotCommand
+import dev.inmo.tgbotapi.types.CustomEmojiId
 import dev.inmo.tgbotapi.types.InlineQueries.InlineQueryResult.InlineQueryResultArticle
 import dev.inmo.tgbotapi.types.InlineQueries.InputMessageContent.InputTextMessageContent
 import dev.inmo.tgbotapi.types.InlineQueryId
+import dev.inmo.tgbotapi.types.buttons.KeyboardButtonStyle
 import dev.inmo.tgbotapi.types.message.content.TextContent
 import dev.inmo.tgbotapi.utils.PreviewFeature
 import dev.inmo.tgbotapi.utils.botCommand
@@ -51,17 +53,17 @@ fun InlineKeyboardBuilder.includePageButtons(page: Int, count: Int) {
 
     row {
         if (page - 1 > 2) {
-            dataButton("<<", "1 $count")
+            dataButton("<<", "1 $count", style = KeyboardButtonStyle.Danger)
         }
         if (page - 1 > 1) {
-            dataButton("<", "${page - 2} $count")
+            dataButton("<", "${page - 2} $count", style = KeyboardButtonStyle.Primary)
         }
 
         if (page + 1 < count) {
-            dataButton(">", "${page + 2} $count")
+            dataButton(">", "${page + 2} $count", style = KeyboardButtonStyle.Success)
         }
         if (page + 2 < count) {
-            dataButton(">>", "$count $count")
+            dataButton(">>", "$count $count", style = KeyboardButtonStyle.Danger)
         }
     }
     row {
@@ -161,7 +163,7 @@ suspend fun activateKeyboardsBot(
                 it,
                 replyMarkup = replyKeyboard(resizeKeyboard = true, oneTimeKeyboard = true) {
                     row {
-                        simpleButton("/inline")
+                        simpleButton("/inline", style = KeyboardButtonStyle.Primary)
                     }
                 }
             ) {
