@@ -69,3 +69,5 @@ include ":DraftsBot"
 include ":GiftsBot"
 
 include ":TagsBot"
+
+include ":ManagedBotsBot"
