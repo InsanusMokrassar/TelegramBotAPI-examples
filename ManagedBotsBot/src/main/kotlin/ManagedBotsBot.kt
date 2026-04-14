@@ -2,14 +2,21 @@ import dev.inmo.kslog.common.KSLog
 import dev.inmo.kslog.common.LogLevel
 import dev.inmo.kslog.common.defaultMessageFormatter
 import dev.inmo.kslog.common.setDefaultKSLog
+import dev.inmo.micro_utils.coroutines.subscribeLoggingDropExceptions
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.chat.get.getChat
+import dev.inmo.tgbotapi.extensions.api.managed_bots.getManagedBotToken
+import dev.inmo.tgbotapi.extensions.api.managed_bots.replaceManagedBotToken
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContextData
 import dev.inmo.tgbotapi.extensions.behaviour_builder.buildSubcontextInitialAction
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onManagedBotCreated
+import dev.inmo.tgbotapi.extensions.utils.chatEventMessageOrNull
+import dev.inmo.tgbotapi.extensions.utils.groupContentMessageOrNull
+import dev.inmo.tgbotapi.extensions.utils.managedBotCreatedOrNull
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.flatReplyKeyboard
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.replyKeyboard
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.requestManagedBotButton
@@ -18,6 +25,7 @@ import dev.inmo.tgbotapi.types.buttons.KeyboardButtonRequestManagedBot
 import dev.inmo.tgbotapi.types.buttons.PreparedKeyboardButtonId
 import dev.inmo.tgbotapi.types.message.abstracts.CommonMessage
 import dev.inmo.tgbotapi.types.request.RequestId
+import dev.inmo.tgbotapi.types.toChatId
 import dev.inmo.tgbotapi.types.update.abstracts.Update
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -103,7 +111,22 @@ suspend fun main(vararg args: String) {
             )
         }
 
-        allUpdatesFlow.subscribeSafelyWithoutExceptions(this) {
+        onManagedBotCreated {
+            reply(it, "Managed bot created successfully: ${it.chatEvent.bot}")
+            val token = getManagedBotToken(
+                it.chatEvent.bot.id.toChatId()
+            )
+            reply(it, "Token: $token")
+        }
+
+        onCommand("replaceToken") {
+            val reply = it.replyTo ?.chatEventMessageOrNull() ?: return@onCommand
+            val managedBotCreated = reply.chatEvent.managedBotCreatedOrNull() ?: return@onCommand
+
+            reply(it, "Token: ${replaceManagedBotToken(managedBotCreated.bot.id.toChatId())}")
+        }
+
+        allUpdatesFlow.subscribeLoggingDropExceptions(this) {
             println(it)
         }
     }.second.join()
