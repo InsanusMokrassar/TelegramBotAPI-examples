@@ -9,11 +9,13 @@ import dev.inmo.tgbotapi.extensions.api.chat.get.getChat
 import dev.inmo.tgbotapi.extensions.api.managed_bots.getManagedBotToken
 import dev.inmo.tgbotapi.extensions.api.managed_bots.replaceManagedBotToken
 import dev.inmo.tgbotapi.extensions.api.send.reply
+import dev.inmo.tgbotapi.extensions.api.send.send
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContextData
 import dev.inmo.tgbotapi.extensions.behaviour_builder.buildSubcontextInitialAction
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onManagedBotCreated
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onManagedBotUpdated
 import dev.inmo.tgbotapi.extensions.utils.chatEventMessageOrNull
 import dev.inmo.tgbotapi.extensions.utils.groupContentMessageOrNull
 import dev.inmo.tgbotapi.extensions.utils.managedBotCreatedOrNull
@@ -119,11 +121,19 @@ suspend fun main(vararg args: String) {
             reply(it, "Token: $token")
         }
 
+        onManagedBotUpdated {
+            send(it.user, "Managed bot has been updated: ${it.bot}")
+            val token = getManagedBotToken(
+                it.bot.id.toChatId()
+            )
+            send(it.user, "Token: $token")
+        }
+
         onCommand("replaceToken") {
             val reply = it.replyTo ?.chatEventMessageOrNull() ?: return@onCommand
             val managedBotCreated = reply.chatEvent.managedBotCreatedOrNull() ?: return@onCommand
 
-            reply(it, "Token: ${replaceManagedBotToken(managedBotCreated.bot.id.toChatId())}")
+            reply(it, "Token in replace update: ${replaceManagedBotToken(managedBotCreated.bot.id.toChatId())}")
         }
 
         allUpdatesFlow.subscribeLoggingDropExceptions(this) {
