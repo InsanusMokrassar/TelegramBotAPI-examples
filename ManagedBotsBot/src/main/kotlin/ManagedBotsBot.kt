@@ -10,7 +10,14 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContextData
 import dev.inmo.tgbotapi.extensions.behaviour_builder.buildSubcontextInitialAction
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
+import dev.inmo.tgbotapi.extensions.utils.types.buttons.flatReplyKeyboard
+import dev.inmo.tgbotapi.extensions.utils.types.buttons.replyKeyboard
+import dev.inmo.tgbotapi.extensions.utils.types.buttons.requestManagedBotButton
+import dev.inmo.tgbotapi.types.Username
+import dev.inmo.tgbotapi.types.buttons.KeyboardButtonRequestManagedBot
+import dev.inmo.tgbotapi.types.buttons.PreparedKeyboardButtonId
 import dev.inmo.tgbotapi.types.message.abstracts.CommonMessage
+import dev.inmo.tgbotapi.types.request.RequestId
 import dev.inmo.tgbotapi.types.update.abstracts.Update
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -73,6 +80,27 @@ suspend fun main(vararg args: String) {
         onCommand("canManageBots") {
             val me = getMe()
             reply(it, if (me.canManageBots) "Yes" else "No")
+        }
+
+        val requestId = RequestId(0)
+        onCommand("keyboard") {
+            reply(
+                it,
+                "Keyboard",
+                replyMarkup = flatReplyKeyboard(
+                    resizeKeyboard = true,
+                    oneTimeKeyboard = true,
+                ) {
+                    requestManagedBotButton(
+                        "Add managed bot",
+                        KeyboardButtonRequestManagedBot(
+                            requestId = requestId,
+                            suggestedName = "SampleName",
+                            suggestedUsername = Username("@some_sample_bot")
+                        )
+                    )
+                }
+            )
         }
 
         allUpdatesFlow.subscribeSafelyWithoutExceptions(this) {
