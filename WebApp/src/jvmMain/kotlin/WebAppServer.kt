@@ -5,6 +5,7 @@ import dev.inmo.micro_utils.ktor.server.createKtorServer
 import dev.inmo.tgbotapi.extensions.api.answers.answerInlineQuery
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.bot.setMyCommands
+import dev.inmo.tgbotapi.extensions.api.savePreparedKeyboardButton
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.send
 import dev.inmo.tgbotapi.extensions.api.set.setUserEmojiStatus
@@ -21,6 +22,10 @@ import dev.inmo.tgbotapi.requests.answers.InlineQueryResultsButton
 import dev.inmo.tgbotapi.types.*
 import dev.inmo.tgbotapi.types.InlineQueries.InlineQueryResult.InlineQueryResultArticle
 import dev.inmo.tgbotapi.types.InlineQueries.InputMessageContent.InputTextMessageContent
+import dev.inmo.tgbotapi.types.buttons.KeyboardButtonRequestManagedBot
+import dev.inmo.tgbotapi.types.buttons.PreparedKeyboardButton
+import dev.inmo.tgbotapi.types.buttons.PreparedKeyboardButtonId
+import dev.inmo.tgbotapi.types.buttons.reply.requestManagedBotReplyButton
 import dev.inmo.tgbotapi.types.webapps.WebAppInfo
 import dev.inmo.tgbotapi.utils.*
 import io.ktor.http.*
@@ -59,6 +64,7 @@ suspend fun main(vararg args: String) {
     val initiationLogger = KSLog("Initialization")
 
     val bot = telegramBot(telegramBotAPIUrlsKeeper)
+    val usersToButtonsMap = mutableMapOf<UserId, PreparedKeyboardButtonId>()
     createKtorServer(
         "0.0.0.0",
         args.getOrNull(2) ?.toIntOrNull() ?: 8080
@@ -123,6 +129,24 @@ suspend fun main(vararg args: String) {
 
                 call.respond(HttpStatusCode.OK, set.toString())
             }
+            post("getPreparedKeyboardButtonId") {
+                val requestBody = call.receiveText()
+                val webAppCheckData = Json.decodeFromString(WebAppDataWrapper.serializer(), requestBody)
+
+                val isSafe = telegramBotAPIUrlsKeeper.checkWebAppData(webAppCheckData.data, webAppCheckData.hash)
+                val rawUserId = call.parameters[userIdField] ?.toLongOrNull() ?.let(::RawChatId) ?: error("$userIdField should be presented as long value")
+
+                if (isSafe) {
+                    val buttonId = usersToButtonsMap[UserId(rawUserId)]
+                    if (buttonId == null) {
+                        call.respond(HttpStatusCode.NoContent)
+                    } else {
+                        call.respond(HttpStatusCode.OK, buttonId.string)
+                    }
+                } else {
+                    call.respond(HttpStatusCode.Forbidden)
+                }
+            }
         }
     }.start(false)
 
@@ -170,6 +194,20 @@ suspend fun main(vararg args: String) {
                     showAboveText = true
                 )
             )
+        }
+        onCommand("prepareKeyboard") {
+            val preparedKeyboardButton = savePreparedKeyboardButton(
+                userId = it.chat.id.toChatId(),
+                button = requestManagedBotReplyButton(
+                    text = "Saved sample button",
+                    requestManagedBot = KeyboardButtonRequestManagedBot(
+                        requestId = preparedSampleKeyboardRequestId,
+                        suggestedName = "Saved sample button bot",
+                        suggestedUsername = Username.prepare("saved_sample_button_bot")
+                    )
+                )
+            )
+            usersToButtonsMap[it.chat.id.toChatId()] = preparedKeyboardButton.id
         }
         onBaseInlineQuery {
             answerInlineQuery(

@@ -1,6 +1,7 @@
 import androidx.compose.runtime.*
 import dev.inmo.micro_utils.coroutines.launchLoggingDropExceptions
 import dev.inmo.tgbotapi.types.CustomEmojiId
+import dev.inmo.tgbotapi.types.buttons.PreparedKeyboardButtonId
 import dev.inmo.tgbotapi.types.userIdField
 import dev.inmo.tgbotapi.types.webAppQueryIdField
 import dev.inmo.tgbotapi.webapps.*
@@ -17,6 +18,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
 import io.ktor.http.content.TextContent
+import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.*
 import kotlinx.dom.appendElement
@@ -65,7 +67,12 @@ fun main() {
         }
         val scope = rememberCoroutineScope()
         val isSafeState = remember { mutableStateOf<Boolean?>(null) }
-        val logsState = remember { mutableStateListOf<Any?>() }
+        val logsState = remember {
+            mutableStateListOf<Any?>(
+                window.location.href,
+            )
+        }
+        val buttonIdState = remember { mutableStateOf<PreparedKeyboardButtonId?>(null) }
 
 //        Text(window.location.href)
 //        P()
@@ -92,6 +99,30 @@ fun main() {
             logsState.add(
                 webApp.initDataUnsafe.chat.toString()
             )
+        }
+
+        LaunchedEffect(baseUrl) {
+            val response = client.post("$baseUrl/getPreparedKeyboardButtonId") {
+                setBody(
+                    Json.encodeToString(
+                        WebAppDataWrapper.serializer(),
+                        WebAppDataWrapper(webApp.initData, webApp.initDataUnsafe.hash)
+                    )
+                )
+                parameter(userIdField, webApp.initDataUnsafe.user ?.id ?.long ?: return@LaunchedEffect)
+            }
+            when (response.status) {
+                HttpStatusCode.OK -> {
+                    val buttonId = response.bodyAsText()
+                    buttonIdState.value = PreparedKeyboardButtonId(buttonId)
+                }
+                HttpStatusCode.NoContent -> {
+                    buttonIdState.value = null
+                }
+                else -> {
+                    logsState.add("Error while getting prepared keyboard button id: ${response.status}")
+                }
+            }
         }
 
         Text(
@@ -250,6 +281,23 @@ fun main() {
         }
 
         P()
+        H3 { Text("Prepared keyboard button") }
+        val buttonIdValue = buttonIdState.value
+        if (buttonIdValue == null) {
+            Text("Ensure that you have called /prepareKeyboard in bot. If you did it, check logs of server")
+        } else {
+            Button({
+                onClick {
+                    webApp.requestChat(buttonIdValue) {
+                        logsState.add("Chat have been received: $it")
+                    }
+                }
+            }) {
+                Text("Prepared keyboard button")
+            }
+        }
+
+        P()
         H3 { Text("Write access callbacks") }
         Button({
             onClick {
@@ -396,11 +444,15 @@ fun main() {
                 }
                 mainButton.apply {
                     setText("Main button")
-                    setParams(
-                        BottomButtonParams(
-                            iconCustomEmojiId = CustomEmojiId("5370976574969486150") // 😏
+                    runCatching {
+                        setParams(
+                            BottomButtonParams(
+                                iconCustomEmojiId = CustomEmojiId("5370976574969486150") // 😏
+                            )
                         )
-                    )
+                    }.onFailure {
+                        logsState.add("Can't set params for main button: $it")
+                    }
                     onClick {
                         logsState.add("Main button clicked")
                         hapticFeedback.notificationOccurred(
@@ -411,11 +463,15 @@ fun main() {
                 }
                 secondaryButton.apply {
                     setText("Secondary button")
-                    setParams(
-                        BottomButtonParams(
-                            iconCustomEmojiId = CustomEmojiId("5370763368497944736") // 😒
+                    runCatching {
+                        setParams(
+                            BottomButtonParams(
+                                iconCustomEmojiId = CustomEmojiId("5370763368497944736") // 😒
+                            )
                         )
-                    )
+                    }.onFailure {
+                        logsState.add("Can't set params for secondary button: $it")
+                    }
                     onClick {
                         logsState.add("Secondary button clicked")
                         hapticFeedback.notificationOccurred(
