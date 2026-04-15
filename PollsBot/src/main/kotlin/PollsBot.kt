@@ -6,11 +6,16 @@ import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.tgbotapi.extensions.api.bot.setMyCommands
 import dev.inmo.tgbotapi.extensions.api.send.polls.sendQuizPoll
 import dev.inmo.tgbotapi.extensions.api.send.polls.sendRegularPoll
+import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.send
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onContentMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onPollAnswer
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onPollOptionAdded
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onPollOptionDeleted
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onPollUpdates
+import dev.inmo.tgbotapi.extensions.utils.accessibleMessageOrNull
 import dev.inmo.tgbotapi.extensions.utils.customEmojiTextSourceOrNull
 import dev.inmo.tgbotapi.extensions.utils.extensions.parseCommandsWithArgsSources
 import dev.inmo.tgbotapi.types.BotCommand
@@ -105,7 +110,9 @@ suspend fun main(vararg args: String) {
                     }
                 },
                 isAnonymous = false,
-                replyParameters = ReplyParameters(it)
+                replyParameters = ReplyParameters(it),
+                allowAddingOptions = true,
+                hideResultsUntilCloses = true,
             )
             pollToChatMutex.withLock {
                 pollToChat[sentPoll.content.poll.id] = sentPoll.chat.id
@@ -118,7 +125,12 @@ suspend fun main(vararg args: String) {
                 .firstOrNull { it.first.command == "quiz" }
                 ?.second
                 ?.firstNotNullOfOrNull { it.customEmojiTextSourceOrNull() }
-            val correctAnswer = Random.nextInt(10)
+            val correctAnswer = mutableListOf<Int>()
+            (1 until Random.nextInt(9)).forEach {
+                val option = Random.nextInt(10)
+                if (correctAnswer.contains(option)) return@forEach
+                correctAnswer.add(option)
+            }
             val sentPoll = sendQuizPoll(
                 it.chat.id,
                 questionEntities = buildEntities {
@@ -127,7 +139,13 @@ suspend fun main(vararg args: String) {
                         customEmoji(customEmoji.customEmojiId, customEmoji.subsources)
                     }
                 },
-                (1 .. 10).map {
+                descriptionTextSources = buildEntities {
+                    regular("Test quiz poll description:")
+                    if (customEmoji != null) {
+                        customEmoji(customEmoji.customEmojiId, customEmoji.subsources)
+                    }
+                },
+                options = (1 .. 10).map {
                     InputPollOption {
                         regular(it.toString()) + " "
                         if (customEmoji != null) {
@@ -137,7 +155,11 @@ suspend fun main(vararg args: String) {
                 },
                 isAnonymous = false,
                 replyParameters = ReplyParameters(it),
-                correctOptionId = correctAnswer,
+                correctOptionIds = correctAnswer.sorted(),
+                allowMultipleAnswers = correctAnswer.size > 1,
+                allowsRevoting = true,
+                shuffleOptions = true,
+                hideResultsUntilCloses = true,
                 explanationTextSources = buildEntities {
                     regular("Random solved it to be ") + underline((correctAnswer + 1).toString()) + " "
                     if (customEmoji != null) {
@@ -145,6 +167,7 @@ suspend fun main(vararg args: String) {
                     }
                 }
             )
+            println("Sent poll data: $sentPoll")
             pollToChatMutex.withLock {
                 pollToChat[sentPoll.content.poll.id] = sentPoll.chat.id
             }
@@ -165,6 +188,32 @@ suspend fun main(vararg args: String) {
             when(it.isAnonymous) {
                 false -> send(chatId, "[onPollUpdates] Public poll updated: ${it.options.joinToString()}")
                 true -> send(chatId, "[onPollUpdates] Anonymous poll updated: ${it.options.joinToString()}")
+            }
+        }
+
+        onPollOptionAdded {
+            it.chatEvent.pollMessage ?.accessibleMessageOrNull() ?.let { pollMessage ->
+                reply(pollMessage) {
+                    +"Poll option added: \n"
+                    +it.chatEvent.optionTextSources
+                }
+            }
+        }
+        onPollOptionDeleted {
+            it.chatEvent.pollMessage ?.accessibleMessageOrNull() ?.let { pollMessage ->
+                reply(pollMessage) {
+                    +"Poll option deleted: \n"
+                    +it.chatEvent.optionTextSources
+                }
+            }
+        }
+
+        onContentMessage {
+            val replyPollOptionId = it.replyInfo ?.pollOptionId ?: return@onContentMessage
+            it.replyTo ?.accessibleMessageOrNull() ?.let { replied ->
+                reply(replied, pollOptionId = replyPollOptionId) {
+                    +"Reply to poll option"
+                }
             }
         }
 
