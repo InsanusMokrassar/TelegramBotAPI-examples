@@ -1,3 +1,4 @@
+import dev.inmo.micro_utils.coroutines.runCatchingLogging
 import dev.inmo.micro_utils.coroutines.runCatchingSafely
 import dev.inmo.tgbotapi.bot.ktor.telegramBot
 import dev.inmo.tgbotapi.extensions.api.chat.modify.setChatPhoto
@@ -15,17 +16,13 @@ suspend fun main(args: Array<String>) {
     bot.buildBehaviourWithLongPolling(scope = CoroutineScope(Dispatchers.IO)) {
         onPhoto {
             val bytes = downloadFile(it.content)
-            runCatchingSafely {
+            runCatchingLogging {
                 setChatPhoto(
                     it.chat.id,
                     bytes.asMultipartFile("sample.jpg")
                 )
-            }.onSuccess { b ->
-                if (b) {
-                    reply(it, "Done")
-                } else {
-                    reply(it, "Something went wrong")
-                }
+            }.onSuccess { _ ->
+                reply(it, "Done")
             }.onFailure { e ->
                 e.printStackTrace()
 

@@ -44,7 +44,11 @@ suspend fun main(args: Array<String>) {
         onCommand("delete") {
             val deleted = runCatchingSafely {
                 deleteStickerSet(it.chat.stickerSetName())
-            }.getOrElse { false }
+            }.map {
+                true
+            }.getOrElse {
+                false
+            }
 
             if (deleted) {
                 reply(it, "Deleted")

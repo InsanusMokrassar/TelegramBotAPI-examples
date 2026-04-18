@@ -213,6 +213,8 @@ suspend fun main(args: Array<String>) {
                     firstName,
                     secondName
                 )
+            }.map {
+                true
             }.getOrElse { false }
             reply(it) {
                 if (set) {
@@ -230,6 +232,8 @@ suspend fun main(args: Array<String>) {
                     businessConnectionId,
                     username
                 )
+            }.map {
+                true
             }.getOrElse {
                 it.printStackTrace()
                 false
@@ -267,6 +271,8 @@ suspend fun main(args: Array<String>) {
             }
             val transferred = runCatching {
                 transferBusinessAccountStars(businessConnectionId, count)
+            }.map {
+                true
             }.getOrElse {
                 it.printStackTrace()
                 false
@@ -310,6 +316,8 @@ suspend fun main(args: Array<String>) {
                     businessConnectionId,
                     bio
                 )
+            }.map {
+                true
             }.getOrElse {
                 it.printStackTrace()
                 false
@@ -327,6 +335,8 @@ suspend fun main(args: Array<String>) {
                     businessConnectionId,
                     initialBio
                 )
+            }.map {
+                true
             }.getOrElse {
                 it.printStackTrace()
                 false
@@ -358,6 +368,8 @@ suspend fun main(args: Array<String>) {
                     ),
                     isPublic = isPublic
                 )
+            }.map {
+                true
             }.getOrElse {
                 it.printStackTrace()
                 false
@@ -376,6 +388,8 @@ suspend fun main(args: Array<String>) {
                     businessConnectionId,
                     isPublic = isPublic
                 )
+            }.map {
+                true
             }.getOrElse {
                 it.printStackTrace()
                 false
@@ -461,6 +475,8 @@ suspend fun main(args: Array<String>) {
 
             val deleted = runCatching {
                 deleteStory(businessConnectionId, replyTo.content.story.id)
+            }.map {
+                true
             }.getOrElse {
                 it.printStackTrace()
                 false
