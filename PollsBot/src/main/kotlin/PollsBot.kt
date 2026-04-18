@@ -156,7 +156,7 @@ suspend fun main(vararg args: String) {
                 isAnonymous = false,
                 replyParameters = ReplyParameters(it),
                 correctOptionIds = correctAnswer.sorted(),
-                allowMultipleAnswers = correctAnswer.size > 1,
+                allowsMultipleAnswers = correctAnswer.size > 1,
                 allowsRevoting = true,
                 shuffleOptions = true,
                 hideResultsUntilCloses = true,

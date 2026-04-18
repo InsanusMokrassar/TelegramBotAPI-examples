@@ -70,21 +70,18 @@ suspend fun main(vararg args: String) {
 
             draftMessagesChannel.send("Photo file have been downloaded. Start set my profile photo")
 
-            val setResult = setMyProfilePhoto(
+            setMyProfilePhoto(
                 InputProfilePhoto.Static(
                     photoFile.asMultipartFile()
                 )
             )
-            if (setResult) {
-                reply(commandMessage, "New photo have been set")
-            }
+            reply(commandMessage, "New photo have been set")
         }
 
         onCommand("removeMyProfilePhoto") {
             runCatchingLogging {
-                if (removeMyProfilePhoto()) {
-                    reply(it, "Photo have been removed")
-                }
+                removeMyProfilePhoto()
+                reply(it, "Photo have been removed")
             }.onFailure { e ->
                 e.printStackTrace()
                 reply(it, "Something web wrong. See logs for details.")
