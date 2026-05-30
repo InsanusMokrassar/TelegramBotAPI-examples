@@ -6,7 +6,11 @@ import dev.inmo.micro_utils.coroutines.subscribeLoggingDropExceptions
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
-import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onGuestMessage
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onContentMessage
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onGuestRequestMessage
+import dev.inmo.tgbotapi.extensions.utils.extensions.raw.guest_bot_caller_chat
+import dev.inmo.tgbotapi.extensions.utils.extensions.raw.guest_bot_caller_user
+import dev.inmo.tgbotapi.extensions.utils.publicChatOrNull
 import dev.inmo.tgbotapi.types.InlineQueries.InlineQueryResult.InlineQueryResultArticle
 import dev.inmo.tgbotapi.types.InlineQueries.InputMessageContent.InputTextMessageContent
 import dev.inmo.tgbotapi.types.InlineQueryId
@@ -52,7 +56,7 @@ suspend fun main(vararg args: String) {
         // supportsGuestQueries reflects the supports_guest_queries field from the Telegram API
         println("Supports guest queries: ${me.supportsGuestQueries}")
 
-        onGuestMessage { message ->
+        onGuestRequestMessage { message ->
             println("=== Guest message received ===")
             // guestQueryId is the unique ID required to answer this guest query
             println("  guestQueryId:       ${message.guestQueryId}")
@@ -78,6 +82,22 @@ suspend fun main(vararg args: String) {
             )
             // SentGuestMessage contains the inline_message_id of the sent reply
             println("  SentGuestMessage:   $sentGuestMessage")
+        }
+
+        onContentMessage {
+            println(it)
+            val userCalledGuestMessage = it.guest_bot_caller_user
+            val chatCalledGuestMessage = it.guest_bot_caller_chat ?.publicChatOrNull()
+            if (userCalledGuestMessage != null) {
+                reply(it) {
+                    +"User called guest bot: ${userCalledGuestMessage.lastName + " " + userCalledGuestMessage.firstName}"
+                }
+            }
+            if (chatCalledGuestMessage != null) {
+                reply(it) {
+                    +"Chat called guest bot: ${chatCalledGuestMessage.title}"
+                }
+            }
         }
 
         allUpdatesFlow.subscribeLoggingDropExceptions(scope = this) {
