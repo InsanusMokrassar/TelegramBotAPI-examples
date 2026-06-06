@@ -2,7 +2,7 @@ import dev.inmo.kslog.common.KSLog
 import dev.inmo.kslog.common.LogLevel
 import dev.inmo.kslog.common.defaultMessageFormatter
 import dev.inmo.kslog.common.setDefaultKSLog
-import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
+import dev.inmo.micro_utils.coroutines.subscribeLoggingDropExceptions
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onGiveawayCompleted
@@ -50,7 +50,7 @@ suspend fun main(vararg args: String) {
             println(it)
         }
 
-//        allUpdatesFlow.subscribeSafelyWithoutExceptions(this) {
+//        allUpdatesFlow.subscribeLoggingDropExceptions(this) {
 //            println(it)
 //        }
     }.second.join()

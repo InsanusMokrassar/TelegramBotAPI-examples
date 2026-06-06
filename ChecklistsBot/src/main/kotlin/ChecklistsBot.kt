@@ -4,7 +4,6 @@ import dev.inmo.kslog.common.defaultMessageFormatter
 import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.micro_utils.coroutines.runCatchingLogging
 import dev.inmo.micro_utils.coroutines.subscribeLoggingDropExceptions
-import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.bot.getMyStarBalance
 import dev.inmo.tgbotapi.extensions.api.chat.get.getChat
@@ -33,7 +32,7 @@ import dev.inmo.tgbotapi.extensions.utils.previewChannelDirectMessagesChatOrNull
 import dev.inmo.tgbotapi.extensions.utils.suggestedChannelDirectMessagesContentMessageOrNull
 import dev.inmo.tgbotapi.types.checklists.ChecklistTaskId
 import dev.inmo.tgbotapi.types.message.SuggestedPostParameters
-import dev.inmo.tgbotapi.types.message.abstracts.CommonMessage
+import dev.inmo.tgbotapi.types.message.abstracts.ChatContentMessage
 import dev.inmo.tgbotapi.types.message.content.ChecklistContent
 import dev.inmo.tgbotapi.types.message.textsources.TextSourcesList
 import dev.inmo.tgbotapi.types.update.abstracts.Update

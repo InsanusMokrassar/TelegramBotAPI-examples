@@ -3,6 +3,7 @@ import dev.inmo.kslog.common.LogLevel
 import dev.inmo.kslog.common.defaultMessageFormatter
 import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.micro_utils.common.Percentage
+import dev.inmo.tgbotapi.types.chat.PreviewBot
 import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.business.getBusinessAccountStarBalance
@@ -27,7 +28,8 @@ import dev.inmo.tgbotapi.extensions.api.stories.deleteStory
 import dev.inmo.tgbotapi.extensions.api.stories.postStory
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
-import dev.inmo.tgbotapi.extensions.utils.commonMessageOrNull
+import dev.inmo.tgbotapi.extensions.utils.chatContentMessageOrNull
+import dev.inmo.tgbotapi.extensions.utils.chatMessageOrNull
 import dev.inmo.tgbotapi.extensions.utils.extendedPrivateChatOrThrow
 import dev.inmo.tgbotapi.extensions.utils.ifAccessibleMessage
 import dev.inmo.tgbotapi.extensions.utils.ifBusinessContentMessage
@@ -44,13 +46,15 @@ import dev.inmo.tgbotapi.types.MessageId
 import dev.inmo.tgbotapi.types.RawChatId
 import dev.inmo.tgbotapi.types.business_connection.BusinessConnectionId
 import dev.inmo.tgbotapi.types.chat.PrivateChat
-import dev.inmo.tgbotapi.types.message.abstracts.CommonMessage
+import dev.inmo.tgbotapi.types.message.abstracts.ChatContentMessage
+import dev.inmo.tgbotapi.types.message.content.LivePhotoContent
 import dev.inmo.tgbotapi.types.message.content.PhotoContent
 import dev.inmo.tgbotapi.types.message.content.StoryContent
 import dev.inmo.tgbotapi.types.message.content.TextContent
 import dev.inmo.tgbotapi.types.message.content.VideoContent
 import dev.inmo.tgbotapi.types.message.content.VisualMediaGroupPartContent
 import dev.inmo.tgbotapi.types.stories.InputStoryContent
+import dev.inmo.tgbotapi.types.stories.InputStoryContent.*
 import dev.inmo.tgbotapi.types.stories.StoryArea
 import dev.inmo.tgbotapi.types.stories.StoryAreaPosition
 import dev.inmo.tgbotapi.types.stories.StoryAreaType
@@ -120,6 +124,15 @@ suspend fun main(args: Array<String>) {
                 if (businessContentMessage.sentByBusinessConnectionOwner) {
                     reply(sent, "You have sent this message to the ${businessContentMessage.businessConnectionId.string} related chat")
                 } else {
+                    // Since TG Bot API 9.0: business bots can reply to other bots in business context
+                    // when bot-to-bot communication is enabled for both bots
+                    if (businessContentMessage.from is PreviewBot) {
+                        reply(
+                            to = sent,
+                            text = "Replying to bot ${businessContentMessage.from.firstName} in business context (bot-to-bot reply)",
+                        )
+                        return@ifBusinessContentMessage
+                    }
                     reply(
                         to = sent,
                         text = "User have sent this message to you in the ${businessContentMessage.businessConnectionId.string} related chat",
@@ -203,6 +216,8 @@ suspend fun main(args: Array<String>) {
                 }
             )
         }
+        // Since TG Bot API 9.0: the following account management commands no longer require
+        // the connected user to have a Telegram Premium subscription.
         onCommandWithArgs("set_business_account_name", initialFilter = { it.chat is PrivateChat }) { it, args ->
             val firstName = args[0]
             val secondName = args.getOrNull(1)
@@ -349,9 +364,9 @@ suspend fun main(args: Array<String>) {
                 }
             }
         }
-        suspend fun handleSetProfilePhoto(it: CommonMessage<TextContent>, isPublic: Boolean) {
+        suspend fun handleSetProfilePhoto(it: ChatContentMessage<TextContent>, isPublic: Boolean) {
             val businessConnectionId = chatsBusinessConnections[it.chat.id] ?: return@handleSetProfilePhoto
-            val replyTo = it.replyTo ?.commonMessageOrNull() ?.withContentOrNull<PhotoContent>()
+            val replyTo = it.replyTo ?.chatContentMessageOrNull() ?.withContentOrNull<PhotoContent>()
             if (replyTo == null) {
                 reply(it) {
                     +"Reply to photo for using of this command"
@@ -411,7 +426,7 @@ suspend fun main(args: Array<String>) {
 
         onCommand("post_story", initialFilter = { it.chat is PrivateChat }) {
             val businessConnectionId = chatsBusinessConnections[it.chat.id] ?: return@onCommand
-            val replyTo = it.replyTo ?.commonMessageOrNull() ?.withContentOrNull<VisualMediaGroupPartContent>()
+            val replyTo = it.replyTo ?.chatContentMessageOrNull() ?.withContentOrNull<VisualMediaGroupPartContent>()
             if (replyTo == null) {
                 reply(it) {
                     +"Reply to photo or video for using of this command"
@@ -424,11 +439,15 @@ suspend fun main(args: Array<String>) {
                 postStory(
                     businessConnectionId,
                     when (replyTo.content) {
-                        is PhotoContent -> InputStoryContent.Photo(
+                        is PhotoContent -> Photo(
                             file.multipartFile()
                         )
-                        is VideoContent -> InputStoryContent.Video(
+                        is VideoContent -> Video(
                             file.multipartFile()
+                        )
+                        is LivePhotoContent -> Video(
+                            file.multipartFile(),
+                            isAnimation = true
                         )
                     },
                     activePeriod = PostStory.ACTIVE_PERIOD_6_HOURS,
@@ -465,7 +484,7 @@ suspend fun main(args: Array<String>) {
 
         onCommand("delete_story", initialFilter = { it.chat is PrivateChat }) {
             val businessConnectionId = chatsBusinessConnections[it.chat.id] ?: return@onCommand
-            val replyTo = it.replyTo ?.commonMessageOrNull() ?.withContentOrNull<StoryContent>()
+            val replyTo = it.replyTo ?.chatContentMessageOrNull() ?.withContentOrNull<StoryContent>()
             if (replyTo == null) {
                 reply(it) {
                     +"Reply to photo or video for using of this command"
