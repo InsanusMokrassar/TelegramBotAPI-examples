@@ -4,6 +4,7 @@ import dev.inmo.kslog.common.defaultMessageFormatter
 import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.chat.get.getChatAdministrators
+import dev.inmo.tgbotapi.extensions.api.chat.members.getChatMember
 import dev.inmo.tgbotapi.extensions.api.send.deleteAllUserMessageReactions
 import dev.inmo.tgbotapi.extensions.api.send.deleteUserMessageReaction
 import dev.inmo.tgbotapi.extensions.api.send.reply
@@ -14,12 +15,12 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onChatMe
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onContentMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.utils.plus
-import dev.inmo.tgbotapi.extensions.utils.chatContentMessageOrNull
-import dev.inmo.tgbotapi.extensions.utils.contentMessageOrNull
 import dev.inmo.tgbotapi.extensions.utils.fromUserChatMessageOrNull
 import dev.inmo.tgbotapi.extensions.utils.fromUserMessageOrNull
 import dev.inmo.tgbotapi.extensions.utils.publicChatOrNull
+import dev.inmo.tgbotapi.extensions.utils.requireRestrictedChatMember
 import dev.inmo.tgbotapi.extensions.utils.restrictedMemberChatMemberOrNull
+import dev.inmo.tgbotapi.extensions.utils.specialRightsChatMemberOrNull
 import dev.inmo.tgbotapi.types.chat.CommonBot
 import dev.inmo.tgbotapi.types.chat.ChatPermissions
 import kotlinx.coroutines.CoroutineScope
@@ -89,6 +90,23 @@ suspend fun main(vararg args: String) {
             println("  canReactToMessages (ChatPermissions):      ${permissions.canReactToMessages}")
         }
 
+        // Feature 1: can_react_to_messages in ChatMemberRestricted and ChatPermissions
+        // RestrictedMemberChatMember implements ChatPermissions, so canReactToMessages
+        // appears in both types as required by the Telegram Bot API spec
+        onCommand(
+            "retrieveRights"
+        ) { message ->
+            val replyMessage = message.replyTo ?.fromUserChatMessageOrNull() ?: run {
+                reply(message) { +"This command works only in groups/supergroups/channels" }
+                return@onCommand
+            }
+            val chatMember = getChatMember(message.chat.id, replyMessage.user.id)
+            val chatPermissions = chatMember.restrictedMemberChatMemberOrNull()
+
+            val canReactToMessages = chatPermissions ?.canReactToMessages
+            reply(message) { +"Can react to messages: $canReactToMessages" }
+        }
+
         // Feature 2: return_bots parameter in getChatAdministrators
         // retrieveOtherBots = true corresponds to return_bots = true in the Telegram API
         onCommand("admins") { message ->
@@ -108,7 +126,7 @@ suspend fun main(vararg args: String) {
 
         // Feature 4: deleteMessageReaction
         // Deletes a specific reaction by the replied message's author on that message
-        onCommand("deletereaction") { message ->
+        onCommand("deleteReaction") { message ->
             val replied = message.replyTo ?.fromUserChatMessageOrNull() ?: run {
                 reply(message) { +"Reply to a message to remove that user's reaction from it" }
                 return@onCommand
@@ -119,7 +137,7 @@ suspend fun main(vararg args: String) {
 
         // Feature 3: deleteAllMessageReactions
         // Deletes all reactions that the replied message's author has left in this chat
-        onCommand("deleteallreactions") { message ->
+        onCommand("deleteAllReactions") { message ->
             val replied = message.replyTo?.fromUserMessageOrNull() ?: run {
                 reply(message) { +"Reply to a message to clear all reactions of that user in this chat" }
                 return@onCommand
