@@ -9,17 +9,29 @@ import dev.inmo.tgbotapi.extensions.api.send.media.sendLivePhoto
 import dev.inmo.tgbotapi.extensions.api.send.media.sendMediaGroup
 import dev.inmo.tgbotapi.extensions.api.send.media.sendPaidMedia
 import dev.inmo.tgbotapi.extensions.api.send.reply
+import dev.inmo.tgbotapi.extensions.api.send.replyWithLivePhoto
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onEditedLivePhoto
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onLivePhoto
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onLivePhotoGallery
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMediaGroupMessages
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onPaidMediaInfoContent
+import dev.inmo.tgbotapi.extensions.utils.contentMessageOrNull
+import dev.inmo.tgbotapi.extensions.utils.photoContentOrNull
+import dev.inmo.tgbotapi.extensions.utils.photoFileOrNull
+import dev.inmo.tgbotapi.extensions.utils.videoContentOrNull
+import dev.inmo.tgbotapi.extensions.utils.videoFileOrNull
 import dev.inmo.tgbotapi.extensions.utils.withContentOrNull
 import dev.inmo.tgbotapi.types.message.content.LivePhotoContent
 import dev.inmo.tgbotapi.types.message.payments.PaidMedia
 import dev.inmo.tgbotapi.types.media.TelegramMediaLivePhoto
 import dev.inmo.tgbotapi.types.media.TelegramPaidMediaLivePhoto
 import dev.inmo.tgbotapi.types.media.toTelegramPaidMediaLivePhoto
+import dev.inmo.tgbotapi.types.message.content.MediaContent
+import dev.inmo.tgbotapi.types.message.content.MediaGroupContent
+import dev.inmo.tgbotapi.types.message.content.MediaGroupPartContent
+import dev.inmo.tgbotapi.types.message.content.VideoContent
 import dev.inmo.tgbotapi.utils.RiskFeature
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -157,6 +169,20 @@ suspend fun main(vararg args: String) {
             println("=== Edited live photo received ===")
             println("  fileId:  ${message.content.media.fileId}")
             println("  caption: ${message.content.text}")
+        }
+
+        onMediaGroupMessages {
+            val photo = it.content.group.firstNotNullOfOrNull {
+                it.content.photoContentOrNull()
+            } ?: return@onMediaGroupMessages
+            val video = it.content.group.firstNotNullOfOrNull {
+                it.content.videoContentOrNull()
+            } ?: return@onMediaGroupMessages
+            replyWithLivePhoto(
+                it,
+                video.media.fileId,
+                photo.media.fileId
+            )
         }
 
         allUpdatesFlow.subscribeLoggingDropExceptions(scope = this) {

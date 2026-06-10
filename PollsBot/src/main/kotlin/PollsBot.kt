@@ -17,14 +17,18 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onPollOp
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onPollUpdates
 import dev.inmo.tgbotapi.extensions.utils.accessibleMessageOrNull
 import dev.inmo.tgbotapi.extensions.utils.chatContentMessageOrNull
+import dev.inmo.tgbotapi.extensions.utils.contentMessageOrNull
 import dev.inmo.tgbotapi.extensions.utils.customEmojiTextSourceOrNull
 import dev.inmo.tgbotapi.extensions.utils.extensions.parseCommandsWithArgsSources
+import dev.inmo.tgbotapi.extensions.utils.withContentOrNull
 import dev.inmo.tgbotapi.types.BotCommand
 import dev.inmo.tgbotapi.types.IdChatIdentifier
 import dev.inmo.tgbotapi.types.PollId
 import dev.inmo.tgbotapi.types.ReplyParameters
 import dev.inmo.tgbotapi.types.media.TelegramMediaLocation
+import dev.inmo.tgbotapi.types.media.TelegramMediaSticker
 import dev.inmo.tgbotapi.types.media.TelegramMediaVenue
+import dev.inmo.tgbotapi.types.message.content.StickerContent
 import dev.inmo.tgbotapi.types.polls.InputPollOption
 import dev.inmo.tgbotapi.types.polls.PollAnswer
 import dev.inmo.tgbotapi.types.polls.QuizPoll
@@ -192,10 +196,11 @@ suspend fun main(vararg args: String) {
         // TelegramMediaVenue implements InputPollMedia and InputPollOptionMedia (InputMediaVenue)
         // Both can be used as poll question media or as option media
         onCommand("media_poll") {
+            val replySticker = it.replyTo ?.contentMessageOrNull() ?.withContentOrNull<StickerContent>() ?.content ?.media
             val sentPoll = sendRegularPoll(
                 it.chat.id,
                 buildEntities { regular("Which venue would you visit?") },
-                listOf(
+                listOfNotNull(
                     // InputPollOptionMedia via TelegramMediaVenue (InputMediaVenue)
                     InputPollOption(
                         media = TelegramMediaVenue(
@@ -210,6 +215,11 @@ suspend fun main(vararg args: String) {
                         media = TelegramMediaLocation(latitude = 51.5007, longitude = -0.1246)
                     ) { regular("Big Ben") },
                     InputPollOption { regular("Neither") },
+                    replySticker ?.let {
+                        InputPollOption(media = TelegramMediaSticker(replySticker.fileId)) {
+                            regular("Your sticker")
+                        }
+                    }
                 ),
                 isAnonymous = false,
                 // InputMediaLocation as InputPollMedia — poll question media
@@ -259,7 +269,7 @@ suspend fun main(vararg args: String) {
                     InputPollOption { regular("Yes") },
                     InputPollOption { regular("No") },
                 ),
-                isAnonymous = false,
+                isAnonymous = true,
                 membersOnly = true,
                 replyParameters = ReplyParameters(it)
             )
@@ -277,7 +287,7 @@ suspend fun main(vararg args: String) {
                     InputPollOption { regular("Option A") },
                     InputPollOption { regular("Option B") },
                 ),
-                isAnonymous = false,
+                isAnonymous = true,
                 countryCodes = listOf("US", "DE", "JP"),
                 replyParameters = ReplyParameters(it)
             )
@@ -372,6 +382,8 @@ suspend fun main(vararg args: String) {
             BotCommand("single_option", "Poll with 1 option (minimum is now 1, not 2)"),
         )
 
-        allUpdatesFlow.subscribeLoggingDropExceptions(scope = this) { println(it) }
+        allUpdatesFlow.subscribeLoggingDropExceptions(scope = this) {
+            println(it)
+        }
     }.second.join()
 }
