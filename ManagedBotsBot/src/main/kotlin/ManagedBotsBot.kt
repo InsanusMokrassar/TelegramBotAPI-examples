@@ -124,14 +124,16 @@ suspend fun main(vararg args: String) {
             val botChatId = it.chatEvent.bot.id.toChatId()
             reply(it, "Managed bot created successfully: ${it.chatEvent.bot}\nBot ID: ${botChatId.chatId.long}")
             val token = getManagedBotToken(botChatId)
-            reply(it, "Token: $token")
+            val accessSettings = getManagedBotAccessSettings(botChatId)
+            reply(it, "Token: $token; Access settings: $accessSettings")
         }
 
         onManagedBotUpdated {
             val botChatId = it.bot.id.toChatId()
             send(it.user, "Managed bot has been updated: ${it.bot}\nBot ID: ${botChatId.chatId.long}")
             val token = getManagedBotToken(botChatId)
-            send(it.user, "Token: $token")
+            val accessSettings = getManagedBotAccessSettings(botChatId)
+            send(it.user, "Token: $token; Access settings: $accessSettings")
         }
 
         onCommand("replaceToken") {
