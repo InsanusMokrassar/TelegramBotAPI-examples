@@ -71,3 +71,9 @@ include ":GiftsBot"
 include ":TagsBot"
 
 include ":ManagedBotsBot"
+
+include ":GuestQueryBot"
+
+include ":LivePhotosBot"
+
+include ":ChatManagementBot"

@@ -2,7 +2,7 @@ import dev.inmo.kslog.common.KSLog
 import dev.inmo.kslog.common.LogLevel
 import dev.inmo.kslog.common.defaultMessageFormatter
 import dev.inmo.kslog.common.setDefaultKSLog
-import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
+import dev.inmo.micro_utils.coroutines.subscribeLoggingDropExceptions
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.bot.getMyStarBalance
 import dev.inmo.tgbotapi.extensions.api.chat.get.getChat
@@ -22,7 +22,7 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onPhoto
 import dev.inmo.tgbotapi.types.media.AudioMediaGroupMemberTelegramMedia
 import dev.inmo.tgbotapi.types.media.toTelegramMediaAudio
 import dev.inmo.tgbotapi.types.media.toTelegramPaidMediaPhoto
-import dev.inmo.tgbotapi.types.message.abstracts.CommonMessage
+import dev.inmo.tgbotapi.types.message.abstracts.ChatContentMessage
 import dev.inmo.tgbotapi.types.update.abstracts.Update
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,8 +31,8 @@ private var BehaviourContextData.update: Update?
     get() = get("update") as? Update
     set(value) = set("update", value)
 
-private var BehaviourContextData.commonMessage: CommonMessage<*>?
-    get() = get("commonMessage") as? CommonMessage<*>
+private var BehaviourContextData.commonMessage: ChatContentMessage<*>?
+    get() = get("commonMessage") as? ChatContentMessage<*>
     set(value) = set("commonMessage", value)
 
 /**
@@ -129,7 +129,7 @@ suspend fun main(vararg args: String) {
             println(it.chatEvent)
         }
 
-        allUpdatesFlow.subscribeSafelyWithoutExceptions(this) {
+        allUpdatesFlow.subscribeLoggingDropExceptions(this) {
             println(it)
         }
     }.second.join()

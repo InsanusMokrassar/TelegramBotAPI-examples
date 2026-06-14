@@ -1,4 +1,4 @@
-import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
+import dev.inmo.micro_utils.coroutines.subscribeLoggingDropExceptions
 import dev.inmo.tgbotapi.extensions.api.files.downloadFile
 import dev.inmo.tgbotapi.extensions.api.files.downloadFileToTemp
 import dev.inmo.tgbotapi.extensions.api.get.getFileAdditionalInfo
@@ -10,6 +10,7 @@ import dev.inmo.tgbotapi.requests.abstracts.asMultipartFile
 import dev.inmo.tgbotapi.types.actions.*
 import dev.inmo.tgbotapi.types.media.TelegramMediaAudio
 import dev.inmo.tgbotapi.types.media.TelegramMediaDocument
+import dev.inmo.tgbotapi.types.media.TelegramMediaLivePhoto
 import dev.inmo.tgbotapi.types.media.TelegramMediaPhoto
 import dev.inmo.tgbotapi.types.media.TelegramMediaVideo
 import dev.inmo.tgbotapi.types.message.content.*
@@ -46,6 +47,7 @@ suspend fun main(args: Array<String>) {
                 val action = when (content) {
                     is PhotoContent -> UploadPhotoAction
                     is AnimationContent,
+                    is LivePhotoContent,
                     is VideoContent -> UploadVideoAction
                     is StickerContent -> ChooseStickerAction
                     is MediaGroupContent<*> -> UploadPhotoAction
@@ -74,7 +76,7 @@ suspend fun main(args: Array<String>) {
                         )
                         is MediaGroupContent<*> -> replyWithMediaGroup(
                             it,
-                            content.group.map {
+                            content.group.mapNotNull {
                                 when (val innerContent = it.content) {
                                     is AudioContent -> TelegramMediaAudio(
                                         downloadFileToTemp(innerContent.media).asMultipartFile()
@@ -87,6 +89,10 @@ suspend fun main(args: Array<String>) {
                                     )
                                     is VideoContent -> TelegramMediaVideo(
                                         downloadFileToTemp(innerContent.media).asMultipartFile()
+                                    )
+                                    is LivePhotoContent -> TelegramMediaLivePhoto(
+                                        downloadFileToTemp(innerContent.media).asMultipartFile(),
+                                        innerContent.media.photo ?.fileId ?: return@mapNotNull null
                                     )
                                 }
                             }
@@ -107,10 +113,16 @@ suspend fun main(args: Array<String>) {
                             it,
                             outFile.asMultipartFile()
                         )
+
+                        is LivePhotoContent -> replyWithLivePhoto(
+                            it,
+                            outFile.asMultipartFile(),
+                            content.media.photo ?.fileId ?: error("Unable to resend live photo files without their photos")
+                        )
                     }
                 }
             }
         }
-        allUpdatesFlow.subscribeSafelyWithoutExceptions(this) { println(it) }
+        allUpdatesFlow.subscribeLoggingDropExceptions(this) { println(it) }
     }.second.join()
 }

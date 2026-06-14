@@ -3,7 +3,6 @@ import dev.inmo.kslog.common.w
 import dev.inmo.micro_utils.coroutines.runCatchingLogging
 import dev.inmo.micro_utils.coroutines.runCatchingSafely
 import dev.inmo.micro_utils.coroutines.subscribeLoggingDropExceptions
-import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.tgbotapi.bot.TelegramBot
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.bot.setMyCommands
@@ -75,8 +74,29 @@ suspend fun main(vararg args: String) {
             send(it.chat, testText)
         }
 
+        // sendMessageDraft now accepts empty text (length 0 is valid since TG Bot API 9.0)
+        // Useful to show a typing indicator without any text yet
+        onCommand("test_empty_draft") {
+            sendMessageDraftFlowWithTexts(
+                it.chat.id,
+                flow<String> {
+                    emit("") // empty draft — clears / initializes typing indicator with no content
+                    delay(1500L)
+                    val step = 50
+                    var currentLength = step
+                    while (isActive && testText.length > currentLength) {
+                        delay(500L)
+                        emit(testText.take(currentLength))
+                        currentLength += step
+                    }
+                },
+            )
+            send(it.chat, testText)
+        }
+
         setMyCommands(
             BotCommand("test_draft_flow", "Start draft testing with flow"),
+            BotCommand("test_empty_draft", "Draft starting from empty text (TG Bot API 9.0)"),
             scope = BotCommandScope.AllGroupChats
         )
         allUpdatesFlow.subscribeLoggingDropExceptions(this) {

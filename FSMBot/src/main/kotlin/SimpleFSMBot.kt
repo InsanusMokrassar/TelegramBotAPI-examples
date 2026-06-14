@@ -1,5 +1,5 @@
 import dev.inmo.micro_utils.coroutines.awaitFirst
-import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
+import dev.inmo.micro_utils.coroutines.subscribeLoggingDropExceptions
 import dev.inmo.micro_utils.fsm.common.State
 import dev.inmo.tgbotapi.extensions.api.send.send
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitAnyContentMessage
@@ -13,7 +13,7 @@ import dev.inmo.tgbotapi.extensions.utils.extensions.sameThread
 import dev.inmo.tgbotapi.extensions.utils.textContentOrNull
 import dev.inmo.tgbotapi.extensions.utils.withContentOrNull
 import dev.inmo.tgbotapi.types.IdChatIdentifier
-import dev.inmo.tgbotapi.types.message.abstracts.CommonMessage
+import dev.inmo.tgbotapi.types.message.abstracts.ChatContentMessage
 import dev.inmo.tgbotapi.types.message.content.TextContent
 import dev.inmo.tgbotapi.utils.botCommand
 import dev.inmo.tgbotapi.utils.firstOf
@@ -24,7 +24,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 sealed interface BotState : State
-data class ExpectContentOrStopState(override val context: IdChatIdentifier, val sourceMessage: CommonMessage<TextContent>) : BotState
+data class ExpectContentOrStopState(override val context: IdChatIdentifier, val sourceMessage: ChatContentMessage<TextContent>) : BotState
 data class StopState(override val context: IdChatIdentifier) : BotState
 
 suspend fun main(args: Array<String>) {
@@ -97,7 +97,7 @@ suspend fun main(args: Array<String>) {
             startChain(ExpectContentOrStopState(it.chat.id, it.withContentOrNull() ?: return@onContentMessage))
         }
 
-        allUpdatesFlow.subscribeSafelyWithoutExceptions(this) {
+        allUpdatesFlow.subscribeLoggingDropExceptions(this) {
             println(it)
         }
     }.second.join()

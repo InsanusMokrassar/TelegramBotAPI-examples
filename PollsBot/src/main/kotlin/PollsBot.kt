@@ -2,7 +2,7 @@ import dev.inmo.kslog.common.KSLog
 import dev.inmo.kslog.common.LogLevel
 import dev.inmo.kslog.common.defaultMessageFormatter
 import dev.inmo.kslog.common.setDefaultKSLog
-import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
+import dev.inmo.micro_utils.coroutines.subscribeLoggingDropExceptions
 import dev.inmo.tgbotapi.extensions.api.bot.setMyCommands
 import dev.inmo.tgbotapi.extensions.api.send.polls.sendQuizPoll
 import dev.inmo.tgbotapi.extensions.api.send.polls.sendRegularPoll
@@ -16,14 +16,22 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onPollOp
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onPollOptionDeleted
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onPollUpdates
 import dev.inmo.tgbotapi.extensions.utils.accessibleMessageOrNull
+import dev.inmo.tgbotapi.extensions.utils.chatContentMessageOrNull
+import dev.inmo.tgbotapi.extensions.utils.contentMessageOrNull
 import dev.inmo.tgbotapi.extensions.utils.customEmojiTextSourceOrNull
 import dev.inmo.tgbotapi.extensions.utils.extensions.parseCommandsWithArgsSources
+import dev.inmo.tgbotapi.extensions.utils.withContentOrNull
 import dev.inmo.tgbotapi.types.BotCommand
 import dev.inmo.tgbotapi.types.IdChatIdentifier
 import dev.inmo.tgbotapi.types.PollId
 import dev.inmo.tgbotapi.types.ReplyParameters
+import dev.inmo.tgbotapi.types.media.TelegramMediaLocation
+import dev.inmo.tgbotapi.types.media.TelegramMediaSticker
+import dev.inmo.tgbotapi.types.media.TelegramMediaVenue
+import dev.inmo.tgbotapi.types.message.content.StickerContent
 import dev.inmo.tgbotapi.types.polls.InputPollOption
 import dev.inmo.tgbotapi.types.polls.PollAnswer
+import dev.inmo.tgbotapi.types.polls.QuizPoll
 import dev.inmo.tgbotapi.utils.buildEntities
 import dev.inmo.tgbotapi.utils.customEmoji
 import dev.inmo.tgbotapi.utils.regular
@@ -35,11 +43,22 @@ import kotlinx.coroutines.sync.withLock
 import kotlin.random.Random
 
 /**
- * This bot will answer with anonymous or public poll and send message on
- * any update.
- * 
- * * Use `/anonymous` to take anonymous regular poll
- * * Use `/public` to take public regular poll
+ * This bot demonstrates poll features including the new API additions:
+ *
+ * * `/anonymous` — anonymous regular poll
+ * * `/public` — public regular poll with option adding
+ * * `/quiz` — quiz poll with random correct answer
+ * * `/media_poll` — poll with [TelegramMediaLocation] as poll media (InputMediaLocation),
+ *   and [TelegramMediaVenue] as option media (InputMediaVenue / InputPollOptionMedia)
+ * * `/quiz_media` — quiz poll with [TelegramMediaLocation] as `media` and [TelegramMediaVenue]
+ *   as `explanationMedia` (new [QuizPoll.explanationMedia] field)
+ * * `/members_only` — poll with `membersOnly = true` (new [dev.inmo.tgbotapi.types.polls.Poll.membersOnly] field)
+ * * `/country_codes` — poll with `countryCodes` (new [dev.inmo.tgbotapi.types.polls.Poll.countryCodes] field)
+ * * `/single_option` — poll with just 1 option (minimum options count decreased from 2 to 1)
+ *
+ * [onPollUpdates] prints [dev.inmo.tgbotapi.types.polls.Poll.media], [dev.inmo.tgbotapi.types.polls.Poll.membersOnly],
+ * [dev.inmo.tgbotapi.types.polls.Poll.countryCodes], [QuizPoll.explanationMedia], and
+ * [dev.inmo.tgbotapi.types.polls.PollOption.media] for each option.
  */
 suspend fun main(vararg args: String) {
     val botToken = args.first()
@@ -173,6 +192,126 @@ suspend fun main(vararg args: String) {
             }
         }
 
+        // TelegramMediaLocation implements InputPollMedia and InputPollOptionMedia (InputMediaLocation)
+        // TelegramMediaVenue implements InputPollMedia and InputPollOptionMedia (InputMediaVenue)
+        // Both can be used as poll question media or as option media
+        onCommand("media_poll") {
+            val replySticker = it.replyTo ?.contentMessageOrNull() ?.withContentOrNull<StickerContent>() ?.content ?.media
+            val sentPoll = sendRegularPoll(
+                it.chat.id,
+                buildEntities { regular("Which venue would you visit?") },
+                listOfNotNull(
+                    // InputPollOptionMedia via TelegramMediaVenue (InputMediaVenue)
+                    InputPollOption(
+                        media = TelegramMediaVenue(
+                            latitude = 48.8566,
+                            longitude = 2.3522,
+                            title = "Eiffel Tower",
+                            address = "Champ de Mars, Paris"
+                        )
+                    ) { regular("Eiffel Tower") },
+                    // InputPollOptionMedia via TelegramMediaLocation (InputMediaLocation)
+                    InputPollOption(
+                        media = TelegramMediaLocation(latitude = 51.5007, longitude = -0.1246)
+                    ) { regular("Big Ben") },
+                    InputPollOption { regular("Neither") },
+                    replySticker ?.let {
+                        InputPollOption(media = TelegramMediaSticker(replySticker.fileId)) {
+                            regular("Your sticker")
+                        }
+                    }
+                ),
+                isAnonymous = false,
+                // InputMediaLocation as InputPollMedia — poll question media
+                media = TelegramMediaLocation(latitude = 48.8566, longitude = 2.3522),
+                replyParameters = ReplyParameters(it)
+            )
+            pollToChatMutex.withLock {
+                pollToChat[sentPoll.content.poll.id] = sentPoll.chat.id
+            }
+        }
+
+        // Demonstrates InputPollMedia on quiz + new QuizPoll.explanationMedia field
+        onCommand("quiz_media") {
+            val sentPoll = sendQuizPoll(
+                it.chat.id,
+                questionEntities = buildEntities { regular("Where is the Eiffel Tower?") },
+                options = listOf(
+                    InputPollOption { regular("Paris") },
+                    InputPollOption { regular("London") },
+                    InputPollOption { regular("Berlin") },
+                ),
+                correctOptionIds = listOf(0),
+                explanation = "The Eiffel Tower is in Paris, France.",
+                isAnonymous = false,
+                // InputMediaLocation as InputPollMedia — poll question media (new Poll.media field)
+                media = TelegramMediaLocation(latitude = 48.8566, longitude = 2.3522),
+                // explanationMedia is new on QuizPoll — media shown with quiz explanation
+                explanationMedia = TelegramMediaVenue(
+                    latitude = 48.8566,
+                    longitude = 2.3522,
+                    title = "Eiffel Tower",
+                    address = "Champ de Mars, 5 Av. Anatole France, Paris"
+                ),
+                replyParameters = ReplyParameters(it)
+            )
+            pollToChatMutex.withLock {
+                pollToChat[sentPoll.content.poll.id] = sentPoll.chat.id
+            }
+        }
+
+        // Demonstrates Poll.membersOnly and the membersOnly sendPoll parameter
+        onCommand("members_only") {
+            val sentPoll = sendRegularPoll(
+                it.chat.id,
+                buildEntities { regular("Members-only poll") },
+                listOf(
+                    InputPollOption { regular("Yes") },
+                    InputPollOption { regular("No") },
+                ),
+                isAnonymous = true,
+                membersOnly = true,
+                replyParameters = ReplyParameters(it)
+            )
+            pollToChatMutex.withLock {
+                pollToChat[sentPoll.content.poll.id] = sentPoll.chat.id
+            }
+        }
+
+        // Demonstrates Poll.countryCodes and the countryCodes sendPoll parameter
+        onCommand("country_codes") {
+            val sentPoll = sendRegularPoll(
+                it.chat.id,
+                buildEntities { regular("Country-targeted poll (US, DE, JP)") },
+                listOf(
+                    InputPollOption { regular("Option A") },
+                    InputPollOption { regular("Option B") },
+                ),
+                isAnonymous = true,
+                countryCodes = listOf("US", "DE", "JP"),
+                replyParameters = ReplyParameters(it)
+            )
+            pollToChatMutex.withLock {
+                pollToChat[sentPoll.content.poll.id] = sentPoll.chat.id
+            }
+        }
+
+        // Demonstrates that minimum poll options count is now 1 (was 2 before)
+        onCommand("single_option") {
+            val sentPoll = sendRegularPoll(
+                it.chat.id,
+                buildEntities { regular("Acknowledge this notice") },
+                listOf(
+                    InputPollOption { regular("Got it") },
+                ),
+                isAnonymous = false,
+                replyParameters = ReplyParameters(it)
+            )
+            pollToChatMutex.withLock {
+                pollToChat[sentPoll.content.poll.id] = sentPoll.chat.id
+            }
+        }
+
         onPollAnswer {
             val chatId = pollToChat[it.pollId] ?: return@onPollAnswer
 
@@ -185,14 +324,29 @@ suspend fun main(vararg args: String) {
         onPollUpdates {
             val chatId = pollToChat[it.id] ?: return@onPollUpdates
 
-            when(it.isAnonymous) {
-                false -> send(chatId, "[onPollUpdates] Public poll updated: ${it.options.joinToString()}")
-                true -> send(chatId, "[onPollUpdates] Anonymous poll updated: ${it.options.joinToString()}")
+            // Poll.media — PollMedia attached to the poll question (new field)
+            // Poll.membersOnly — whether poll is restricted to channel members (new field)
+            // Poll.countryCodes — country restriction list (new field)
+            // QuizPoll.explanationMedia — PollMedia attached to quiz explanation (new field)
+            // PollOption.media — PollMedia attached to each option (new field)
+            val pollInfo = buildString {
+                append("[onPollUpdates] anonymous=${it.isAnonymous}")
+                append(" | media=${it.media}")
+                append(" | membersOnly=${it.membersOnly}")
+                append(" | countryCodes=${it.countryCodes}")
+                if (it is QuizPoll) {
+                    append(" | explanationMedia=${it.explanationMedia}")
+                }
+                append("\n  options:")
+                it.options.forEach { option ->
+                    append("\n    ${option.text}: votes=${option.votes}, media=${option.media}")
+                }
             }
+            send(chatId, pollInfo)
         }
 
         onPollOptionAdded {
-            it.chatEvent.pollMessage ?.accessibleMessageOrNull() ?.let { pollMessage ->
+            it.chatEvent.pollMessage ?.accessibleMessageOrNull() ?.chatContentMessageOrNull() ?.let { pollMessage ->
                 reply(pollMessage) {
                     +"Poll option added: \n"
                     +it.chatEvent.optionTextSources
@@ -200,7 +354,7 @@ suspend fun main(vararg args: String) {
             }
         }
         onPollOptionDeleted {
-            it.chatEvent.pollMessage ?.accessibleMessageOrNull() ?.let { pollMessage ->
+            it.chatEvent.pollMessage ?.accessibleMessageOrNull() ?.chatContentMessageOrNull() ?.let { pollMessage ->
                 reply(pollMessage) {
                     +"Poll option deleted: \n"
                     +it.chatEvent.optionTextSources
@@ -210,7 +364,7 @@ suspend fun main(vararg args: String) {
 
         onContentMessage {
             val replyPollOptionId = it.replyInfo ?.pollOptionId ?: return@onContentMessage
-            it.replyTo ?.accessibleMessageOrNull() ?.let { replied ->
+            it.replyTo ?.accessibleMessageOrNull() ?.chatContentMessageOrNull() ?.let { replied ->
                 reply(replied, pollOptionId = replyPollOptionId) {
                     +"Reply to poll option"
                 }
@@ -221,8 +375,15 @@ suspend fun main(vararg args: String) {
             BotCommand("anonymous", "Create anonymous regular poll"),
             BotCommand("public", "Create non anonymous regular poll"),
             BotCommand("quiz", "Create quiz poll with random right answer"),
+            BotCommand("media_poll", "Poll with location/venue media on question and options"),
+            BotCommand("quiz_media", "Quiz with media and explanationMedia on question/explanation"),
+            BotCommand("members_only", "Poll restricted to channel members only (membersOnly)"),
+            BotCommand("country_codes", "Poll targeted to US, DE, JP users (countryCodes)"),
+            BotCommand("single_option", "Poll with 1 option (minimum is now 1, not 2)"),
         )
 
-        allUpdatesFlow.subscribeSafelyWithoutExceptions(this) { println(it) }
+        allUpdatesFlow.subscribeLoggingDropExceptions(scope = this) {
+            println(it)
+        }
     }.second.join()
 }

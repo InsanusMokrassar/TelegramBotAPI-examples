@@ -2,7 +2,6 @@ import dev.inmo.kslog.common.KSLog
 import dev.inmo.kslog.common.LogLevel
 import dev.inmo.kslog.common.defaultMessageFormatter
 import dev.inmo.kslog.common.setDefaultKSLog
-import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.business.getBusinessAccountGiftsFlow
 import dev.inmo.tgbotapi.extensions.api.gifts.getChatGiftsFlow
@@ -105,7 +104,7 @@ suspend fun main(vararg args: String) {
             }
         }
 
-//        allUpdatesFlow.subscribeSafelyWithoutExceptions(this) {
+//        allUpdatesFlow.subscribeLoggingDropExceptions(this) {
 //            println(it)
 //        }
     }.second.join()

@@ -1,4 +1,4 @@
-import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
+import dev.inmo.micro_utils.coroutines.subscribeLoggingDropExceptions
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitDeepLinks
@@ -36,7 +36,7 @@ suspend fun main(vararg args: String) {
         onDeepLink { (it, deepLink) ->
             reply(it, "Ok, I got deep link \"${deepLink}\" in trigger")
         }
-        waitDeepLinks().subscribeSafelyWithoutExceptions(this) { (it, deepLink) ->
+        waitDeepLinks().subscribeLoggingDropExceptions(this) { (it, deepLink) ->
             reply(it, "Ok, I got deep link \"${deepLink}\" in waiter")
             println(triggersHolder.handleableCommandsHolder.handleable)
         }

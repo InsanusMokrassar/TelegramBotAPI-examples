@@ -31,7 +31,7 @@ import dev.inmo.tgbotapi.extensions.utils.previewChannelDirectMessagesChatOrNull
 import dev.inmo.tgbotapi.extensions.utils.suggestedChannelDirectMessagesContentMessageOrNull
 import dev.inmo.tgbotapi.types.message.SuggestedPostParameters
 import dev.inmo.tgbotapi.types.message.abstracts.ChannelPaidPost
-import dev.inmo.tgbotapi.types.message.abstracts.CommonMessage
+import dev.inmo.tgbotapi.types.message.abstracts.ChatContentMessage
 import dev.inmo.tgbotapi.types.update.abstracts.Update
 import dev.inmo.tgbotapi.utils.firstOf
 import kotlinx.coroutines.CoroutineScope

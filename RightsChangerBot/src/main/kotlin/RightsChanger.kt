@@ -33,6 +33,7 @@ import dev.inmo.tgbotapi.types.chat.member.AdministratorChatMember
 import dev.inmo.tgbotapi.types.chat.member.ChatCommonAdministratorRights
 import dev.inmo.tgbotapi.types.commands.BotCommandScope
 import dev.inmo.tgbotapi.types.message.abstracts.AccessibleMessage
+import dev.inmo.tgbotapi.types.message.abstracts.ChatMessage
 import dev.inmo.tgbotapi.types.request.RequestId
 import dev.inmo.tgbotapi.utils.*
 import kotlinx.coroutines.flow.filter
@@ -208,7 +209,7 @@ suspend fun main(args: Array<String>) {
         ) {
             val replyMessage = it.replyTo
             val userInReply = replyMessage?.fromUserMessageOrNull()?.user?.id ?: return@onCommand
-            if (replyMessage is AccessibleMessage) {
+            if (replyMessage is ChatMessage) {
                 reply(
                     replyMessage,
                     "Manage keyboard:",
@@ -229,7 +230,7 @@ suspend fun main(args: Array<String>) {
             val replyMessage = it.replyTo
             val userInReply = replyMessage?.fromUserMessageOrNull()?.user?.id ?: return@onCommand
 
-            if (replyMessage is AccessibleMessage) {
+            if (replyMessage is ChatMessage) {
                 reply(
                     replyMessage,
                     "Manage keyboard:",
@@ -247,7 +248,7 @@ suspend fun main(args: Array<String>) {
             initialFilter = { it.user.id == allowedAdmin }
         ) {
             val messageReply =
-                it.message.commonMessageOrNull()?.replyTo?.fromUserMessageOrNull() ?: return@onMessageDataCallbackQuery
+                it.message.chatContentMessageOrNull()?.replyTo?.fromUserMessageOrNull() ?: return@onMessageDataCallbackQuery
             val userId = messageReply.user.id
             val permissions =
                 getUserChatPermissions(it.message.chat.id.toChatId(), userId) ?: return@onMessageDataCallbackQuery
@@ -334,7 +335,7 @@ suspend fun main(args: Array<String>) {
             initialFilter = { it.user.id == allowedAdmin }
         ) {
             val messageReply =
-                it.message.commonMessageOrNull()?.replyTo?.fromUserMessageOrNull() ?: return@onMessageDataCallbackQuery
+                it.message.chatContentMessageOrNull()?.replyTo?.fromUserMessageOrNull() ?: return@onMessageDataCallbackQuery
             val userId = messageReply.user.id
             val permissions =
                 getUserChatPermissions(it.message.chat.id.toChatId(), userId) ?: return@onMessageDataCallbackQuery

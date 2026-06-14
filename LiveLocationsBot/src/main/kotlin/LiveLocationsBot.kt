@@ -1,4 +1,4 @@
-import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
+import dev.inmo.micro_utils.coroutines.subscribeLoggingDropExceptions
 import dev.inmo.tgbotapi.extensions.api.EditLiveLocationInfo
 import dev.inmo.tgbotapi.extensions.api.edit.location.live.stopLiveLocation
 import dev.inmo.tgbotapi.extensions.api.handleLiveLocation
@@ -61,7 +61,7 @@ suspend fun main(vararg args: String) {
                 stopLiveLocation(it, replyMarkup = null)
             }
         }
-        allUpdatesFlow.subscribeSafelyWithoutExceptions(this) { println(it) }
+        allUpdatesFlow.subscribeLoggingDropExceptions(this) { println(it) }
     }.second.join()
 }
 
