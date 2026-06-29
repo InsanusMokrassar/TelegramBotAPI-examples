@@ -25,6 +25,7 @@ import dev.inmo.tgbotapi.types.BotCommand
 import dev.inmo.tgbotapi.types.IdChatIdentifier
 import dev.inmo.tgbotapi.types.PollId
 import dev.inmo.tgbotapi.types.ReplyParameters
+import dev.inmo.tgbotapi.types.media.TelegramMediaLink
 import dev.inmo.tgbotapi.types.media.TelegramMediaLocation
 import dev.inmo.tgbotapi.types.media.TelegramMediaSticker
 import dev.inmo.tgbotapi.types.media.TelegramMediaVenue
@@ -55,6 +56,8 @@ import kotlin.random.Random
  * * `/members_only` — poll with `membersOnly = true` (new [dev.inmo.tgbotapi.types.polls.Poll.membersOnly] field)
  * * `/country_codes` — poll with `countryCodes` (new [dev.inmo.tgbotapi.types.polls.Poll.countryCodes] field)
  * * `/single_option` — poll with just 1 option (minimum options count decreased from 2 to 1)
+ * * `/link_poll` — poll whose options carry a [TelegramMediaLink] (InputMediaLink / Bot API 10.1
+ *   [dev.inmo.tgbotapi.types.Link]) as [dev.inmo.tgbotapi.types.media.InputPollOptionMedia]
  *
  * [onPollUpdates] prints [dev.inmo.tgbotapi.types.polls.Poll.media], [dev.inmo.tgbotapi.types.polls.Poll.membersOnly],
  * [dev.inmo.tgbotapi.types.polls.Poll.countryCodes], [QuizPoll.explanationMedia], and
@@ -312,6 +315,30 @@ suspend fun main(vararg args: String) {
             }
         }
 
+        // Demonstrates TelegramMediaLink (InputMediaLink, Bot API 10.1) as poll option media.
+        // Link is the only new poll media type in 10.1 and is allowed only as InputPollOptionMedia.
+        onCommand("link_poll") {
+            val sentPoll = sendRegularPoll(
+                it.chat.id,
+                buildEntities { regular("Pick your favourite resource") },
+                listOf(
+                    // InputPollOptionMedia via TelegramMediaLink (InputMediaLink)
+                    InputPollOption(
+                        media = TelegramMediaLink("https://core.telegram.org/bots/api")
+                    ) { regular("Bot API docs") },
+                    InputPollOption(
+                        media = TelegramMediaLink("https://github.com/InsanusMokrassar/ktgbotapi")
+                    ) { regular("ktgbotapi") },
+                    InputPollOption { regular("None of these") },
+                ),
+                isAnonymous = false,
+                replyParameters = ReplyParameters(it)
+            )
+            pollToChatMutex.withLock {
+                pollToChat[sentPoll.content.poll.id] = sentPoll.chat.id
+            }
+        }
+
         onPollAnswer {
             val chatId = pollToChat[it.pollId] ?: return@onPollAnswer
 
@@ -380,6 +407,7 @@ suspend fun main(vararg args: String) {
             BotCommand("members_only", "Poll restricted to channel members only (membersOnly)"),
             BotCommand("country_codes", "Poll targeted to US, DE, JP users (countryCodes)"),
             BotCommand("single_option", "Poll with 1 option (minimum is now 1, not 2)"),
+            BotCommand("link_poll", "Poll with link media (TelegramMediaLink) on options"),
         )
 
         allUpdatesFlow.subscribeLoggingDropExceptions(scope = this) {

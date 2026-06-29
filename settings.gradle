@@ -77,3 +77,7 @@ include ":GuestQueryBot"
 include ":LivePhotosBot"
 
 include ":ChatManagementBot"
+
+include ":RichMessagesBot"
+
+include ":JoinRequestQueriesBot"
