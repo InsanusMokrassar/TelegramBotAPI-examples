@@ -13,6 +13,7 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAn
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onBaseInlineQuery
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onGuestRequestMessage
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onPhoto
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onRichMessage
 import dev.inmo.tgbotapi.extensions.utils.baseSentMessageUpdateOrNull
 import dev.inmo.tgbotapi.extensions.utils.contentMessageOrNull
@@ -25,8 +26,11 @@ import dev.inmo.tgbotapi.types.InlineQueries.InputMessageContent.InputRichMessag
 import dev.inmo.tgbotapi.types.InlineQueryId
 import dev.inmo.tgbotapi.types.message.content.TextContent
 import dev.inmo.tgbotapi.types.message.textsources.BotCommandTextSource
+import dev.inmo.tgbotapi.types.media.TelegramMediaPhoto
+import dev.inmo.tgbotapi.types.rich.InputRichMessageBlocks
 import dev.inmo.tgbotapi.types.rich.InputRichMessageHTML
 import dev.inmo.tgbotapi.types.rich.InputRichMessageMarkdown
+import dev.inmo.tgbotapi.types.rich.InputRichMessageMedia
 import dev.inmo.tgbotapi.types.toChatId
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -52,6 +56,14 @@ import kotlinx.coroutines.flow.mapNotNull
  * - [waitRichMessage] — expectation for a rich message
  * - [onlyRichMessageContentMessages] — flow filter keeping only rich message content
  * - [InputRichMessageContent] — usable as InputMessageContent in inline query results
+ *
+ * Telegram Bot API 10.2 additions demonstrated below:
+ * - [InputRichMessageBlocks] — build a rich message from a typed [dev.inmo.tgbotapi.types.rich.InputRichBlock]
+ *   tree via the InputRichBlocks DSL instead of an HTML/Markdown string (exactly one of html/markdown/blocks)
+ * - the draft-only `thinking()` block, streamed through [sendRichMessageDraft]
+ * - [InputRichMessageMedia] — media referenced from the rich message via `tg://photo?id=` / `tg://video?id=` /
+ *   `tg://audio?id=`, plus first-class media blocks (photo/video/...) inside the blocks tree; new files are
+ *   uploaded as `attach://` automatically by [dev.inmo.tgbotapi.requests.send.SendRichMessage]
  */
 suspend fun main(vararg args: String) {
     val botToken = args.first()
@@ -444,6 +456,103 @@ suspend fun main(vararg args: String) {
             )
         }
 
+        // === Bots API 10.2 additions: InputRichBlocks DSL + rich message media ===
+
+        // InputRichMessageBlocks { } — build a rich message from a typed InputRichBlock tree instead
+        // of an HTML/Markdown string (exactly one of html/markdown/blocks may be used). The lambda is an
+        // InputRichBlocksBuilder; buildInputRichBlocks { } returns the raw List<InputRichBlock> the same way.
+        onCommand("rich_blocks") {
+            sendRichMessage(
+                it.chat.id,
+                InputRichMessageBlocks {
+                    heading("Rich blocks (Bots API 10.2)", level = 1)
+                    paragraph {
+                        plain("This message is built from ")
+                        bold("structured InputRichBlocks")
+                        plain(" — no HTML or Markdown string is involved.")
+                    }
+
+                    heading("Lists", level = 2)
+                    list {
+                        item("A plain list item")
+                        item(hasCheckbox = true, isChecked = true) { paragraph("A completed task item") }
+                        item(hasCheckbox = true, isChecked = false) { paragraph("A pending task item") }
+                        item(value = 7, labelType = "1") { paragraph("An ordered item explicitly starting at 7") }
+                    }
+
+                    divider()
+
+                    heading("Code", level = 2)
+                    preformatted("val answer = 42", language = "kotlin")
+
+                    heading("Quotation", level = 2)
+                    blockQuotation {
+                        paragraph {
+                            plain("Quotations are themselves made of nested blocks — ")
+                            italic("including inline formatting")
+                            plain(".")
+                        }
+                    }
+                }
+            )
+        }
+
+        // sendRichMessageDraft with blocks: the thinking() block is only valid inside a draft and is used
+        // to stream a model's reasoning before the finalized rich message is sent via sendRichMessage.
+        onCommand("rich_blocks_draft") {
+            val chatId = it.chat.id.toChatId()
+            val draftId = 2L
+            listOf("Analyzing your request", "Composing a structured answer").forEach { step ->
+                sendRichMessageDraft(
+                    chatId,
+                    draftId,
+                    InputRichMessageBlocks { thinking(step) }
+                )
+                delay(1000)
+            }
+            // finalize the streamed draft with the real (non-thinking) blocks
+            sendRichMessage(
+                chatId,
+                InputRichMessageBlocks {
+                    heading("Answer", level = 2)
+                    paragraph("Here is the finalized, structured reply.")
+                }
+            )
+        }
+
+        // Rich message media: send me a photo and it gets embedded into a rich message two ways.
+        onPhoto { message ->
+            // reuse the received file by its fileId (no upload). To upload a brand-new file instead,
+            // build the TelegramMedia from file.asMultipartFile() — SendRichMessage collects any
+            // MultipartFile inside the rich message and uploads it as attach://<id> automatically.
+            val photoMedia = TelegramMediaPhoto(message.content.media.fileId)
+
+            // (1) referenced from HTML via tg://photo?id=<id>, resolved through InputRichMessage.media
+            sendRichMessage(
+                message.chat.id,
+                InputRichMessageHTML(
+                    """
+                        <h2>Your photo, referenced from HTML</h2>
+                        <p>Below is your photo, referenced via <code>tg://photo?id=userphoto</code>:</p>
+                        <img src="tg://photo?id=userphoto"/>
+                    """.trimIndent(),
+                    media = listOf(
+                        InputRichMessageMedia(id = "userphoto", media = photoMedia)
+                    )
+                )
+            )
+
+            // (2) as a first-class media block inside an InputRichBlocks tree
+            sendRichMessage(
+                message.chat.id,
+                InputRichMessageBlocks {
+                    heading("Your photo, as a media block", level = 2)
+                    paragraph("The same photo, this time a photo() block inside the blocks tree:")
+                    photo(photoMedia)
+                }
+            )
+        }
+
         // waitRichMessage expectation: wait for the user to send a rich message
         onCommand("wait_rich") {
             reply(it, "Send me a rich message now")
@@ -528,7 +637,9 @@ suspend fun main(vararg args: String) {
         setMyCommands(
             BotCommand("rich_html", "Send a rich message described with HTML"),
             BotCommand("rich_markdown", "Send a rich message described with Markdown"),
+            BotCommand("rich_blocks", "Send a rich message built from the InputRichBlocks DSL"),
             BotCommand("rich_draft", "Stream a rich message draft, then finalize it"),
+            BotCommand("rich_blocks_draft", "Stream a blocks draft with thinking(), then finalize it"),
             BotCommand("rich_edit", "Send a rich message and edit it with new rich content"),
             BotCommand("wait_rich", "Wait for you to send a rich message"),
         )

@@ -81,3 +81,9 @@ include ":ChatManagementBot"
 include ":RichMessagesBot"
 
 include ":JoinRequestQueriesBot"
+
+include ":EphemeralMessagesBot"
+
+include ":CommunitiesBot"
+
+include ":BotSubscriptionsBot"
