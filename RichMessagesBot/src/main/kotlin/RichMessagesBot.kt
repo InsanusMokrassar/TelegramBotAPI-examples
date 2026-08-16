@@ -472,12 +472,21 @@ suspend fun main(vararg args: String) {
                         plain(" — no HTML or Markdown string is involved.")
                     }
 
-                    heading("Lists", level = 2)
-                    list {
-                        item("A plain list item")
-                        item(hasCheckbox = true, isChecked = true) { paragraph("A completed task item") }
-                        item(hasCheckbox = true, isChecked = false) { paragraph("A pending task item") }
-                        item(value = 7, labelType = "1") { paragraph("An ordered item explicitly starting at 7") }
+                    h2("Lists")
+                    h3("Ordered")
+                    orderedList {
+                        item(0) { paragraph("A plain list item") }
+                        item(1) { paragraph { url("google", "google.com") } }
+                        item(2, hasCheckbox = true, isChecked = true) { paragraph("A plain list item") }
+                        item(3, hasCheckbox = true, isChecked = false) { paragraph("A plain list item") }
+                    }
+                    divider()
+                    h3("Unordered")
+                    unorderedList {
+                        item { paragraph("A plain list item") }
+                        item { paragraph { url("google", "google.com") } }
+                        item(hasCheckbox = true, isChecked = true) { paragraph("A plain list item") }
+                        item(hasCheckbox = true, isChecked = false) { paragraph("A plain list item") }
                     }
 
                     divider()
