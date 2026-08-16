@@ -17,7 +17,9 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMessag
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.dataButton
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.flatInlineKeyboard
 import dev.inmo.tgbotapi.types.BotCommand
+import dev.inmo.tgbotapi.types.ephemeralReplyReceiverUserIdOrNull
 import dev.inmo.tgbotapi.types.message.abstracts.PossiblyEphemeralMessage
+import korlibs.time.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -60,7 +62,6 @@ suspend fun main(vararg args: String) {
 
     telegramBotWithBehaviourAndLongPolling(
         botToken,
-        CoroutineScope(Dispatchers.IO),
         testServer = isTestServer,
     ) {
         val me = getMe()
@@ -96,10 +97,10 @@ suspend fun main(vararg args: String) {
             // sent ephemeral message exposes its ephemeralMessageId through that interface.
             val ephemeralMessageId = (sent as? PossiblyEphemeralMessage)?.ephemeralMessageId
             if (ephemeralMessageId != null) {
-                delay(3000)
+                delay(3.seconds)
                 // editEphemeralMessageText: address the ephemeral message by chatId + receiverUserId + ephemeralMessageId
                 editEphemeralMessageText(chatId, receiverUserId, ephemeralMessageId, "🔓 Revealed: the answer is 42")
-                delay(3000)
+                delay(3.seconds)
                 // deleteEphemeralMessage: same addressing (there is also a PossiblyEphemeralMessage overload)
                 deleteEphemeralMessage(chatId, receiverUserId, ephemeralMessageId)
             }
@@ -115,7 +116,7 @@ suspend fun main(vararg args: String) {
             reply(message, "Got your ephemeral message — I am replying ephemerally too.")
 
             // The explicit equivalent, addressing the ephemeral message by hand:
-            val receiverUserId = ephemeral.receiverUser?.id
+            val receiverUserId = ephemeral.ephemeralReplyReceiverUserIdOrNull
             if (receiverUserId != null) {
                 replyToEphemeral(
                     message.chat.id,
