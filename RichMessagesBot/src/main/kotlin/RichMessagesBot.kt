@@ -34,12 +34,14 @@ import dev.inmo.tgbotapi.types.media.TelegramMediaAudio
 import dev.inmo.tgbotapi.types.media.TelegramMediaPhoto
 import dev.inmo.tgbotapi.types.media.TelegramMediaVideo
 import dev.inmo.tgbotapi.types.media.TelegramMediaVoiceNote
+import dev.inmo.tgbotapi.types.rich.InputRichMessage
 import dev.inmo.tgbotapi.types.rich.InputRichMessageBlocks
 import dev.inmo.tgbotapi.types.rich.InputRichMessageHTML
 import dev.inmo.tgbotapi.types.rich.InputRichMessageMarkdown
 import dev.inmo.tgbotapi.types.rich.InputRichMessageMedia
 import dev.inmo.tgbotapi.types.rich.RichBlockCaption
-import dev.inmo.tgbotapi.types.rich.RichBlockTableCell
+import dev.inmo.tgbotapi.types.rich.RichBlockTableCellAlign
+import dev.inmo.tgbotapi.types.rich.RichBlockTableCellVAlign
 import dev.inmo.tgbotapi.types.rich.RichTextPlain
 import dev.inmo.tgbotapi.types.rich.buildRichText
 import dev.inmo.tgbotapi.types.toChatId
@@ -375,18 +377,17 @@ suspend fun main(vararg args: String) {
             paragraph("Block quotation started\nBlock quotation continued on the next line\nBlock quotation continued on the same line\nThe last line of the block quotation")
         }
 
-        table(
-            listOf(
-                listOf(
-                    RichBlockTableCell(RichTextPlain("Header 1"), isHeader = true, align = "left", valign = "middle"),
-                    RichBlockTableCell(RichTextPlain("Header 2"), isHeader = true, align = "center", valign = "middle")
-                ),
-                listOf(
-                    RichBlockTableCell(RichTextPlain("left"), align = "left", valign = "middle"),
-                    RichBlockTableCell(RichTextPlain("center"), align = "center", valign = "middle")
-                )
-            )
-        )
+        table {
+            row {
+                headerCell(align = RichBlockTableCellAlign.Left, valign = RichBlockTableCellVAlign.Top) { plain("Header 1") }
+                headerCell(align = RichBlockTableCellAlign.Center, valign = RichBlockTableCellVAlign.Middle) { plain("Header 2") }
+                headerCell(align = RichBlockTableCellAlign.Right, valign = RichBlockTableCellVAlign.Bottom) { plain("Header 2") }
+            }
+            row {
+                cell(align = RichBlockTableCellAlign.Left, valign = RichBlockTableCellVAlign.Top) { plain("left") }
+                cell(align = RichBlockTableCellAlign.Center, valign = RichBlockTableCellVAlign.Middle) { plain("center") }
+            }
+        }
         paragraph {
             plain("Text with a reference")
             referenceLink("id1", "id1")
@@ -474,22 +475,24 @@ suspend fun main(vararg args: String) {
                 }
             }
         }
-        table(
-            listOf(
-                listOf(
-                    RichBlockTableCell(RichTextPlain("Metric"), isHeader = true, align = "left", valign = "middle"),
-                    RichBlockTableCell(RichTextPlain("Value"), isHeader = true, align = "right", valign = "middle")
-                ),
-                listOf(
-                    RichBlockTableCell(RichTextPlain("Speed"), align = "left", valign = "middle"),
-                    RichBlockTableCell(buildRichText { bold("42"); plain(" "); superscript("ms") }, align = "right", valign = "middle")
-                ),
-                listOf(
-                    RichBlockTableCell(RichTextPlain("Status"), align = "left", valign = "middle"),
-                    RichBlockTableCell(buildRichText { spoiler("ready") }, align = "right", valign = "middle")
-                )
-            )
-        )
+        table {
+            row {
+                headerCell(align = RichBlockTableCellAlign.Left, valign = RichBlockTableCellVAlign.Middle) { plain("Metric") }
+                headerCell(align = RichBlockTableCellAlign.Right, valign = RichBlockTableCellVAlign.Middle) { plain("Value") }
+            }
+            row {
+                cell(align = RichBlockTableCellAlign.Left, valign = RichBlockTableCellVAlign.Middle) { plain("Speed") }
+                cell(align = RichBlockTableCellAlign.Right, valign = RichBlockTableCellVAlign.Middle) {
+                    bold("42")
+                    plain(" ")
+                    superscript("ms")
+                }
+            }
+            row {
+                cell(align = RichBlockTableCellAlign.Left, valign = RichBlockTableCellVAlign.Middle) { plain("Status") }
+                cell(align = RichBlockTableCellAlign.Right, valign = RichBlockTableCellVAlign.Middle) { spoiler("ready") }
+            }
+        }
         paragraph {
             reference("note") {
                 plain("Footnote with ")
@@ -659,13 +662,35 @@ suspend fun main(vararg args: String) {
         onCommand("rich_markdown") {
             val sent = sendRichMessage(
                 it.chat.id,
-                testMarkdownInputRichMessageBlocks
+                InputRichMessageMarkdown(
+                    testMarkdownText
+                )
             )
             println(sent)
         }
 
         // sendRichMessage with Markdown-formatted content
         onCommand("rich_markdown_medialess") {
+            val sent = sendRichMessage(
+                it.chat.id,
+                InputRichMessageMarkdown(
+                    testMarkdownMediaLessText
+                )
+            )
+            println(sent)
+        }
+
+        // sendRichMessage with Markdown-formatted content
+        onCommand("rich_markdown_blocks") {
+            val sent = sendRichMessage(
+                it.chat.id,
+                testMarkdownInputRichMessageBlocks
+            )
+            println(sent)
+        }
+
+        // sendRichMessage with Markdown-formatted content
+        onCommand("rich_markdown_medialess_blocks") {
             val sent = sendRichMessage(
                 it.chat.id,
                 testMarkdownMediaLessInputRichMessageBlocks
