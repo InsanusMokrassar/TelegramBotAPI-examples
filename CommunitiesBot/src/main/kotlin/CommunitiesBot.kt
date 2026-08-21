@@ -8,12 +8,17 @@ import dev.inmo.tgbotapi.extensions.api.chat.get.getChat
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.send
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitCommunityChatAdded
+import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitCommunityChatAddedEventsMessages
+import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitCommunityChatRemoved
+import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitCommunityChatRemovedEventsMessages
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommunityChatAdded
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommunityChatRemoved
+import dev.inmo.tgbotapi.extensions.utils.extensions.sameChat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 
 /**
@@ -85,10 +90,17 @@ suspend fun main(vararg args: String) {
         }
 
         // waitCommunityChatAdded expectation: suspend until this chat is added to a community
-        onCommand("wait_community") {
-            reply(it, "Waiting for this chat to be added to a community...")
-            val event = waitCommunityChatAdded().first()
-            reply(it, "Chat added to community: ${event.community.name} (id=${event.community.id.long})")
+        onCommand("wait_community_added") { origin ->
+            reply(origin, "Waiting for this chat to be added to a community...")
+            val event = waitCommunityChatAddedEventsMessages().filter { it.sameChat(origin) }.first().chatEvent
+            reply(origin, "Chat added to community: ${event.community.name} (id=${event.community.id.long})")
+        }
+
+        // waitCommunityChatAdded expectation: suspend until this chat is added to a community
+        onCommand("wait_community_removed") { origin ->
+            reply(origin, "Waiting for this chat to be added to a community...")
+            waitCommunityChatRemovedEventsMessages().filter { it.sameChat(origin) }.first()
+            reply(origin, "Chat removed from its community (${origin.chat.id})")
         }
 
         allUpdatesFlow.subscribeSafelyWithoutExceptions(this) {
