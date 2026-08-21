@@ -20,7 +20,10 @@ import kotlinx.coroutines.Dispatchers
 import java.io.File
 
 /**
- * This bot will download incoming files
+ * Starts the long-polling media downloader and echo bot.
+ *
+ * [args] must contain the bot token and may contain an output directory as its
+ * second item. The directory is created when necessary and defaults to `/tmp/`.
  */
 suspend fun main(args: Array<String>) {
     val botToken = args.first()

@@ -17,21 +17,28 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 
 /**
- * This bot demonstrates Bot Subscriptions (subscription updates) support introduced in Telegram Bot API 10.2.
+ * Runs a long-polling demonstration of bot payment-subscription updates introduced in Telegram Bot API 10.2.
  *
- * When a user starts, renews, cancels or fails to pay a subscription to the bot (a recurring Telegram Stars
- * payment), the bot receives a `subscription` update carrying a [BotSubscriptionUpdated].
+ * Telegram sends a `subscription` update carrying a [BotSubscriptionUpdated] when a user cancels a recurring
+ * payment subscription to the bot, re-enables a canceled subscription, or a subscription payment fails. This
+ * example consumes those updates; it does not create recurring invoices.
  *
  * Key concepts demonstrated:
  * - [onBotSubscriptionUpdated] — trigger whose handler receives a [BotSubscriptionUpdated] (`user`,
- *   `invoicePayload`, `state`)
+ *   `invoicePayload`, `state`) and makes a best-effort status notification to the subscriber
  * - [BotSubscriptionUpdated.State] — the typed sealed state: [BotSubscriptionUpdated.State.Active],
  *   [BotSubscriptionUpdated.State.Canceled], [BotSubscriptionUpdated.State.Failed] (data objects) and the
  *   [BotSubscriptionUpdated.State.Unknown] value-class fallback for any future state
  * - `botSubscriptionUpdatedUpdatesFlow` — the raw update flow of
  *   [dev.inmo.tgbotapi.types.update.BotSubscriptionUpdatedUpdate] (available directly because a
  *   BehaviourContext is a `FlowsUpdatesFilter`); each emission's payload is its `data`
- * - [waitBotSubscriptionUpdated] — expectation returning a flow of [BotSubscriptionUpdated]
+ * - [waitBotSubscriptionUpdated] — expectation returning a flow of [BotSubscriptionUpdated]; the
+ *   `/wait_subscription` handler takes its next value without a timeout and replies in the command's chat
+ *
+ * The first command-line argument is always treated as the bot token. Later arguments equal to `debug` and
+ * `testServer` enable console diagnostic logging and Telegram's Bot API test environment, respectively.
+ *
+ * @param args bot token followed by optional, case-sensitive `debug` and `testServer` flags
  */
 suspend fun main(vararg args: String) {
     val botToken = args.first()

@@ -33,6 +33,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 
+/**
+ * Runs the TopicsHandling long-polling example.
+ *
+ * The bot exposes destructive forum-topic test commands, reports selected topic service events, and flushes pending
+ * updates at startup before subscribing to new ones.
+ *
+ * @param args the Telegram bot token as the first element; additional elements are ignored
+ */
 suspend fun main(vararg args: String) {
     telegramBotWithBehaviourAndLongPolling(
         args.first(),

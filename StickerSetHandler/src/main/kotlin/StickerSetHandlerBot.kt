@@ -24,7 +24,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
 /**
- * Send sticker to this bot to form your own stickers set. Send /delete to delete this sticker set
+ * Starts the long-polling sticker-set example using the bot token in the first command-line argument.
+ *
+ * Supported sticker messages create or extend the deterministic set for the current private chat, while `/delete`
+ * removes that set. Private chats are required because the chat ID is also passed to Telegram as the set owner's
+ * user ID.
+ *
+ * @param args command-line arguments whose first element must be a Bot API token
  */
 suspend fun main(args: Array<String>) {
     telegramBotWithBehaviourAndLongPolling(

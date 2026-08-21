@@ -22,21 +22,17 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 
 /**
- * This bot demonstrates Communities support introduced in Telegram Bot API 10.2.
+ * Starts a long-polling bot that demonstrates Telegram Communities.
  *
- * A community groups several chats together. When a chat is added to (or removed from) a community, the bot
- * receives a service event in that chat.
+ * [onCommunityChatAdded] receives the joined [dev.inmo.tgbotapi.types.communities.Community], while
+ * [onCommunityChatRemoved] receives a fieldless removal event. `/community` reads
+ * [dev.inmo.tgbotapi.types.chat.ExtendedChat.community] with [getChat]. The two wait commands use
+ * [waitCommunityChatAddedEventsMessages] and [waitCommunityChatRemovedEventsMessages] to take the first same-chat
+ * event without a timeout. The bot prints its [getMe] result and every received update.
  *
- * Key concepts demonstrated:
- * - [onCommunityChatAdded] — trigger for the `community_chat_added` service event. The handler receives a
- *   [dev.inmo.tgbotapi.types.message.abstracts.ChatEventMessage] carrying a
- *   [dev.inmo.tgbotapi.types.communities.CommunityChatAdded] whose `community` is the
- *   [dev.inmo.tgbotapi.types.communities.Community] (`id`: [dev.inmo.tgbotapi.types.communities.CommunityId],
- *   `name`) the chat was added to
- * - [onCommunityChatRemoved] — trigger for the fieldless `community_chat_removed` service event
- * - [waitCommunityChatAdded] — expectation returning a flow of [dev.inmo.tgbotapi.types.communities.CommunityChatAdded]
- * - [dev.inmo.tgbotapi.types.chat.ExtendedChat.community] — the community a chat belongs to
- *   (`ChatFullInfo.community`), available directly from [getChat] without any cast
+ * @param args the bot token followed by the optional, case-sensitive `debug` and `testServer` flags; unknown trailing
+ * arguments are ignored
+ * @throws NoSuchElementException when the required bot token is absent
  */
 suspend fun main(vararg args: String) {
     val botToken = args.first()
@@ -89,14 +85,14 @@ suspend fun main(vararg args: String) {
             )
         }
 
-        // waitCommunityChatAdded expectation: suspend until this chat is added to a community
+        // Suspend until the next community-added event message from this chat.
         onCommand("wait_community_added") { origin ->
             reply(origin, "Waiting for this chat to be added to a community...")
             val event = waitCommunityChatAddedEventsMessages().filter { it.sameChat(origin) }.first().chatEvent
             reply(origin, "Chat added to community: ${event.community.name} (id=${event.community.id.long})")
         }
 
-        // waitCommunityChatAdded expectation: suspend until this chat is added to a community
+        // Suspend until the next community-removed event message from this chat.
         onCommand("wait_community_removed") { origin ->
             reply(origin, "Waiting for this chat to be added to a community...")
             waitCommunityChatRemovedEventsMessages().filter { it.sameChat(origin) }.first()

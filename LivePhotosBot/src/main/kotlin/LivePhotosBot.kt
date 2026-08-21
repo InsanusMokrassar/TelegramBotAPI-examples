@@ -37,16 +37,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
 /**
- * This bot demonstrates Live Photos support introduced in Telegram Bot API.
+ * Starts the long-polling example for receiving, sending, grouping, editing, and selling Live Photos.
  *
- * Key concepts demonstrated:
- * - [dev.inmo.tgbotapi.types.files.LivePhotoFile] — the LivePhoto class: a photo with an attached short video
- * - [TelegramMediaLivePhoto] — InputMediaLivePhoto: used in sendMediaGroup and editMessageMedia
- * - [LivePhotoContent] — the content type carried in Message.live_photo / ExternalReplyInfo.live_photo
- * - [sendLivePhoto] — method to send a live photo
- * - [PaidMedia.LivePhoto] — PaidMediaLivePhoto: a live photo inside paid media content
- * - [TelegramPaidMediaLivePhoto] — InputPaidMediaLivePhoto: used in sendPaidMedia
- * - sendMediaGroup and editMessageMedia with live photos
+ * @param args bot token followed by the optional, case-sensitive `debug` and `testServer` flags; unknown trailing
+ * arguments are ignored
  */
 @OptIn(RiskFeature::class)
 suspend fun main(vararg args: String) {

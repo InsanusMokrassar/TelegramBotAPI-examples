@@ -13,7 +13,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
 /**
- * This place can be the playground for your code.
+ * Starts a long-polling bot that prints its profile and giveaway-related updates.
+ *
+ * The first argument must be the bot token. The optional, case-sensitive `debug`
+ * and `testServer` flags enable diagnostic logging and the Bot API test environment.
+ *
+ * @param args bot token followed by any optional flags
  */
 suspend fun main(vararg args: String) {
     val botToken = args.first()

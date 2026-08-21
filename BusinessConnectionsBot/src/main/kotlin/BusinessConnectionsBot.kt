@@ -70,6 +70,16 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
 
+/**
+ * Starts the long-polling Telegram Business API demonstration bot.
+ *
+ * The bot flushes queued updates before registering its handlers and stores business connection IDs only in memory.
+ * Consequently, an already connected account may need to disable and re-enable its connection after a restart before
+ * owner-side commands can resolve that connection.
+ *
+ * @param args the bot token followed optionally by the literal `debug`, which enables verbose library logging
+ * @throws NoSuchElementException when the bot token is missing
+ */
 suspend fun main(args: Array<String>) {
     val botToken = args.first()
     val isDebug = args.getOrNull(1) == "debug"

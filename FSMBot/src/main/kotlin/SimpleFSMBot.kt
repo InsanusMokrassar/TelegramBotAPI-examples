@@ -23,10 +23,25 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
+/** State hierarchy for a chat-scoped content-resending conversation. */
 sealed interface BotState : State
+
+/**
+ * Waits for content or a `/stop` command in the thread of [sourceMessage].
+ *
+ * @property context Chat whose FSM chain owns this state.
+ * @property sourceMessage Message that determines the forum topic/thread to observe.
+ */
 data class ExpectContentOrStopState(override val context: IdChatIdentifier, val sourceMessage: ChatContentMessage<TextContent>) : BotState
+
+/** Terminal state that acknowledges the end of the chain in [context]. */
 data class StopState(override val context: IdChatIdentifier) : BotState
 
+/**
+ * Starts the FSM-based resender using the bot token in the first command-line argument.
+ *
+ * The bot runs with long polling until its coroutine is cancelled.
+ */
 suspend fun main(args: Array<String>) {
     val botToken = args.first()
 

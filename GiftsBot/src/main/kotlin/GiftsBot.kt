@@ -25,6 +25,17 @@ import dev.inmo.tgbotapi.utils.buildEntities
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
+/**
+ * Starts a long-polling bot whose standalone `/start` command lists all owned gifts for the current chat.
+ *
+ * Business chats are queried through their business connection, private chats through their user ID, and public or
+ * unknown chat types through their chat ID. Regular and unique gifts are rendered as formatted text and long results
+ * are split across replies. The bot also prints its [getMe] result at startup.
+ *
+ * @param args the bot token followed by optional, case-sensitive `debug` and `testServer` flags; unknown trailing
+ * arguments are ignored
+ * @throws NoSuchElementException when the required bot token is absent
+ */
 suspend fun main(vararg args: String) {
     val botToken = args.first()
 

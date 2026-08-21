@@ -10,7 +10,14 @@ import dev.inmo.tgbotapi.extensions.utils.formatting.makeTelegramDeepLink
 import dev.inmo.tgbotapi.types.message.textsources.BotCommandTextSource
 
 /**
- * This bot will send you deeplink to this bot when you send some text message and react on the `start` button
+ * Runs a long-polling bot that turns non-command text into a deep link to itself
+ * and acknowledges payloads received through `/start`.
+ *
+ * The bot account must have a username so that its deep links can be constructed.
+ *
+ * @param args the bot token as the first argument; any remaining arguments are ignored
+ * @throws NoSuchElementException when no bot token is supplied
+ * @throws IllegalStateException when the bot account has no username
  */
 suspend fun main(vararg args: String) {
     val botToken = args.first()

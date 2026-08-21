@@ -41,7 +41,12 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 
 /**
- * This place can be the playground for your code.
+ * Starts the long-polling suggested-post lifecycle playground.
+ *
+ * The first element of [args] must be the bot token. Optional exact values `debug`
+ * and `testServer` enable diagnostic logging and Telegram's test environment.
+ * Channel direct-message content is resent as a suggestion, then automatically
+ * declined after a three-message countdown unless an approval or decline arrives.
  */
 suspend fun main(vararg args: String) {
     val botToken = args.first()

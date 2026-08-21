@@ -37,10 +37,19 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.isActive
 
+/** Sample text streamed as a draft and then sent as the completed message. */
 const val testText = """
     Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.    
 """
 
+/**
+ * Starts DraftsBot with long polling and registers the draft demonstration commands.
+ *
+ * The first element of [args] must be the bot token; subsequent elements are ignored.
+ * This function remains suspended until the polling job completes.
+ *
+ * @throws NoSuchElementException when no bot token is supplied
+ */
 suspend fun main(vararg args: String) {
     telegramBotWithBehaviourAndLongPolling(
         args.first(),

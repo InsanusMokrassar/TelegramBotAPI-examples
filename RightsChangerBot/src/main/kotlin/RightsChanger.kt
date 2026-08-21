@@ -40,14 +40,20 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
 
+/** States used by the private-chat flow that selects a channel and one of its users. */
 sealed interface UserRetrievingStep : State {
+    /** Waits for the user to share a channel in the private chat identified by [context]. */
     data class RetrievingChannelChatState(
         override val context: ChatId
     ) : UserRetrievingStep
+
+    /** Waits for a user selection after [channelId] has been shared. */
     data class RetrievingUserIdChatState(
         override val context: ChatId,
         val channelId: ChatId
     ) : UserRetrievingStep
+
+    /** Carries the selected [channelId] and [userId] to the administrator-rights keyboard step. */
     data class RetrievingChatInfoDoneState(
         override val context: ChatId,
         val channelId: ChatId,
@@ -55,6 +61,12 @@ sealed interface UserRetrievingStep : State {
     ) : UserRetrievingStep
 }
 
+/**
+ * Runs the RightsChangerBot FSM and callback handlers using long polling.
+ *
+ * @param args the bot token, the only user ID authorized to mutate rights, and optionally `debug` as the third
+ * element to enable formatted KSLog output
+ */
 @OptIn(PreviewFeature::class)
 suspend fun main(args: Array<String>) {
     val botToken = args.first()

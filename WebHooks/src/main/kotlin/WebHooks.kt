@@ -16,24 +16,16 @@ import dev.inmo.tgbotapi.utils.buildEntities
 import io.ktor.server.routing.*
 
 /**
- * Launches webhook-based simple bot. Required arguments:
+ * Registers a Telegram webhook and starts a blocking, plain-HTTP Ktor server for its update POSTs.
  *
- * 1. Token
- * *. Arguments starting with `https://`
+ * The first argument is the bot token and the first `https://` argument is the public webhook address. The first
+ * remaining non-`debug` argument becomes the optional route, the first integer becomes the port (default `8080`),
+ * and an argument exactly equal to `debug` enables formatted KSLog output. A numeric port can also be selected as the
+ * route because route parsing is performed independently.
  *
- * Optional arguments:
+ * TLS termination and certificate provisioning must be handled outside this process.
  *
- * *. Any argument == `debug` to enable debug mode
- * *. Any argument **not** starting with `https://` and **not** equal to `debug` as **subpath** (will be used as
- * subroute to place listening of webhooks)
- * *. Any argument as number of port
- *
- * Sample: `TOKEN https://sample.com it/is/subpath 8080` will result to:
- *
- * * `TOKEN` used as token
- * * Bot will set up its webhook info as `https://sample.com/it/is/subpath`
- * * Bot will set up to listen webhooks on route `it/is/subpath`
- * * Bot will start to listen any incoming request on port `8080` and url `0.0.0.0`
+ * @param args positional webhook/server configuration described above
  */
 suspend fun main(args: Array<String>) {
     val botToken = args.first()

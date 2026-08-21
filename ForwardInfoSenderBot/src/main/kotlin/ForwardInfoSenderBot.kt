@@ -13,8 +13,11 @@ import dev.inmo.tgbotapi.utils.regular
 import kotlinx.coroutines.*
 
 /**
- * This bot will always return message about forwarder. In cases when sent message was not a forward message it will
- * send suitable message
+ * Starts a long-polling bot that replies to each received content message with its forward-source metadata.
+ *
+ * Messages without forward metadata receive a corresponding fallback response.
+ *
+ * @param args the bot token as the required first element; any remaining elements are ignored
  */
 suspend fun main(vararg args: String) {
     val botToken = args.first()

@@ -36,7 +36,13 @@ private var BehaviourContextData.commonMessage: ChatContentMessage<*>?
     set(value) = set("commonMessage", value)
 
 /**
- * This place can be the playground for your code.
+ * Runs a diagnostics-oriented TelegramBotAPI playground using long polling.
+ *
+ * The bot logs every update and Bot API result, demonstrates global and handler-specific context
+ * initialization, exposes commands for profile audios and the bot's Star balance, and observes
+ * channel direct-messages configuration changes.
+ *
+ * @param args bot token followed by optional, case-sensitive `debug` and `testServer` flags
  */
 suspend fun main(vararg args: String) {
     val botToken = args.first()

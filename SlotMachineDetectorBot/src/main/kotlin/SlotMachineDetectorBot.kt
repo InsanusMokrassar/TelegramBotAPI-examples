@@ -6,6 +6,13 @@ import dev.inmo.tgbotapi.extensions.utils.*
 import dev.inmo.tgbotapi.types.dice.SlotMachineDiceAnimationType
 import kotlinx.coroutines.*
 
+/**
+ * Starts the long-polling slot-machine detector.
+ *
+ * [args] must contain the bot token first; later elements are ignored. Slot-machine
+ * dice receive a pipe-separated three-reel reply, while other dice receive an
+ * explanatory reply. An undecodable slot-machine result is silently ignored.
+ */
 suspend fun main(args: Array<String>) {
     val bot = telegramBot(args.first())
 

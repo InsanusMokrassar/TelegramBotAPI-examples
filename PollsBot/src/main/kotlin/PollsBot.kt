@@ -44,24 +44,13 @@ import kotlinx.coroutines.sync.withLock
 import kotlin.random.Random
 
 /**
- * This bot demonstrates poll features including the new API additions:
+ * Starts the long-polling poll-feature showcase.
  *
- * * `/anonymous` — anonymous regular poll
- * * `/public` — public regular poll with option adding
- * * `/quiz` — quiz poll with random correct answer
- * * `/media_poll` — poll with [TelegramMediaLocation] as poll media (InputMediaLocation),
- *   and [TelegramMediaVenue] as option media (InputMediaVenue / InputPollOptionMedia)
- * * `/quiz_media` — quiz poll with [TelegramMediaLocation] as `media` and [TelegramMediaVenue]
- *   as `explanationMedia` (new [QuizPoll.explanationMedia] field)
- * * `/members_only` — poll with `membersOnly = true` (new [dev.inmo.tgbotapi.types.polls.Poll.membersOnly] field)
- * * `/country_codes` — poll with `countryCodes` (new [dev.inmo.tgbotapi.types.polls.Poll.countryCodes] field)
- * * `/single_option` — poll with just 1 option (minimum options count decreased from 2 to 1)
- * * `/link_poll` — poll whose options carry a [TelegramMediaLink] (InputMediaLink / Bot API 10.1
- *   [dev.inmo.tgbotapi.types.Link]) as [dev.inmo.tgbotapi.types.media.InputPollOptionMedia]
- *
- * [onPollUpdates] prints [dev.inmo.tgbotapi.types.polls.Poll.media], [dev.inmo.tgbotapi.types.polls.Poll.membersOnly],
- * [dev.inmo.tgbotapi.types.polls.Poll.countryCodes], [QuizPoll.explanationMedia], and
- * [dev.inmo.tgbotapi.types.polls.PollOption.media] for each option.
+ * The first element of [args] must be the bot token. An optional exact `debug`
+ * value in any later position enables diagnostic logging. The registered commands
+ * create regular polls and quizzes with anonymity, media, audience restrictions,
+ * custom emoji, and single-option variants; update handlers report answers, state
+ * changes, option edits, and replies associated with poll options.
  */
 suspend fun main(vararg args: String) {
     val botToken = args.first()

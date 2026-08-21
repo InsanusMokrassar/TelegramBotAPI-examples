@@ -4,6 +4,10 @@ import org.w3c.dom.*
 
 private val scope = CoroutineScope(Dispatchers.Default)
 
+/**
+ * Installs the browser token form and starts one resender for each submission.
+ * Callback output from each instance is displayed in its associated page element.
+ */
 fun main() {
     document.addEventListener(
         "DOMContentLoaded",

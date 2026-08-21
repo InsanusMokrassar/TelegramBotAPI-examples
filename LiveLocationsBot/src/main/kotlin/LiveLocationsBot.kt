@@ -18,7 +18,12 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 
 /**
- * This bot will send you live location and update it from time to time
+ * Starts the long-polling live-location example.
+ *
+ * The first element of [args] must be the bot token; later elements are ignored.
+ * Each `/start` command begins a synthetic location at `(0.0, 0.0)`, advances both
+ * coordinates every three seconds, and stops when the current message's `Cancel`
+ * button is pressed.
  */
 suspend fun main(vararg args: String) {
     val botToken = args.first()
@@ -64,4 +69,3 @@ suspend fun main(vararg args: String) {
         allUpdatesFlow.subscribeLoggingDropExceptions(this) { println(it) }
     }.second.join()
 }
-

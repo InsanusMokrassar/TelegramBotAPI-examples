@@ -14,24 +14,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
 /**
- * This bot demonstrates Join Request Queries support introduced in Telegram Bot API 10.1.
+ * Starts the long-polling join-request-query example.
  *
- * A "guard bot" of a chat receives chat join requests as queries and must process them with
- * [answerChatJoinRequestQuery] or hand the user a Web App via [sendChatJoinRequestWebApp]
- * (for example, to run a captcha / verification flow before deciding).
- *
- * Your bot must be set as the guard bot of the chat and must have `can_invite_users` rights to
- * receive these requests.
- *
- * Key concepts demonstrated:
- * - [dev.inmo.tgbotapi.types.chat.ExtendedBot.supportsJoinRequestQueries] — whether the bot itself
- *   supports join request queries (from getMe(), maps `User.supports_join_request_queries`)
- * - [dev.inmo.tgbotapi.types.chat.ExtendedChat.guardBot] — the bot that processes join request
- *   queries in a chat (from getChat(), maps `ChatFullInfo.guard_bot`)
- * - [dev.inmo.tgbotapi.types.chat.ChatJoinRequest.queryId] — the [dev.inmo.tgbotapi.types.ChatJoinRequestQueryId]
- *   present when the request arrives as a query to the guard bot
- * - [answerChatJoinRequestQuery] with [ChatJoinRequestQueryResult] (Approve / Decline / Queue / Unknown)
- * - [sendChatJoinRequestWebApp] — open a Web App to process the request
+ * The first element of [args] must be the bot token. When the second element is an
+ * `https://` URL, query-backed requests are handed to that Web App. Otherwise, the
+ * bot queues requests with a blank bio and approves those with a nonblank bio.
+ * The optional exact values `debug` and `testServer` enable diagnostic logging and
+ * Telegram's test environment, respectively.
  */
 suspend fun main(vararg args: String) {
     val botToken = args.first()

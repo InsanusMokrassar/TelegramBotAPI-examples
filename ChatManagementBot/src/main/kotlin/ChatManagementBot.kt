@@ -27,27 +27,16 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
 /**
- * This bot demonstrates Chat Management API features added in Bot API 9.x:
+ * Runs a long-polling demonstration of the chat-management features introduced in Telegram Bot API 10.0.
  *
- * 1. `can_react_to_messages` field in `ChatMemberRestricted` — printed when a member's
- *    restrictions are changed (requires the bot to be an admin in the group).
- *    `RestrictedMemberChatMember` also implements `ChatPermissions`, so the same field
- *    covers both `ChatMemberRestricted` and `ChatPermissions` from the spec.
+ * The bot logs changes to a restricted member's `canReactToMessages` permission, exposes commands for querying
+ * member rights and administrators, removes a user's reactions, and logs content messages received from other
+ * bots. Reaction deletion requires the bot's `can_delete_messages` administrator right. Receiving unrestricted
+ * bot-authored group messages additionally requires Bot-to-Bot Communication Mode, administrator status, and
+ * disabled Group Privacy Mode; `canReadAllGroupMessages` only reports the last of those settings.
  *
- * 2. `return_bots` in `getChatAdministrators` — `/admins` command lists all admins
- *    including other bots (retrieveOtherBots = true).
- *
- * 3. `deleteAllMessageReactions` — `/deleteallreactions` in reply to a message removes
- *    all reactions that the replied message's author has left across the entire chat.
- *
- * 4. `deleteMessageReaction` — `/deletereaction` in reply to a message removes the
- *    reaction the replied message's author placed on that specific message.
- *
- * 5. Seeing messages from other bots in groups — demonstrated via `canReadAllGroupMessages`
- *    from `getMe()`. When true (privacy mode off), the bot receives messages from other bots.
- *    All such messages are logged.
- *
- * Usage: pass the bot token as the first argument. Optional: `debug`, `testServer`.
+ * @param args the bot token followed by optional, case-sensitive `debug` and `testServer` flags. `debug` routes
+ * library logs to standard output; `testServer` selects Telegram's Bot API test environment.
  */
 suspend fun main(vararg args: String) {
     val botToken = args.first()
@@ -70,8 +59,8 @@ suspend fun main(vararg args: String) {
         val me = getMe()
         println("Bot: ${me.firstName} (@${me.username?.username})")
 
-        // Feature 5: canReadAllGroupMessages (can_read_all_group_messages) from getMe()
-        // When true, the bot receives messages from other bots in groups (privacy mode off)
+        // canReadAllGroupMessages (can_read_all_group_messages) reports whether Group Privacy Mode is disabled.
+        // Bot-to-bot delivery has additional requirements described in the entry-point KDoc and README.
         println("canReadAllGroupMessages: ${me.canReadAllGroupMessages}")
 
         // Feature 1: can_react_to_messages in ChatMemberRestricted and ChatPermissions
@@ -136,7 +125,7 @@ suspend fun main(vararg args: String) {
         }
 
         // Feature 3: deleteAllMessageReactions
-        // Deletes all reactions that the replied message's author has left in this chat
+        // Deletes up to 10,000 recent reactions that the replied message's author has left in this chat
         onCommand("deleteAllReactions") { message ->
             val replied = message.replyTo?.fromUserMessageOrNull() ?: run {
                 reply(message) { +"Reply to a message to clear all reactions of that user in this chat" }
@@ -147,8 +136,7 @@ suspend fun main(vararg args: String) {
         }
 
         // Feature 5: messages from other bots in groups
-        // Bots with canReadAllGroupMessages=true (privacy mode off) receive messages from other bots.
-        // This handler logs all such messages to demonstrate the feature.
+        // This handler logs bot-authored content messages that Telegram delivers to this bot.
         onContentMessage(
             initialFilter = { msg ->
                 val user = msg.fromUserMessageOrNull()?.user

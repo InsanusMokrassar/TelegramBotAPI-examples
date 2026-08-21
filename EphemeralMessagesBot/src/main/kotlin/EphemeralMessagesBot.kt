@@ -25,27 +25,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 
 /**
- * This bot demonstrates Ephemeral Messages support introduced in Telegram Bot API 10.2.
+ * Runs the ephemeral-messages example bot using long polling.
  *
- * An ephemeral message lives inside a group chat but is shown to exactly one user (its `receiver`).
- * It is addressed not by a normal message id, but by a per-receiver [dev.inmo.tgbotapi.types.EphemeralMessageId]
- * together with that receiver's [dev.inmo.tgbotapi.types.UserId]. Bots typically send ephemeral messages in
- * response to a callback query (so a `callbackQueryId` is available) or reply ephemerally to an ephemeral
- * message the bot itself received.
+ * `/ephemeral` posts an inline button whose callback sends, edits, and deletes a message visible only to
+ * the user who pressed it. Incoming [PossiblyEphemeralMessage] instances receive both an automatic
+ * ephemeral [reply] and an explicit [replyToEphemeral].
  *
- * Key concepts demonstrated:
- * - [sendTextMessage] with `receiverUserId` + `callbackQueryId` — sends the outgoing message as ephemeral,
- *   visible only to `receiverUserId` in the group chat (one of the 13 ephemeral-capable send requests)
- * - [PossiblyEphemeralMessage] — the marker interface (`receiverUser` / `ephemeralMessageId`) implemented by
- *   the group-family `Common*ContentMessage` types; the way to detect that a message is ephemeral
- * - [editEphemeralMessageText] / [deleteEphemeralMessage] — edit / delete an ephemeral message addressed by
- *   `chatId` + `receiverUserId` + [dev.inmo.tgbotapi.types.EphemeralMessageId] ([deleteEphemeralMessage] also
- *   accepts a [PossiblyEphemeralMessage] directly)
- * - [reply] smart-branch — replying to an ephemeral message automatically sends the reply ephemeral to the
- *   same receiver (see [dev.inmo.tgbotapi.types.ephemeralReplyParametersOrNull])
- * - [replyToEphemeral] — the explicit form: reply to an ephemeral message by `chatId` + `receiverUserId` +
- *   `ephemeralMessageId` without needing the original [PossiblyEphemeralMessage] object
- * - [BotCommand.isEphemeral] — the new command flag marking a command whose response is ephemeral
+ * [args] must start with the bot token. The optional exact values `debug` and `testServer` respectively
+ * enable console logging and select Telegram's test server.
+ *
+ * @throws NoSuchElementException when [args] does not contain a bot token
  */
 suspend fun main(vararg args: String) {
     val botToken = args.first()

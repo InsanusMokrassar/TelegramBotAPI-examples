@@ -18,14 +18,18 @@ import dev.inmo.tgbotapi.types.mediaCountInMediaGroup
 
 private const val command = "send_file"
 
+/**
+ * Selects a file by recursively choosing random children below [currentRoot].
+ *
+ * @return the selected file, or `null` when the picker cannot continue from the current root
+ */
 expect fun pickFile(currentRoot: MPPFile): MPPFile?
 
 /**
- * This bot will send files inside of working directory OR from directory in the second argument.
- * You may send /send_file command to this bot to get random file from the directory OR
- * `/send_file $number` when you want to receive required number of files. For example,
- * /send_file and `/send_file 1` will have the same effect - bot will send one random file.
- * But if you will send `/send_file 5` it will choose 5 random files and send them as group
+ * Runs the long-polling random-file bot using [token] and serving selections rooted at [folder].
+ *
+ * `/send_file` selects one non-empty file, while `/send_file N` selects `N` files and splits them into valid Telegram
+ * media-group sizes.
  */
 suspend fun doRandomFileSenderBot(token: String, folder: MPPFile) {
     val bot = telegramBot(token)

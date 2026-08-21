@@ -52,31 +52,23 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
 
 /**
- * This bot demonstrates Rich Messages support introduced in Telegram Bot API 10.1.
+ * Runs a long-polling showcase of the rich-message APIs introduced in Telegram Bot API 10.1 and 10.2.
  *
- * Rich messages allow bots to send highly structured text (and to stream AI-generated replies
- * with seamless rich formatting). Telegram parses the provided HTML/Markdown into a structured
- * [dev.inmo.tgbotapi.types.rich.RichMessage] made of [dev.inmo.tgbotapi.types.rich.RichBlock]s.
+ * Outgoing [dev.inmo.tgbotapi.types.rich.InputRichMessage] values use one of three representations:
+ * [InputRichMessageHTML], [InputRichMessageMarkdown], or a typed [InputRichMessageBlocks] tree of
+ * [dev.inmo.tgbotapi.types.rich.InputRichBlock] values. The handlers demonstrate [sendRichMessage],
+ * [sendRichMessageDraft] revisions sharing a draft ID (including draft-only `thinking()` blocks), and edits
+ * through [EditChatMessageRichText]. Media is shown both as [InputRichMessageMedia] references such as
+ * `tg://photo?id=...` and as typed blocks; [dev.inmo.tgbotapi.requests.send.SendRichMessage] also turns
+ * multipart files inside an input tree into `attach://` uploads.
  *
- * Key concepts demonstrated:
- * - [dev.inmo.tgbotapi.types.rich.InputRichMessage] — describes a rich message to send. Built only via
- *   the [InputRichMessageHTML] / [InputRichMessageMarkdown] factories (exactly one format must be used)
- * - [sendRichMessage] — sendRichMessage method
- * - [sendRichMessageDraft] — sendRichMessageDraft method: stream partial rich messages by draftId
- * - [EditChatMessageRichText] — editMessageText with the new `rich_message` parameter
- * - [onRichMessage] — trigger for incoming [dev.inmo.tgbotapi.types.message.content.RichMessageContent]
- *   (the new `rich_message` field of Message)
- * - [waitRichMessage] — expectation for a rich message
- * - [onlyRichMessageContentMessages] — flow filter keeping only rich message content
- * - [InputRichMessageContent] — usable as InputMessageContent in inline query results
+ * Incoming [dev.inmo.tgbotapi.types.message.content.RichMessageContent] and user-selected content covers
+ * [onRichMessage], [waitRichMessage], [onlyRichMessageContentMessages], photo reuse, and
+ * [InputRichMessageContent] in inline and guest-query results. Parsed content is exposed as a
+ * [dev.inmo.tgbotapi.types.rich.RichMessage] containing [dev.inmo.tgbotapi.types.rich.RichBlock]s.
  *
- * Telegram Bot API 10.2 additions demonstrated below:
- * - [InputRichMessageBlocks] — build a rich message from a typed [dev.inmo.tgbotapi.types.rich.InputRichBlock]
- *   tree via the InputRichBlocks DSL instead of an HTML/Markdown string (exactly one of html/markdown/blocks)
- * - the draft-only `thinking()` block, streamed through [sendRichMessageDraft]
- * - [InputRichMessageMedia] — media referenced from the rich message via `tg://photo?id=` / `tg://video?id=` /
- *   `tg://audio?id=`, plus first-class media blocks (photo/video/...) inside the blocks tree; new files are
- *   uploaded as `attach://` automatically by [dev.inmo.tgbotapi.requests.send.SendRichMessage]
+ * @param args the bot token followed by optional, case-sensitive `debug` and `testServer` flags. The token
+ * must be present; unrecognized later arguments are ignored.
  */
 suspend fun main(vararg args: String) {
     val botToken = args.first()

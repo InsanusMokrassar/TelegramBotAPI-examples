@@ -4,6 +4,12 @@ import org.w3c.dom.*
 
 private val scope = CoroutineScope(Dispatchers.Default)
 
+/**
+ * Installs the browser launch form after `DOMContentLoaded`.
+ *
+ * Every submission reads the token from `bot_token`, appends a result container under `bots_container`, and launches
+ * [activateKeyboardsBot]. The result of its startup `getMe` request is rendered in that new container.
+ */
 fun main() {
     document.addEventListener(
         "DOMContentLoaded",
