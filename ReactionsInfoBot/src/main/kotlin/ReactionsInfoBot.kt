@@ -15,7 +15,12 @@ import dev.inmo.tgbotapi.utils.customEmoji
 import dev.inmo.tgbotapi.utils.regular
 
 /**
- * This bot will send info about user reactions in his PM with reply to message user reacted to
+ * Runs the ReactionsInfoBot example using long polling.
+ *
+ * User-attributed reaction changes are reported to the reacting user in a private cross-chat reply, with a temporary
+ * `✍` reaction marking the source message. Anonymous reaction-count updates are printed to standard output.
+ *
+ * @param args the bot token first and, optionally, `debug` as the second element to enable formatted KSLog output
  */
 suspend fun main(vararg args: String) {
     val botToken = args.first()

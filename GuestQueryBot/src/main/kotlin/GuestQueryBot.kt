@@ -19,19 +19,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
 /**
- * This bot demonstrates guest mode support introduced in Telegram Bot API.
+ * Starts the long-polling guest-query example.
  *
- * Guest mode allows bots to receive messages and reply within chats they are not a member of.
- * To enable guest queries for your bot, set `supports_guest_queries` in BotFather settings.
- *
- * Key concepts demonstrated:
- * - `supportsGuestQueries` field on the bot itself (via getMe())
- * - `GuestMessageUpdate` — a new update type for messages sent in guest mode
- * - `guestQueryId` — unique ID used to answer the guest query
- * - `guestBotCallerUser` — the user who initiated the guest query
- * - `guestBotCallerChat` — the chat from which the guest query was sent
- * - `answerGuestQuery` / `reply(GuestMessage, InlineQueryResult)` — how to respond
- * - `SentGuestMessage` — the result returned after answering, containing the inline_message_id
+ * The first element of [args] must be the bot token. The optional, case-sensitive
+ * values `debug` and `testServer` enable diagnostic logging and Telegram's test
+ * environment, respectively. Guest requests receive an inline article response;
+ * regular content messages with guest-caller metadata receive an acknowledgement.
  */
 suspend fun main(vararg args: String) {
     val botToken = args.first()

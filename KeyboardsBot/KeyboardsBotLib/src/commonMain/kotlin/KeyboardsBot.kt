@@ -25,6 +25,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.currentCoroutineContext
 
+/**
+ * Parses pagination callback data whose first two space-separated fields are the page and total page count.
+ *
+ * @return the parsed page and count, or `null` when either field is missing or is not an integer
+ */
 fun String.parsePageAndCount(): Pair<Int, Int>? {
     val (pageString, countString) = split(" ").takeIf { it.count() > 1 } ?: return null
     return Pair(
@@ -33,6 +38,15 @@ fun String.parsePageAndCount(): Pair<Int, Int>? {
     )
 }
 
+/**
+ * Adds the pagination controls used by command replies and inline-query results.
+ *
+ * The controls include nearby page callbacks, first/last-page jumps when applicable, a button that copies the
+ * corresponding `/inline` command, and a button that starts inline mode for a user-selected chat.
+ *
+ * @param page the current page; callers should keep it within `1..count`
+ * @param count the total number of pages; callers should pass a positive value
+ */
 fun InlineKeyboardBuilder.includePageButtons(page: Int, count: Int) {
     val numericButtons = listOfNotNull(
         page - 1,
@@ -78,6 +92,15 @@ fun InlineKeyboardBuilder.includePageButtons(page: Int, count: Int) {
     }
 }
 
+/**
+ * Creates and runs the shared KeyboardsBot behavior using long polling.
+ *
+ * The bot serves `/inline` pagination keyboards, edits them in response to callback queries, answers compatible
+ * inline queries, offers an `/inline` reply-keyboard button for unhandled commands, and logs every received update.
+ *
+ * @param token the Telegram bot token
+ * @param print receives the bot information returned by the startup `getMe` request
+ */
 @OptIn(PreviewFeature::class)
 suspend fun activateKeyboardsBot(
     token: String,

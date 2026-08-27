@@ -38,6 +38,7 @@ import org.w3c.dom.*
 import kotlin.random.Random
 import kotlin.random.nextUBytes
 
+/** Appends [text] and a paragraph break to this HTML element. */
 fun HTMLElement.log(text: String) {
     appendText(text)
     appendElement("p", {})
@@ -50,6 +51,10 @@ private object RootStyleSheet : StyleSheet() {
     }
 }
 
+/**
+ * Renders the Telegram Web App showcase and connects its controls to the JVM
+ * server's same-origin validation and bot-helper routes.
+ */
 @OptIn(ExperimentalUnsignedTypes::class)
 fun main() {
     console.log("Web app started")

@@ -46,6 +46,17 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 
+/**
+ * Starts a long-polling bot that renders incoming checklists as formatted text and reports
+ * checklist task additions and completion-state changes with task-aware replies.
+ *
+ * The first argument is the required bot token. The optional, case-sensitive `debug` and
+ * `testServer` arguments enable verbose library logging and Telegram's Bot API test environment,
+ * respectively. The bot identity and every received update are printed to standard output in all
+ * modes.
+ *
+ * @param args bot token followed by optional `debug` and `testServer` flags
+ */
 suspend fun main(vararg args: String) {
     val botToken = args.first()
 
@@ -65,7 +76,6 @@ suspend fun main(vararg args: String) {
         CoroutineScope(Dispatchers.Default),
         testServer = isTestServer,
     ) {
-        // start here!!
         val me = getMe()
         println(me)
 

@@ -20,6 +20,16 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.currentCoroutineContext
 
+/**
+ * Starts the shared long-polling resender and suspends until polling stops.
+ *
+ * Eligible content is recreated in its source chat with reply/quote metadata and
+ * message effects preserved. Business messages sent by the business-connection
+ * owner are skipped.
+ *
+ * @param token bot token used for polling and API requests.
+ * @param print output callback for bot information and resend diagnostics.
+ */
 suspend fun activateResenderBot(
     token: String,
     print: (Any) -> Unit

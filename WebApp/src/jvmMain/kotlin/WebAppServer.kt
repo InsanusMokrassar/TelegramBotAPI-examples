@@ -38,13 +38,13 @@ import kotlinx.serialization.json.Json
 import java.io.File
 
 /**
- * Accepts two parameters:
+ * Starts the static Web App server and long-polling bot.
  *
- * * Telegram Token
- * * URL where will be placed
- * * Port (default 8080)
- *
- * Will start the server to share the static (index.html and WebApp.js) on 0.0.0.0:8080
+ * The first element of [args] must be the bot token and the second the public Web
+ * App URL used in Telegram buttons. The optional third element is parsed as the
+ * listening port and defaults to `8080`. Exact `debug` and `testServer` values
+ * enable diagnostic logging and Telegram's test environment, respectively.
+ * Production JS output is served when present, otherwise development output.
  */
 @OptIn(PreviewFeature::class)
 suspend fun main(vararg args: String) {

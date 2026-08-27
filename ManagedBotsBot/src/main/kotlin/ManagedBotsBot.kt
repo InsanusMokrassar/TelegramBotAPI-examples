@@ -48,7 +48,12 @@ private var BehaviourContextData.commonMessage: ChatContentMessage<*>?
     set(value) = set("commonMessage", value)
 
 /**
- * This place can be the playground for your code.
+ * Starts the long-polling managed-bot playground.
+ *
+ * The first element of [args] must be the bot token. Optional exact values `debug`
+ * and `testServer` enable diagnostic logging and Telegram's test environment.
+ * The handlers expose managed-bot creation, tokens, access settings, personal-chat
+ * messages, and bot-to-bot messaging; API results and all updates are logged.
  */
 suspend fun main(vararg args: String) {
     val botToken = args.first()

@@ -16,6 +16,17 @@ import dev.inmo.tgbotapi.utils.regular
 import korlibs.time.DateFormat
 import korlibs.time.format
 
+/**
+ * Starts the BoostsInfoBot example using long polling.
+ *
+ * The `/start` command sends a channel-request keyboard button that accepts channels where this bot is already a
+ * member. When Telegram returns the matching `chat_shared` service message, the bot calls [getUserChatBoosts] for
+ * the selected channel and the requesting user, then replies with that user's boosts. Incoming `chat_boost` updates
+ * are also printed to standard output.
+ *
+ * @param args the bot token as the first element and, optionally, `debug` as the second element to format and print
+ * default KSLog messages to standard output
+ */
 suspend fun main(args: Array<String>) {
     val isDebug = args.getOrNull(1) == "debug"
 

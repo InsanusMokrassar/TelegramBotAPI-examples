@@ -26,7 +26,13 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 
 /**
- * This is one of the easiest bots - it will just print information about itself
+ * Runs the MyBot profile-photo example using long polling.
+ *
+ * Startup bot information is printed to standard output. The bot then handles commands that replace its profile
+ * photo from the next photo received in the same chat or remove its current profile photo.
+ *
+ * @param args the bot token first, followed optionally by `debug` for formatted KSLog output and/or `testServer` for
+ * the Telegram Bot API test environment
  */
 suspend fun main(vararg args: String) {
     val botToken = args.first()

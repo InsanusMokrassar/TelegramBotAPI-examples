@@ -39,6 +39,14 @@ import dev.inmo.tgbotapi.utils.buildEntities
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
+/**
+ * Starts the long-polling chat-member-tag example.
+ *
+ * The first element of [args] must be the bot token. Optional exact values `debug`
+ * and `testServer` enable diagnostic logging and Telegram's test environment.
+ * Reply-based commands set or clear a group member's tag and tag-management right;
+ * delivered group content receives replies showing its typed and raw sender tag.
+ */
 suspend fun main(vararg args: String) {
     val botToken = args.first()
 

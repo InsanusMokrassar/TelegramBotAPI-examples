@@ -37,7 +37,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
 /**
- * An example bot that interacts with Telegram Stars API (used for payments)
+ * Starts the long-polling Telegram Stars and paid-media playground.
+ *
+ * The first element of [args] must be the bot token and the second a numeric admin
+ * user/chat ID authorized for `/transactions`. Optional exact values `debug` and
+ * `testServer` enable diagnostic logging and Telegram's test environment. Other
+ * handlers create a one-Star invoice or paid media and report payment-related
+ * updates.
  */
 suspend fun main(vararg args: String) {
     val botToken = args.first()

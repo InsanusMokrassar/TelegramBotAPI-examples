@@ -12,6 +12,15 @@ import dev.inmo.tgbotapi.types.chat.member.*
 import dev.inmo.tgbotapi.utils.*
 
 
+/**
+ * Runs a long-polling bot that logs selected chat-member transitions and announces them in the affected chat.
+ *
+ * Updates about the bot itself produce setup/status messages, while joins, departures, promotions, demotions,
+ * administrator changes, and restriction changes produce member notifications.
+ *
+ * @param args the bot token as the first element and, optionally, `debug` in a later element to enable formatted
+ * default KSLog output
+ */
 @OptIn(PreviewFeature::class)
 suspend fun main(args: Array<String>) {
     val token = args.first()

@@ -13,20 +13,37 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAn
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onBaseInlineQuery
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onGuestRequestMessage
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onPhoto
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onRichMessage
 import dev.inmo.tgbotapi.extensions.utils.baseSentMessageUpdateOrNull
 import dev.inmo.tgbotapi.extensions.utils.contentMessageOrNull
 import dev.inmo.tgbotapi.extensions.utils.onlyRichMessageContentMessages
 import dev.inmo.tgbotapi.extensions.utils.withContentOrNull
 import dev.inmo.tgbotapi.requests.edit.text.EditChatMessageRichText
+import dev.inmo.tgbotapi.requests.abstracts.InputFile
 import dev.inmo.tgbotapi.types.BotCommand
+import dev.inmo.tgbotapi.types.CustomEmojiId
 import dev.inmo.tgbotapi.types.InlineQueries.InlineQueryResult.InlineQueryResultArticle
 import dev.inmo.tgbotapi.types.InlineQueries.InputMessageContent.InputRichMessageContent
 import dev.inmo.tgbotapi.types.InlineQueryId
+import dev.inmo.tgbotapi.types.TelegramDate
 import dev.inmo.tgbotapi.types.message.content.TextContent
 import dev.inmo.tgbotapi.types.message.textsources.BotCommandTextSource
+import dev.inmo.tgbotapi.types.media.TelegramMediaAnimation
+import dev.inmo.tgbotapi.types.media.TelegramMediaAudio
+import dev.inmo.tgbotapi.types.media.TelegramMediaPhoto
+import dev.inmo.tgbotapi.types.media.TelegramMediaVideo
+import dev.inmo.tgbotapi.types.media.TelegramMediaVoiceNote
+import dev.inmo.tgbotapi.types.rich.InputRichMessage
+import dev.inmo.tgbotapi.types.rich.InputRichMessageBlocks
 import dev.inmo.tgbotapi.types.rich.InputRichMessageHTML
 import dev.inmo.tgbotapi.types.rich.InputRichMessageMarkdown
+import dev.inmo.tgbotapi.types.rich.InputRichMessageMedia
+import dev.inmo.tgbotapi.types.rich.RichBlockCaption
+import dev.inmo.tgbotapi.types.rich.RichBlockTableCellAlign
+import dev.inmo.tgbotapi.types.rich.RichBlockTableCellVAlign
+import dev.inmo.tgbotapi.types.rich.RichTextPlain
+import dev.inmo.tgbotapi.types.rich.buildRichText
 import dev.inmo.tgbotapi.types.toChatId
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -35,23 +52,23 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
 
 /**
- * This bot demonstrates Rich Messages support introduced in Telegram Bot API 10.1.
+ * Runs a long-polling showcase of the rich-message APIs introduced in Telegram Bot API 10.1 and 10.2.
  *
- * Rich messages allow bots to send highly structured text (and to stream AI-generated replies
- * with seamless rich formatting). Telegram parses the provided HTML/Markdown into a structured
- * [dev.inmo.tgbotapi.types.rich.RichMessage] made of [dev.inmo.tgbotapi.types.rich.RichBlock]s.
+ * Outgoing [dev.inmo.tgbotapi.types.rich.InputRichMessage] values use one of three representations:
+ * [InputRichMessageHTML], [InputRichMessageMarkdown], or a typed [InputRichMessageBlocks] tree of
+ * [dev.inmo.tgbotapi.types.rich.InputRichBlock] values. The handlers demonstrate [sendRichMessage],
+ * [sendRichMessageDraft] revisions sharing a draft ID (including draft-only `thinking()` blocks), and edits
+ * through [EditChatMessageRichText]. Media is shown both as [InputRichMessageMedia] references such as
+ * `tg://photo?id=...` and as typed blocks; [dev.inmo.tgbotapi.requests.send.SendRichMessage] also turns
+ * multipart files inside an input tree into `attach://` uploads.
  *
- * Key concepts demonstrated:
- * - [dev.inmo.tgbotapi.types.rich.InputRichMessage] — describes a rich message to send. Built only via
- *   the [InputRichMessageHTML] / [InputRichMessageMarkdown] factories (exactly one format must be used)
- * - [sendRichMessage] — sendRichMessage method
- * - [sendRichMessageDraft] — sendRichMessageDraft method: stream partial rich messages by draftId
- * - [EditChatMessageRichText] — editMessageText with the new `rich_message` parameter
- * - [onRichMessage] — trigger for incoming [dev.inmo.tgbotapi.types.message.content.RichMessageContent]
- *   (the new `rich_message` field of Message)
- * - [waitRichMessage] — expectation for a rich message
- * - [onlyRichMessageContentMessages] — flow filter keeping only rich message content
- * - [InputRichMessageContent] — usable as InputMessageContent in inline query results
+ * Incoming [dev.inmo.tgbotapi.types.message.content.RichMessageContent] and user-selected content covers
+ * [onRichMessage], [waitRichMessage], [onlyRichMessageContentMessages], photo reuse, and
+ * [InputRichMessageContent] in inline and guest-query results. Parsed content is exposed as a
+ * [dev.inmo.tgbotapi.types.rich.RichMessage] containing [dev.inmo.tgbotapi.types.rich.RichBlock]s.
+ *
+ * @param args the bot token followed by optional, case-sensitive `debug` and `testServer` flags. The token
+ * must be present; unrecognized later arguments are ignored.
  */
 suspend fun main(vararg args: String) {
     val botToken = args.first()
@@ -286,6 +303,251 @@ suspend fun main(vararg args: String) {
 
         </details>
     """.trimIndent()
+    val testMarkdownMediaLessInputRichMessageBlocks = InputRichMessageBlocks {
+        paragraph {
+            bold("bold text")
+            plain("\n")
+            bold("bold text")
+            plain("\n")
+            italic("italic text")
+            plain("\n")
+            italic("italic text")
+            plain("\n")
+            strikethrough("strikethrough text")
+            plain("\n")
+            code("inline fixed-width code")
+            plain("\n")
+            marked("marked text")
+            plain("\n")
+            spoiler("spoiler")
+        }
+        paragraph {
+            url("inline URL", "https://t.me/")
+            plain("\n")
+            email("inline e-mail", "user@example.com")
+            plain("\n")
+            phone("inline phone number", "+123456789")
+            plain("\n")
+            url("inline mention of a user", "tg://user?id=123456789")
+            plain("\n")
+            customEmoji(CustomEmojiId("5368324170671202286"), "👍")
+            plain("\n")
+            dateTime("22:45 tomorrow", TelegramDate(1647531900L), "wDT")
+            plain("\n")
+            mathematicalExpression("x^2 + y^2")
+            plain("\n#hashtag ${'$'}USD +12345678901, card: 4242 4242 4242 4242, https://t.me t.me a@t.me /command @username\n")
+            plain("all the text above was on the same line")
+        }
+
+        h1("Heading 1")
+        h2("Heading 2")
+        h3("Heading 3")
+        h4("Heading 4")
+        h5("Heading 5")
+        h6("Heading 6")
+        paragraph("Paragraph text")
+        preformatted(
+            "  print('pre-formatted fixed-width code block written in the Python programming language')",
+            language = "python"
+        )
+        divider()
+
+        unorderedList {
+            item("unordered list item")
+            item("unordered list item")
+            item("unordered list item")
+        }
+        orderedList {
+            item(1) { paragraph("ordered list item") }
+            item(2) { paragraph("ordered list item") }
+        }
+        unorderedList {
+            item(hasCheckbox = true, isChecked = false) { paragraph("task list item") }
+            item(hasCheckbox = true, isChecked = true) { paragraph("completed task list item") }
+        }
+        blockQuotation {
+            paragraph("Block quotation started\nBlock quotation continued on the next line\nBlock quotation continued on the same line\nThe last line of the block quotation")
+        }
+
+        table {
+            row {
+                headerCell(align = RichBlockTableCellAlign.Left, valign = RichBlockTableCellVAlign.Top) { plain("Header 1") }
+                headerCell(align = RichBlockTableCellAlign.Center, valign = RichBlockTableCellVAlign.Middle) { plain("Header 2") }
+                headerCell(align = RichBlockTableCellAlign.Right, valign = RichBlockTableCellVAlign.Bottom) { plain("Header 2") }
+            }
+            row {
+                cell(align = RichBlockTableCellAlign.Left, valign = RichBlockTableCellVAlign.Top) { plain("left") }
+                cell(align = RichBlockTableCellAlign.Center, valign = RichBlockTableCellVAlign.Middle) { plain("center") }
+            }
+        }
+        paragraph {
+            plain("Text with a reference")
+            referenceLink("id1", "id1")
+            plain(" and another one")
+            referenceLink("id2", "id2")
+            plain(".")
+        }
+        paragraph { reference("Definition of the first footnote.", "id1") }
+        paragraph { reference("Definition of the second footnote.", "id2") }
+        mathematicalExpression("E = mc^2")
+        preformatted("E = mc^2", language = "math")
+
+        h2 {
+            plain("Example Nested Syntax Report for ")
+            italic("Q1")
+        }
+        paragraph {
+            plain("Intro with ")
+            underline("underlined text")
+            plain(", ")
+            marked("marked text")
+            plain(", and ")
+            mathematicalExpression("x^2 + y^2")
+            plain(".")
+        }
+        paragraph {
+            bold {
+                plain("Bold ")
+                italic {
+                    plain("italic ")
+                    underline("underlined italic bold")
+                    plain(" italic")
+                }
+                plain(" bold")
+            }
+        }
+        paragraph {
+            underline {
+                plain("In inline tags, nested ")
+                bold("markdown")
+                plain(" is parsed")
+            }
+        }
+        blockQuotation {
+            paragraph {
+                plain("Quote with ")
+                bold {
+                    plain("bold text, ")
+                    strikethrough {
+                        plain("strikethrough, and ")
+                        spoiler("spoiler")
+                    }
+                }
+                plain(", plus ")
+                url("a link", "https://t.me/")
+                plain(".")
+            }
+        }
+        unorderedList {
+            item {
+                paragraph {
+                    plain("List item with ")
+                    code("code")
+                    plain(", ")
+                    superscript("superscript")
+                    plain(", ")
+                    subscript("subscript")
+                    plain(", and a footnote")
+                    referenceLink("note", "note")
+                }
+            }
+            item {
+                paragraph {
+                    plain("Another item with ")
+                    bold { spoiler { code("spoiler code") } }
+                }
+            }
+            item {
+                paragraph {
+                    plain("Another item with ")
+                    strikethrough {
+                        plain("strikethrough and ")
+                        underline("inserted text")
+                    }
+                }
+            }
+        }
+        table {
+            row {
+                headerCell(align = RichBlockTableCellAlign.Left, valign = RichBlockTableCellVAlign.Middle) { plain("Metric") }
+                headerCell(align = RichBlockTableCellAlign.Right, valign = RichBlockTableCellVAlign.Middle) { plain("Value") }
+            }
+            row {
+                cell(align = RichBlockTableCellAlign.Left, valign = RichBlockTableCellVAlign.Middle) { plain("Speed") }
+                cell(align = RichBlockTableCellAlign.Right, valign = RichBlockTableCellVAlign.Middle) {
+                    bold("42")
+                    plain(" ")
+                    superscript("ms")
+                }
+            }
+            row {
+                cell(align = RichBlockTableCellAlign.Left, valign = RichBlockTableCellVAlign.Middle) { plain("Status") }
+                cell(align = RichBlockTableCellAlign.Right, valign = RichBlockTableCellVAlign.Middle) { spoiler("ready") }
+            }
+        }
+        paragraph {
+            reference("note") {
+                plain("Footnote with ")
+                italic("italic text")
+                plain(" and ")
+                underline("HTML underline")
+                plain(".")
+            }
+        }
+        divider()
+        h1("Details blocks can contain Markdown content:")
+        details(
+            summary = buildRichText {
+                plain("Summary with ")
+                bold("bold text")
+            },
+            isOpen = true
+        ) {
+            h3("Details heading")
+            unorderedList {
+                item { paragraph { plain("List item with "); italic("italic text") } }
+                item { paragraph { plain("List item with "); spoiler("spoiler") } }
+            }
+        }
+    }
+    val testMarkdownInputRichMessageBlocks = InputRichMessageBlocks {
+        testMarkdownMediaLessInputRichMessageBlocks.blocks.orEmpty().forEach(::add)
+
+        val photo = TelegramMediaPhoto(InputFile.fromUrl("https://telegram.org/example/photo.jpg"))
+        val video = TelegramMediaVideo(InputFile.fromUrl("https://telegram.org/example/video.mp4"))
+        val audio = TelegramMediaAudio(InputFile.fromUrl("https://telegram.org/example/audio.mp3"))
+        val voiceNote = TelegramMediaVoiceNote(InputFile.fromUrl("https://telegram.org/example/audio.ogg"))
+        val animation = TelegramMediaAnimation(InputFile.fromUrl("https://telegram.org/example/animation.gif"))
+
+        photo(photo)
+        video(video)
+        audio(audio)
+        voiceNote(voiceNote)
+        animation(animation)
+
+        photo(photo, RichBlockCaption(RichTextPlain("Photo caption")))
+        video(video, RichBlockCaption(RichTextPlain("Video caption")))
+        audio(audio, RichBlockCaption(RichTextPlain("Audio caption")))
+        voiceNote(voiceNote, RichBlockCaption(RichTextPlain("Voice note caption")))
+        animation(animation, RichBlockCaption(RichTextPlain("Animation caption")))
+
+        collage {
+            photo(photo)
+            video(video)
+        }
+        collage(RichBlockCaption(RichTextPlain("Collage caption"))) {
+            video(video)
+            photo(photo)
+        }
+        slideshow {
+            photo(photo)
+            video(video)
+        }
+        slideshow(RichBlockCaption(RichTextPlain("Slideshow caption"))) {
+            video(video)
+            photo(photo)
+        }
+    }
 
     telegramBotWithBehaviourAndLongPolling(
         botToken,
@@ -392,7 +654,6 @@ suspend fun main(vararg args: String) {
         onCommand("rich_markdown") {
             val sent = sendRichMessage(
                 it.chat.id,
-                // InputRichMessageMarkdown factory — content described using Markdown formatting
                 InputRichMessageMarkdown(
                     testMarkdownText
                 )
@@ -404,10 +665,27 @@ suspend fun main(vararg args: String) {
         onCommand("rich_markdown_medialess") {
             val sent = sendRichMessage(
                 it.chat.id,
-                // InputRichMessageMarkdown factory — content described using Markdown formatting
                 InputRichMessageMarkdown(
                     testMarkdownMediaLessText
                 )
+            )
+            println(sent)
+        }
+
+        // sendRichMessage with Markdown-formatted content
+        onCommand("rich_markdown_blocks") {
+            val sent = sendRichMessage(
+                it.chat.id,
+                testMarkdownInputRichMessageBlocks
+            )
+            println(sent)
+        }
+
+        // sendRichMessage with Markdown-formatted content
+        onCommand("rich_markdown_medialess_blocks") {
+            val sent = sendRichMessage(
+                it.chat.id,
+                testMarkdownMediaLessInputRichMessageBlocks
             )
             println(sent)
         }
@@ -441,6 +719,112 @@ suspend fun main(vararg args: String) {
                     // the new rich_message parameter of editMessageText
                     richMessage = InputRichMessageMarkdown("*Edited* rich message — now _updated_")
                 )
+            )
+        }
+
+        // === Bots API 10.2 additions: InputRichBlocks DSL + rich message media ===
+
+        // InputRichMessageBlocks { } — build a rich message from a typed InputRichBlock tree instead
+        // of an HTML/Markdown string (exactly one of html/markdown/blocks may be used). The lambda is an
+        // InputRichBlocksBuilder; buildInputRichBlocks { } returns the raw List<InputRichBlock> the same way.
+        onCommand("rich_blocks") {
+            sendRichMessage(
+                it.chat.id,
+                InputRichMessageBlocks {
+                    heading("Rich blocks (Bots API 10.2)", level = 1)
+                    paragraph {
+                        plain("This message is built from ")
+                        bold("structured InputRichBlocks")
+                        plain(" — no HTML or Markdown string is involved.")
+                    }
+
+                    h2("Lists")
+                    h3("Ordered")
+                    orderedList {
+                        item(0) { paragraph("A plain list item") }
+                        item(1) { paragraph { url("google", "google.com") } }
+                        item(2, hasCheckbox = true, isChecked = true) { paragraph("A plain list item") }
+                        item(3, hasCheckbox = true, isChecked = false) { paragraph("A plain list item") }
+                    }
+                    divider()
+                    h3("Unordered")
+                    unorderedList {
+                        item { paragraph("A plain list item") }
+                        item { paragraph { url("google", "google.com") } }
+                        item(hasCheckbox = true, isChecked = true) { paragraph("A plain list item") }
+                        item(hasCheckbox = true, isChecked = false) { paragraph("A plain list item") }
+                    }
+
+                    divider()
+
+                    heading("Code", level = 2)
+                    preformatted("val answer = 42", language = "kotlin")
+
+                    heading("Quotation", level = 2)
+                    blockQuotation {
+                        paragraph {
+                            plain("Quotations are themselves made of nested blocks — ")
+                            italic("including inline formatting")
+                            plain(".")
+                        }
+                    }
+                }
+            )
+        }
+
+        // sendRichMessageDraft with blocks: the thinking() block is only valid inside a draft and is used
+        // to stream a model's reasoning before the finalized rich message is sent via sendRichMessage.
+        onCommand("rich_blocks_draft") {
+            val chatId = it.chat.id.toChatId()
+            val draftId = 2L
+            listOf("Analyzing your request", "Composing a structured answer").forEach { step ->
+                sendRichMessageDraft(
+                    chatId,
+                    draftId,
+                    InputRichMessageBlocks { thinking(step) }
+                )
+                delay(1000)
+            }
+            // finalize the streamed draft with the real (non-thinking) blocks
+            sendRichMessage(
+                chatId,
+                InputRichMessageBlocks {
+                    heading("Answer", level = 2)
+                    paragraph("Here is the finalized, structured reply.")
+                }
+            )
+        }
+
+        // Rich message media: send me a photo and it gets embedded into a rich message two ways.
+        onPhoto { message ->
+            // reuse the received file by its fileId (no upload). To upload a brand-new file instead,
+            // build the TelegramMedia from file.asMultipartFile() — SendRichMessage collects any
+            // MultipartFile inside the rich message and uploads it as attach://<id> automatically.
+            val photoMedia = TelegramMediaPhoto(message.content.media.fileId)
+
+            // (1) referenced from HTML via tg://photo?id=<id>, resolved through InputRichMessage.media
+            sendRichMessage(
+                message.chat.id,
+                InputRichMessageHTML(
+                    """
+                        <h2>Your photo, referenced from HTML</h2>
+                        <p>Below is your photo, referenced via <code>tg://photo?id=userphoto</code>:</p>
+                        <img src="tg://photo?id=userphoto"/>
+                    """.trimIndent(),
+                    media = listOf(
+                        InputRichMessageMedia(id = "userphoto", media = photoMedia)
+                    )
+                )
+            )
+
+            // (2) as a first-class media block inside an InputRichBlocks tree
+            sendRichMessage(
+                message.chat.id,
+                InputRichMessageBlocks {
+                    heading("Your photo, as a media block", level = 2)
+                    paragraph("The same photo, this time a photo() block inside the blocks tree:")
+                    photo(photoMedia)
+                }
             )
         }
 
@@ -528,7 +912,9 @@ suspend fun main(vararg args: String) {
         setMyCommands(
             BotCommand("rich_html", "Send a rich message described with HTML"),
             BotCommand("rich_markdown", "Send a rich message described with Markdown"),
+            BotCommand("rich_blocks", "Send a rich message built from the InputRichBlocks DSL"),
             BotCommand("rich_draft", "Stream a rich message draft, then finalize it"),
+            BotCommand("rich_blocks_draft", "Stream a blocks draft with thinking(), then finalize it"),
             BotCommand("rich_edit", "Send a rich message and edit it with new rich content"),
             BotCommand("wait_rich", "Wait for you to send a rich message"),
         )

@@ -4,6 +4,11 @@ import org.w3c.dom.*
 
 private val scope = CoroutineScope(Dispatchers.Default)
 
+/**
+ * Installs the browser token form after `DOMContentLoaded` and starts a bot for every submission.
+ *
+ * Each bot receives its token from `bot_token`; its startup information is appended under `bots_container`.
+ */
 fun main() {
     document.addEventListener(
         "DOMContentLoaded",

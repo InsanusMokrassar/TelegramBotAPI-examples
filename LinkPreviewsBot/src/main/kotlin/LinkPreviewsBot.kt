@@ -15,7 +15,12 @@ import dev.inmo.tgbotapi.types.message.content.TextedContent
 import dev.inmo.tgbotapi.utils.regular
 
 /**
- * This bot will reply with the same
+ * Starts a long-polling bot that demonstrates link-preview layouts.
+ *
+ * The first element of [args] must be the bot token. An optional exact `debug`
+ * value in the second position enables diagnostic logging. For each text-bearing
+ * content message, the bot uses its first URL entity to send one disabled-preview
+ * copy and large, small, and default previews both above and below the text.
  */
 suspend fun main(vararg args: String) {
     val botToken = args.first()

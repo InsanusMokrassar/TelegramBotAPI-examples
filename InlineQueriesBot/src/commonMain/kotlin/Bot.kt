@@ -14,8 +14,7 @@ import dev.inmo.tgbotapi.types.inlineQueryAnswerResultsLimit
 import dev.inmo.tgbotapi.utils.buildEntities
 
 /**
- * Thi bot will create inline query answers. You
- * should enable inline queries in bot settings
+ * Starts the inline-query bot with [token] and suspends until long polling stops.
  */
 suspend fun doInlineQueriesBot(token: String) {
     val bot = telegramBot(token)

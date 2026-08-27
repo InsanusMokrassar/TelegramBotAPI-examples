@@ -21,6 +21,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.currentCoroutineContext
 
+/**
+ * Formats this sticker set's name, title, and type as Telegram text entities.
+ *
+ * A `null` receiver produces a bold warning that the sticker set appears to have been removed.
+ */
 fun StickerSet?.buildInfo() = buildEntities {
     if (this@buildInfo == null) {
         bold("Looks like this stickerset has been removed")
@@ -38,6 +43,15 @@ fun StickerSet?.buildInfo() = buildEntities {
     }
 }
 
+/**
+ * Creates and runs the shared StickerInfoBot behavior using long polling.
+ *
+ * Sticker messages are answered with their set metadata. Text messages are scanned for custom-emoji entities and
+ * answered with metadata for each distinct resolved sticker set. Every update is also logged.
+ *
+ * @param token the Telegram bot token
+ * @param print receives the bot information returned by the startup `getMe` request
+ */
 suspend fun activateStickerInfoBot(
     token: String,
     print: (Any) -> Unit

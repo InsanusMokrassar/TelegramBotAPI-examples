@@ -19,6 +19,14 @@ import dev.inmo.tgbotapi.types.request.RequestId
 import dev.inmo.tgbotapi.utils.mention
 import dev.inmo.tgbotapi.utils.row
 
+/**
+ * Starts a long-polling demo of Telegram's user- and chat-request reply-keyboard buttons.
+ *
+ * `/start` sends the keyboard in private chats. Confirmed selections arrive as `users_shared` or `chat_shared`
+ * service messages; the bot replies with each selected identifier and the result of a best-effort [getChat] call.
+ *
+ * @param args the bot token followed optionally by the exact value `debug`, which prints default KSLog output
+ */
 suspend fun main(args: Array<String>) {
     val botToken = args.first()
     val isDebug = args.getOrNull(1) == "debug"

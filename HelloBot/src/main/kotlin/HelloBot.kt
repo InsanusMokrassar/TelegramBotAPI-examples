@@ -18,7 +18,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
 /**
- * The main purpose of this bot is just to answer "Oh, hi, " and add user mention here
+ * Starts HelloBot with long polling and logs every received update.
+ *
+ * Content messages are handled when their text contains the bot's full
+ * username. The reply varies for private, group, channel, and business chats.
+ *
+ * @param args the bot token at index `0`; any remaining arguments are ignored
+ * @throws NoSuchElementException when no bot token is supplied
  */
 @OptIn(PreviewFeature::class)
 suspend fun main(vararg args: String) {
