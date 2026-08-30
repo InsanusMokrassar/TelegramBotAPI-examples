@@ -7,13 +7,13 @@ import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.chat.get.getChat
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.send
-import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitCommunityChatAdded
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitCommunityChatAddedEventsMessages
-import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitCommunityChatRemoved
+import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitCommunityChatJoinedEventsMessages
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitCommunityChatRemovedEventsMessages
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommunityChatAdded
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommunityChatJoined
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommunityChatRemoved
 import dev.inmo.tgbotapi.extensions.utils.extensions.sameChat
 import kotlinx.coroutines.CoroutineScope
@@ -25,10 +25,11 @@ import kotlinx.coroutines.flow.first
  * Starts a long-polling bot that demonstrates Telegram Communities.
  *
  * [onCommunityChatAdded] receives the joined [dev.inmo.tgbotapi.types.communities.Community], while
- * [onCommunityChatRemoved] receives a fieldless removal event. `/community` reads
- * [dev.inmo.tgbotapi.types.chat.ExtendedChat.community] with [getChat]. The two wait commands use
- * [waitCommunityChatAddedEventsMessages] and [waitCommunityChatRemovedEventsMessages] to take the first same-chat
- * event without a timeout. The bot prints its [getMe] result and every received update.
+ * [onCommunityChatRemoved] receives a fieldless removal event, while [onCommunityChatJoined] reports a user joining
+ * the chat from a community. `/community` reads
+ * [dev.inmo.tgbotapi.types.chat.ExtendedChat.community] with [getChat]. The three wait commands use typed event-message
+ * expectations to take the first same-chat event without a timeout. The bot prints its [getMe] result and every
+ * received update.
  *
  * @param args the bot token followed by the optional, case-sensitive `debug` and `testServer` flags; unknown trailing
  * arguments are ignored
@@ -72,6 +73,13 @@ suspend fun main(vararg args: String) {
             send(message.chat.id, "This chat has left its community")
         }
 
+        // community_chat_joined: a user joined this chat through a community
+        onCommunityChatJoined { message ->
+            val community = message.chatEvent.community
+            println("A user joined chat ${message.chat.id} from community '${community.name}' (id=${community.id.long})")
+            reply(message, "Welcome! You joined from the ${community.name} community.")
+        }
+
         // Inspect the current chat's community on demand
         onCommand("community") {
             val community = getChat(it.chat.id).community
@@ -94,9 +102,16 @@ suspend fun main(vararg args: String) {
 
         // Suspend until the next community-removed event message from this chat.
         onCommand("wait_community_removed") { origin ->
-            reply(origin, "Waiting for this chat to be added to a community...")
+            reply(origin, "Waiting for this chat to be removed from a community...")
             waitCommunityChatRemovedEventsMessages().filter { it.sameChat(origin) }.first()
             reply(origin, "Chat removed from its community (${origin.chat.id})")
+        }
+
+        // Suspend until a user joins this chat from a community.
+        onCommand("wait_community_joined") { origin ->
+            reply(origin, "Waiting for somebody to join this chat from a community...")
+            val event = waitCommunityChatJoinedEventsMessages().filter { it.sameChat(origin) }.first().chatEvent
+            reply(origin, "A user joined from ${event.community.name} (id=${event.community.id.long})")
         }
 
         allUpdatesFlow.subscribeSafelyWithoutExceptions(this) {

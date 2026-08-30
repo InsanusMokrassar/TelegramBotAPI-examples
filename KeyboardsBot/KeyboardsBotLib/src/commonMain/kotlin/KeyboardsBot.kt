@@ -57,7 +57,11 @@ fun InlineKeyboardBuilder.includePageButtons(page: Int, count: Int) {
         val numbersRange = 1 .. count
         numericButtons.forEach {
             if (it in numbersRange) {
-                dataButton(it.toString(), "$it $count")
+                if (it == page) {
+                    disabledButton(it.toString(), style = KeyboardButtonStyle.Primary)
+                } else {
+                    dataButton(it.toString(), "$it $count")
+                }
             }
         }
     }
@@ -117,7 +121,7 @@ suspend fun activateKeyboardsBot(
             val page = numberArgs.firstOrNull()?.takeIf { numberArgs.size > 1 }?.coerceAtLeast(1) ?: 1
             reply(
                 message,
-                replyMarkup = inlineKeyboard {
+                replyMarkup = inlineKeyboard(forceReply = true) {
                     includePageButtons(page, numberOfPages)
                 }
             ) {
@@ -136,7 +140,7 @@ suspend fun activateKeyboardsBot(
                     answer(it, "Unsupported message type :(")
                     return@onMessageDataCallbackQuery
                 },
-                replyMarkup = inlineKeyboard {
+                replyMarkup = inlineKeyboard(forceReply = true) {
                     includePageButtons(page, count)
                 }
             ) {
@@ -152,7 +156,7 @@ suspend fun activateKeyboardsBot(
 
             editMessageText(
                 it.inlineMessageId,
-                replyMarkup = inlineKeyboard {
+                replyMarkup = inlineKeyboard(forceReply = true) {
                     includePageButtons(page, count)
                 }
             ) {
@@ -173,7 +177,7 @@ suspend fun activateKeyboardsBot(
                         InlineQueryId(it.query),
                         "Send buttons",
                         InputTextMessageContent("It is sent via inline mode inline buttons"),
-                        replyMarkup = inlineKeyboard {
+                        replyMarkup = inlineKeyboard(forceReply = true) {
                             includePageButtons(page, count)
                         }
                     )
@@ -184,7 +188,11 @@ suspend fun activateKeyboardsBot(
         onUnhandledCommand {
             reply(
                 it,
-                replyMarkup = replyKeyboard(resizeKeyboard = true, oneTimeKeyboard = true) {
+                replyMarkup = replyKeyboard(
+                    resizeKeyboard = true,
+                    oneTimeKeyboard = true,
+                    forceReply = true,
+                ) {
                     row {
                         simpleButton("/inline", style = KeyboardButtonStyle.Primary)
                     }

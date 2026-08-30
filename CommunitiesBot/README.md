@@ -1,6 +1,6 @@
 # CommunitiesBot
 
-This long-polling example demonstrates Communities support introduced in Telegram Bot API 10.2: typed service events when a chat joins or leaves a community, and inspection of a chat's current community.
+This long-polling example demonstrates Communities support introduced in Telegram Bot API 10.2 and extended in 10.3: typed service events when a chat joins or leaves a community, an event when a user joins a chat from a community, and inspection of a chat's current community.
 
 ## Behavior, commands, and triggers
 
@@ -10,18 +10,21 @@ At startup, the bot calls `getMe` and prints its bot information. It also prints
 | --- | --- |
 | `community_chat_added` service message | `onCommunityChatAdded` logs the chat and community name/ID, sends a join notice, then calls `getChat` and logs its nullable `community`. |
 | `community_chat_removed` service message | `onCommunityChatRemoved` logs the chat and sends a leave notice. This event is fieldless, so it has no former-community details. |
+| `community_chat_joined` service message | `onCommunityChatJoined` logs the source community and replies with a welcome message. This means a user joined the current chat from a community; it is distinct from adding the chat itself to a community. |
 | `/community` | Calls `getChat` and replies with the current community name/ID, or says the chat is not in a community. |
 | `/wait_community_added` | Waits without a timeout for the next added event in the command's chat, then replies with the community name/ID. |
-| `/wait_community_removed` | Waits without a timeout for the next removed event in the command's chat, then replies with the chat ID. Its initial waiting reply currently says "added." |
+| `/wait_community_removed` | Waits without a timeout for the next removed event in the command's chat, then replies with the chat ID. |
+| `/wait_community_joined` | Waits without a timeout for the next user-from-community join event in the command's chat, then replies with the source community name/ID. |
 
 Commands use no positional arguments; other commands only appear in the generic update log. Each wait first sends a waiting reply, filters events with `sameChat`, and takes the first match.
 
 ## API concepts
 
 - `CommunityChatAdded` carries a `Community` with a `CommunityId` and name; `CommunityChatRemoved` carries no fields.
-- `onCommunityChatAdded` and `onCommunityChatRemoved` provide typed handlers for the service events.
+- `CommunityChatJoined` carries the community through which a user joined the current chat.
+- `onCommunityChatAdded`, `onCommunityChatRemoved`, and `onCommunityChatJoined` provide typed handlers for the service events.
 - `getChat(...).community` exposes the nullable community on `ExtendedChat` without a subtype cast.
-- `waitCommunityChatAddedEventsMessages` and `waitCommunityChatRemovedEventsMessages` expose typed event-message flows.
+- `waitCommunityChatAddedEventsMessages`, `waitCommunityChatRemovedEventsMessages`, and `waitCommunityChatJoinedEventsMessages` expose typed event-message flows.
 
 ## Telegram setup and permissions
 

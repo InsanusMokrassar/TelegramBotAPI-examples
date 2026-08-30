@@ -3,11 +3,13 @@
 RichMessagesBot is a long-polling showcase of Telegram rich messages. It sends
 rich content from HTML, Markdown, and the typed `InputRichMessageBlocks` DSL;
 streams drafts; edits rich text; handles incoming rich messages; and supplies
-rich content from inline and guest queries.
+rich content from inline and guest queries. Bot API 10.3 coverage includes rich
+buttons, compact tables, expandable quotations, document blocks, document
+references, direct document uploads, and stoppable drafts.
 
 ## Commands
 
-The bot installs seven commands in Telegram's default command menu. Three
+The bot installs eight commands in Telegram's default command menu. Three
 additional handlers can be invoked by typing their commands manually.
 
 | Command | In menu | Demonstration |
@@ -18,21 +20,24 @@ additional handlers can be invoked by typing their commands manually.
 | `/rich_markdown_blocks` | No | Sends and logs the full fixture as a typed block tree, including first-class media blocks, captions, collages, and slideshows. |
 | `/rich_markdown_medialess_blocks` | No | Sends and logs the same typed block tree without its media section. |
 | `/rich_blocks` | Yes | Sends a smaller, directly constructed block tree with headings, formatted paragraphs, ordered and unordered checkbox lists, a divider, preformatted Kotlin, and a quotation. |
-| `/rich_draft` | Yes | Streams three Markdown revisions under draft ID `1`, one second apart, then sends a normal final rich message. |
-| `/rich_blocks_draft` | Yes | Streams two draft-only `thinking()` blocks under draft ID `2`, one second apart, then sends a normal typed-block answer. |
+| `/rich_10_3` | Yes | Sends an inline `RichTextButton`, three aligned `InputRichBlockButtons` rows with URL, callback, inline-query, copy-text, and disabled actions, a compact table, an expandable quotation, and a document block. |
+| `/rich_draft` | Yes | In a private chat, streams three Markdown revisions with `canStop` and `keepOnStop`, one second apart, then sends a normal final rich message unless generation is stopped. |
+| `/rich_blocks_draft` | Yes | In a private chat, streams two draft-only `thinking()` blocks with `canStop` and `keepOnStop`, then sends a normal typed-block answer unless generation is stopped. |
 | `/rich_edit` | Yes | Sends a Markdown rich message, waits two seconds, and replaces its rich content with `EditChatMessageRichText`. |
 | `/wait_rich` | Yes | Prompts for a rich message, waits for the next matching content, and reports its block count. |
 
-The two draft examples finalize by sending a new normal rich message; they do not
-turn the draft itself into the final message. They use distinct fixed IDs (`1`
-and `2`); concurrent runs of the same command in one chat reuse that command's
-ID.
+The two draft examples allocate a unique draft ID and subscribe to
+`waitMessageGenerationStopped` before sending the first revision. They finalize
+by sending a new normal rich message only if no matching stop update arrives;
+when stopped, they leave the retained draft untouched and log the event.
 
 ## Other triggers
 
 | Trigger | Behavior |
 | --- | --- |
 | Any photo | Reuses the received Telegram file ID without downloading it. The bot first sends HTML whose `tg://photo?id=userphoto` reference is resolved by `InputRichMessageMedia`, then sends the same photo as a typed `photo()` block. |
+| Any document | Reuses the received file ID through a `tg://document?id=userdocument` HTML reference, then downloads the file and sends it again as a multipart upload nested in a typed `document()` block. Large documents are therefore held in memory. |
+| A `rich_10_3_callback` rich button | Answers the callback with a notification confirming that the rich-message button was received. |
 | Any incoming rich message | Logs right-to-left state and every parsed block, replies with the block count, and resends the rich message with `createResend`. The `onlyRichMessageContentMessages` flow also logs its block count. |
 | Any inline query | Returns uncached HTML and Markdown articles whose selected messages use `InputRichMessageContent`. |
 | A text guest request containing `/rich_guest` | Returns one inline article containing the full Markdown fixture. This is a substring check, not a registered bot command. Non-text guest requests and text without that exact case-sensitive substring are ignored by this handler. |
@@ -50,9 +55,9 @@ Telegram file ID and assigning an alias for a `tg://photo?id=...` reference.
 
 The source also shows the two library shapes used for rich media: an
 `InputRichMessageMedia` mapping for markup references and first-class photo,
-video, audio, voice-note, animation, collage, and slideshow blocks. The library
-can collect multipart files nested in a rich-message tree as `attach://` uploads,
-although this example's running handlers use URLs or an existing file ID.
+video, audio, voice-note, animation, document, collage, and slideshow blocks.
+The document trigger demonstrates the library collecting a multipart file nested
+in a rich-message tree as an `attach://` upload.
 
 ## Telegram setup and permissions
 
@@ -60,7 +65,7 @@ although this example's running handlers use URLs or an existing file ID.
    control.
 2. Start a private chat with the bot, or add it to a chat and allow it to send
    messages and media.
-3. To test ordinary photo and rich-message triggers in a group, ensure Telegram
+3. To test ordinary photo, document, and rich-message triggers in a group, ensure Telegram
    delivers non-command messages to the bot, for example by disabling Group
    Privacy Mode or making the bot an administrator.
 4. Enable Inline Mode in BotFather to exercise the inline-query results.

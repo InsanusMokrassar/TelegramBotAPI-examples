@@ -8,17 +8,23 @@ The bot defines no commands. It prints every incoming update to standard output 
 
 | Trigger | Behavior |
 | --- | --- |
-| Standalone Live Photo | Logs its file identifiers, dimensions, duration, thumbnail, MIME type, size, and caption. It resends the Live Photo, sends the same media as paid content costing 1 Star, and then edits the resent message with `TelegramMediaLivePhoto`. |
-| Live Photo gallery | Logs every item and resends the gallery with `sendMediaGroup`. |
+| Standalone Live Photo | Logs its file identifiers, dimensions, duration, thumbnail, MIME type, size, and caption. It resends the Live Photo by file ID, downloads both components, edits the resent message with new multipart files, and uploads the files again as paid content costing 1 Star. |
+| Live Photo gallery | Logs every item, downloads each main and cover file, and re-uploads the gallery with `sendMediaGroup`. |
 | Paid-media message containing Live Photos | Logs each Live Photo and replies with the number found. Paid-media messages without a Live Photo get no reply from this handler. |
 | Edited Live Photo | Logs the file ID and updated caption. |
 | Media group containing at least one regular photo and one regular video | Uses the first photo as the cover and the first video as the motion part, then replies with a Live Photo. Albums missing either type are ignored by this handler. |
 
 ## Live Photo handling
 
-The bot does not download or transform media. It reuses Telegram file IDs: the received Live Photo is passed directly to `sendLivePhoto`, while its main file ID and thumbnail file ID are used to construct `TelegramMediaLivePhoto` and `TelegramPaidMediaLivePhoto`. If Telegram supplies no thumbnail, the code falls back to the main file ID for the photo field.
+The initial `sendLivePhoto` call reuses Telegram file IDs. The regular-media edit,
+paid-media send, and gallery resend then demonstrate ktgbotapi 37.0.0 collecting
+the secondary Live Photo `photo` attachment as well as the main multipart file.
+If Telegram supplies no cover photo, the code falls back to the main file ID for
+the `photo` field. Downloaded files are held in memory and are not transformed.
 
-The standalone handler performs its requests in order: resend, send paid media, then edit the resent message. Consequently, a failure while sending paid media prevents the edit for that update.
+The standalone handler performs its requests in order: resend, download, edit,
+then send paid media. The edit can therefore succeed in a private or group chat
+before the channel-only paid-media request fails.
 
 ## Telegram setup and permissions
 

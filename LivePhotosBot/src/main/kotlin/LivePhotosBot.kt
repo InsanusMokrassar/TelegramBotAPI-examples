@@ -5,6 +5,7 @@ import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.micro_utils.coroutines.subscribeLoggingDropExceptions
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.tgbotapi.extensions.api.edit.media.editMessageMedia
+import dev.inmo.tgbotapi.extensions.api.files.downloadFile
 import dev.inmo.tgbotapi.extensions.api.send.media.sendLivePhoto
 import dev.inmo.tgbotapi.extensions.api.send.media.sendMediaGroup
 import dev.inmo.tgbotapi.extensions.api.send.media.sendPaidMedia
@@ -23,6 +24,7 @@ import dev.inmo.tgbotapi.extensions.utils.photoFileOrNull
 import dev.inmo.tgbotapi.extensions.utils.videoContentOrNull
 import dev.inmo.tgbotapi.extensions.utils.videoFileOrNull
 import dev.inmo.tgbotapi.extensions.utils.withContentOrNull
+import dev.inmo.tgbotapi.requests.abstracts.asMultipartFile
 import dev.inmo.tgbotapi.types.message.content.LivePhotoContent
 import dev.inmo.tgbotapi.types.message.payments.PaidMedia
 import dev.inmo.tgbotapi.types.media.TelegramMediaLivePhoto
@@ -90,34 +92,42 @@ suspend fun main(vararg args: String) {
             )
             println("  sent message id: ${sent.messageId}")
 
-            // InputPaidMediaLivePhoto (TelegramPaidMediaLivePhoto): send the live photo as paid media (1 star)
-            sendPaidMedia(
-                chatId = message.chat.id,
-                starCount = 1,
-                media = listOf(
-                    // TelegramPaidMediaLivePhoto is InputPaidMediaLivePhoto
-                    TelegramPaidMediaLivePhoto(
-                        file = livePhotoFile.fileId,
-                        photo = livePhotoFile.photo?.fileId ?: livePhotoFile.fileId
-                    )
-                ),
-                text = "Paid live photo (1 star)"
-            )
+            // Download both Live Photo components once. ktgbotapi 37.0.0 collects the secondary `photo`
+            // MultipartFile alongside the main file for edits, media groups, and paid-media requests.
+            val livePhotoBytes = downloadFile(livePhotoFile)
+            val coverPhotoBytes = livePhotoFile.photo?.let { downloadFile(it) }
 
             // editMessageMedia with InputMediaLivePhoto (TelegramMediaLivePhoto):
-            // edit the previously sent message to replace it with itself via TelegramMediaLivePhoto
+            // edit the previously sent message using newly uploaded main and cover files.
             val sentAsMedia = sent.withContentOrNull<LivePhotoContent>()
             if (sentAsMedia != null) {
                 editMessageMedia(
                     message = sentAsMedia,
-                    // TelegramMediaLivePhoto is InputMediaLivePhoto
                     media = TelegramMediaLivePhoto(
-                        file = livePhotoFile.fileId,
-                        photo = livePhotoFile.photo?.fileId ?: livePhotoFile.fileId,
-                        text = "Edited via editMessageMedia with TelegramMediaLivePhoto"
+                        file = livePhotoBytes.asMultipartFile("edited-live-photo.mp4"),
+                        photo = coverPhotoBytes?.asMultipartFile("edited-live-photo-cover.jpg")
+                            ?: livePhotoFile.photo?.fileId
+                            ?: livePhotoFile.fileId,
+                        text = "Edited with newly uploaded Live Photo files"
                     )
                 )
             }
+
+            // InputPaidMediaLivePhoto (TelegramPaidMediaLivePhoto): upload both files as paid media (1 star).
+            // Telegram currently restricts sendPaidMedia to channel chats.
+            sendPaidMedia(
+                chatId = message.chat.id,
+                starCount = 1,
+                media = listOf(
+                    TelegramPaidMediaLivePhoto(
+                        file = livePhotoBytes.asMultipartFile("paid-live-photo.mp4"),
+                        photo = coverPhotoBytes?.asMultipartFile("paid-live-photo-cover.jpg")
+                            ?: livePhotoFile.photo?.fileId
+                            ?: livePhotoFile.fileId
+                    )
+                ),
+                text = "Paid live photo uploaded as new files (1 star)"
+            )
         }
 
         // Demonstrates: sendMediaGroup with live photos, InputMediaLivePhoto (TelegramMediaLivePhoto)
@@ -128,15 +138,17 @@ suspend fun main(vararg args: String) {
                 println("  - fileId: ${livePhotoFile.fileId}, ${livePhotoFile.width}x${livePhotoFile.height}")
             }
 
-            // sendMediaGroup with TelegramMediaLivePhoto (InputMediaLivePhoto)
+            // sendMediaGroup with newly uploaded main and cover files for every TelegramMediaLivePhoto.
             sendMediaGroup(
                 chatId = mediaGroupContent.group.first().sourceMessage.chat.id,
-                media = mediaGroupContent.group.map { groupMember ->
+                media = mediaGroupContent.group.mapIndexed { index, groupMember ->
                     val livePhotoFile = groupMember.content.media
-                    // TelegramMediaLivePhoto is InputMediaLivePhoto — used here in sendMediaGroup
+                    val coverPhoto = livePhotoFile.photo
                     TelegramMediaLivePhoto(
-                        file = livePhotoFile.fileId,
-                        photo = livePhotoFile.photo?.fileId ?: livePhotoFile.fileId
+                        file = downloadFile(livePhotoFile).asMultipartFile("gallery-live-photo-$index.mp4"),
+                        photo = coverPhoto?.let {
+                            downloadFile(it).asMultipartFile("gallery-live-photo-cover-$index.jpg")
+                        } ?: livePhotoFile.fileId
                     )
                 }
             )

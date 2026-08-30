@@ -116,6 +116,7 @@ suspend fun main(args: Array<String>) {
     val editStoriesToggleAdminRightsData = "${adminRightsDataPrefix}_edit_stories"
     val deleteStoriesToggleAdminRightsData = "${adminRightsDataPrefix}_delete_stories"
     val postStoriesToggleAdminRightsData = "${adminRightsDataPrefix}_post_stories"
+    val sendWelcomeMessagesToggleAdminRightsData = "${adminRightsDataPrefix}_send_welcome_messages"
 
     suspend fun BehaviourContext.getUserChatPermissions(chatId: ChatId, userId: UserId): ChatPermissions? {
         val chatMember = getChatMember(chatId, userId)
@@ -181,6 +182,12 @@ suspend fun main(args: Array<String>) {
                 }
                 row {
                     dataButton("Post stories${permissions.canPostStories.allowedSymbol()}", "$postStoriesToggleAdminRightsData ${channelId.chatId} ${userId.chatId}")
+                }
+                row {
+                    dataButton(
+                        "Send welcome messages${permissions.canSendWelcomeMessages.allowedSymbol()}",
+                        "$sendWelcomeMessagesToggleAdminRightsData ${channelId.chatId} ${userId.chatId}"
+                    )
                 }
             } ?: row {
                 dataButton("Promote to admin", "$postMessagesToggleAdminRightsData ${channelId.chatId} ${userId.chatId}")
@@ -415,6 +422,7 @@ suspend fun main(args: Array<String>) {
                     canEditStories = asAdmin ?.canEditStories.toggleIfData(editStoriesToggleAdminRightsData),
                     canDeleteStories = asAdmin ?.canDeleteStories.toggleIfData(deleteStoriesToggleAdminRightsData),
                     canPostStories = asAdmin ?.canPostStories.toggleIfData(postStoriesToggleAdminRightsData),
+                    canSendWelcomeMessages = asAdmin ?.canSendWelcomeMessages.toggleIfData(sendWelcomeMessagesToggleAdminRightsData),
                 )
             }
 

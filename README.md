@@ -1,6 +1,6 @@
 # TelegramBotAPI examples
 
-Runnable examples for [TelegramBotAPI](https://github.com/InsanusMokrassar/TelegramBotAPI). Each module focuses on a small Telegram Bot API feature and has its own README with detailed behavior, setup, permissions, and optional arguments.
+Runnable examples for [TelegramBotAPI](https://github.com/InsanusMokrassar/TelegramBotAPI), currently targeting tgbotapi 37.0.0 and Telegram Bot API 10.3. Each module focuses on a small Telegram Bot API feature and has its own README with detailed behavior, setup, permissions, and optional arguments.
 
 ## Running an example
 
@@ -24,24 +24,24 @@ sudo apt install libcurl4-gnutls-dev
 | [ChatAvatarSetter](ChatAvatarSetter/) | Sets a chat photo from an image sent to the bot. | `./gradlew :ChatAvatarSetter:run --args="<BOT_TOKEN>"` |
 | [ChatManagementBot](ChatManagementBot/) | Exercises member permissions, administrator queries, reaction deletion, and bot-to-bot messages. | `./gradlew :ChatManagementBot:run --args="<BOT_TOKEN> debug testServer"` |
 | [ChecklistsBot](ChecklistsBot/) | Receives and renders checklist messages and checklist service events. | `./gradlew :ChecklistsBot:run --args="<BOT_TOKEN> debug testServer"` |
-| [CommunitiesBot](CommunitiesBot/) | Handles community join/leave events and inspects a chat's current community. | `./gradlew :CommunitiesBot:run --args="<BOT_TOKEN> debug testServer"` |
+| [CommunitiesBot](CommunitiesBot/) | Handles chat/community membership and user-from-community join events. | `./gradlew :CommunitiesBot:run --args="<BOT_TOKEN> debug testServer"` |
 | [CustomBot](CustomBot/) | Provides a diagnostics playground for contexts, request logging, profile audio, and Stars balance. | `./gradlew :CustomBot:run --args="<BOT_TOKEN> debug testServer"` |
 | [DeepLinksBot](DeepLinksBot/) | Generates bot deep links and consumes their start payloads. | `./gradlew :DeepLinksBot:run --args="<BOT_TOKEN>"` |
-| [DraftsBot](DraftsBot/) † | Streams message drafts before sending the completed message. | `./gradlew :DraftsBot:run --args="<BOT_TOKEN>"` |
-| [EphemeralMessagesBot](EphemeralMessagesBot/) | Sends ephemeral messages revealed through an inline button. | `./gradlew :EphemeralMessagesBot:run --args="<BOT_TOKEN> debug testServer"` |
+| [DraftsBot](DraftsBot/) | Streams empty or stoppable message drafts and handles generation-stopped updates. | `./gradlew :DraftsBot:run --args="<BOT_TOKEN>"` |
+| [EphemeralMessagesBot](EphemeralMessagesBot/) | Sends, replaces, and edits rich, photo, or Live Photo ephemeral messages. | `./gradlew :EphemeralMessagesBot:run --args="<BOT_TOKEN> debug testServer"` |
 | [FSMBot](FSMBot/) | Implements a conversational finite-state machine with chat-scoped in-memory state. | `./gradlew :FSMBot:run --args="<BOT_TOKEN>"` |
 | [FilesLoaderBot](FilesLoaderBot/) | Downloads incoming media to disk and sends it back to the chat. | `./gradlew :FilesLoaderBot:run --args="<BOT_TOKEN> <OUTPUT_DIRECTORY>"` |
 | [ForwardInfoSenderBot](ForwardInfoSenderBot/) | Reports the forward-origin metadata of received content. | `./gradlew :ForwardInfoSenderBot:run --args="<BOT_TOKEN>"` |
-| [GiftsBot](GiftsBot/) | Paginates and lists gifts owned by a user or chat. | `./gradlew :GiftsBot:run --args="<BOT_TOKEN> debug testServer"` |
+| [GiftsBot](GiftsBot/) | Lists owned gifts and renders unique-gift service-message metadata. | `./gradlew :GiftsBot:run --args="<BOT_TOKEN> debug testServer"` |
 | [GiveawaysBot](GiveawaysBot/) | Logs giveaway creation, completion, and winner events. | `./gradlew :GiveawaysBot:run --args="<BOT_TOKEN> debug testServer"` |
 | [GuestQueryBot](GuestQueryBot/) | Handles guest queries in chats where the bot is not a member. | `./gradlew :GuestQueryBot:run --args="<BOT_TOKEN> debug testServer"` |
 | [HelloBot](HelloBot/) | Greets users, groups, channels, or business chats when mentioned. | `./gradlew :HelloBot:run --args="<BOT_TOKEN>"` |
 | [InlineQueriesBot](InlineQueriesBot/) | Answers inline queries and supplies a deep-link result. | `./gradlew :InlineQueriesBot:runJvm --args="<BOT_TOKEN>"` |
 | [JoinRequestQueriesBot](JoinRequestQueriesBot/) | Queues or approves join requests, optionally delegating the decision to a Web App. | `./gradlew :JoinRequestQueriesBot:run --args="<BOT_TOKEN> https://example.com/verify debug testServer"` |
-| [KeyboardsBot](KeyboardsBot/) | Demonstrates reply, inline, callback, paged, copy-text, and inline-mode keyboards. | `./gradlew :KeyboardsBot:jvm_launcher:run --args="<BOT_TOKEN> debug"` |
+| [KeyboardsBot](KeyboardsBot/) | Demonstrates reply, inline, disabled, forced-reply, paged, and inline-mode keyboards. | `./gradlew :KeyboardsBot:jvm_launcher:run --args="<BOT_TOKEN> debug"` |
 | [LinkPreviewsBot](LinkPreviewsBot/) | Sends the same link using multiple link-preview configurations. | `./gradlew :LinkPreviewsBot:run --args="<BOT_TOKEN> debug"` |
 | [LiveLocationsBot](LiveLocationsBot/) | Sends, updates, cancels, and stops a live-location message. | `./gradlew :LiveLocationsBot:run --args="<BOT_TOKEN>"` |
-| [LivePhotosBot](LivePhotosBot/) | Receives, sends, groups, edits, and sells Telegram Live Photos. | `./gradlew :LivePhotosBot:run --args="<BOT_TOKEN> debug testServer"` |
+| [LivePhotosBot](LivePhotosBot/) | Receives, uploads, groups, edits, and sells Telegram Live Photos. | `./gradlew :LivePhotosBot:run --args="<BOT_TOKEN> debug testServer"` |
 | [ManagedBotsBot](ManagedBotsBot/) † | Creates and administers managed bots and inspects personal-channel messages. | `./gradlew :ManagedBotsBot:run --args="<BOT_TOKEN> debug testServer"` |
 | [MemberUpdatedWatcherBot](MemberUpdatedWatcherBot/) | Logs and reports bot/member status transitions in chats. | `./gradlew :MemberUpdatedWatcherBot:run --args="<BOT_TOKEN> debug"` |
 | [MyBot](MyBot/) † | Replaces or removes the bot's global profile photo and prints diagnostics. | `./gradlew :MyBot:run --args="<BOT_TOKEN> debug testServer"` |
@@ -49,8 +49,8 @@ sudo apt install libcurl4-gnutls-dev
 | [RandomFileSenderBot](RandomFileSenderBot/) | Picks random local files and sends them individually or as media groups. | `./gradlew :RandomFileSenderBot:runJvm --args="<BOT_TOKEN> <FILES_DIRECTORY>"` |
 | [ReactionsInfoBot](ReactionsInfoBot/) | Handles per-user reaction changes and anonymous reaction-count updates. | `./gradlew :ReactionsInfoBot:run --args="<BOT_TOKEN> debug"` |
 | [ResenderBot](ResenderBot/) | Recreates received content while preserving reply, quote, effect, and business context. | `./gradlew :ResenderBot:jvm_launcher:run --args="<BOT_TOKEN> debug"` |
-| [RichMessagesBot](RichMessagesBot/) | Demonstrates rich HTML/Markdown/blocks, streaming drafts, inline results, and media. | `./gradlew :RichMessagesBot:run --args="<BOT_TOKEN> debug testServer"` |
-| [RightsChangerBot](RightsChangerBot/) | Uses an FSM and inline keyboards to change member and administrator rights. | `./gradlew :RightsChangerBot:run --args="<BOT_TOKEN> <ALLOWED_USER_ID> debug"` |
+| [RichMessagesBot](RichMessagesBot/) | Demonstrates rich markup/blocks, buttons, documents, drafts, queries, and media. | `./gradlew :RichMessagesBot:run --args="<BOT_TOKEN> debug testServer"` |
+| [RightsChangerBot](RightsChangerBot/) | Uses an FSM and inline keyboards to change member and administrator rights, including welcome messages. | `./gradlew :RightsChangerBot:run --args="<BOT_TOKEN> <ALLOWED_USER_ID> debug"` |
 | [SlotMachineDetectorBot](SlotMachineDetectorBot/) | Detects slot-machine dice and decodes their reel values. | `./gradlew :SlotMachineDetectorBot:run --args="<BOT_TOKEN>"` |
 | [StarTransactionsBot](StarTransactionsBot/) | Demonstrates Stars invoices, transaction history, paid media, and refunds. | `./gradlew :StarTransactionsBot:run --args="<BOT_TOKEN> <ADMIN_USER_ID> debug testServer"` |
 | [StickerInfoBot](StickerInfoBot/) † | Looks up sticker-set metadata for stickers and custom emoji. | `./gradlew :StickerInfoBot:jvm_launcher:run --args="<BOT_TOKEN>"` |
