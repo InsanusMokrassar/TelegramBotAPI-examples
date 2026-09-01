@@ -5,14 +5,18 @@ import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.micro_utils.coroutines.subscribeLoggingDropExceptions
 import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.bot.setMyCommands
+import dev.inmo.tgbotapi.extensions.api.files.downloadFile
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.sendRichMessage
 import dev.inmo.tgbotapi.extensions.api.send.sendRichMessageDraft
+import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitMessageGenerationStopped
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitRichMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onBaseInlineQuery
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onDocument
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onGuestRequestMessage
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMessageDataCallbackQuery
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onPhoto
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onRichMessage
 import dev.inmo.tgbotapi.extensions.utils.baseSentMessageUpdateOrNull
@@ -21,16 +25,19 @@ import dev.inmo.tgbotapi.extensions.utils.onlyRichMessageContentMessages
 import dev.inmo.tgbotapi.extensions.utils.withContentOrNull
 import dev.inmo.tgbotapi.requests.edit.text.EditChatMessageRichText
 import dev.inmo.tgbotapi.requests.abstracts.InputFile
+import dev.inmo.tgbotapi.requests.abstracts.asMultipartFile
 import dev.inmo.tgbotapi.types.BotCommand
 import dev.inmo.tgbotapi.types.CustomEmojiId
 import dev.inmo.tgbotapi.types.InlineQueries.InlineQueryResult.InlineQueryResultArticle
 import dev.inmo.tgbotapi.types.InlineQueries.InputMessageContent.InputRichMessageContent
 import dev.inmo.tgbotapi.types.InlineQueryId
 import dev.inmo.tgbotapi.types.TelegramDate
+import dev.inmo.tgbotapi.types.chat.PrivateChat
 import dev.inmo.tgbotapi.types.message.content.TextContent
 import dev.inmo.tgbotapi.types.message.textsources.BotCommandTextSource
 import dev.inmo.tgbotapi.types.media.TelegramMediaAnimation
 import dev.inmo.tgbotapi.types.media.TelegramMediaAudio
+import dev.inmo.tgbotapi.types.media.TelegramMediaDocument
 import dev.inmo.tgbotapi.types.media.TelegramMediaPhoto
 import dev.inmo.tgbotapi.types.media.TelegramMediaVideo
 import dev.inmo.tgbotapi.types.media.TelegramMediaVoiceNote
@@ -40,19 +47,31 @@ import dev.inmo.tgbotapi.types.rich.InputRichMessageHTML
 import dev.inmo.tgbotapi.types.rich.InputRichMessageMarkdown
 import dev.inmo.tgbotapi.types.rich.InputRichMessageMedia
 import dev.inmo.tgbotapi.types.rich.RichBlockCaption
+import dev.inmo.tgbotapi.types.rich.RichBlockButtonAlignment
 import dev.inmo.tgbotapi.types.rich.RichBlockTableCellAlign
 import dev.inmo.tgbotapi.types.rich.RichBlockTableCellVAlign
+import dev.inmo.tgbotapi.types.rich.RichMessageButton
+import dev.inmo.tgbotapi.types.rich.RichMessageButtonStyle
 import dev.inmo.tgbotapi.types.rich.RichTextPlain
 import dev.inmo.tgbotapi.types.rich.buildRichText
+import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.CopyTextButtonData
+import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.SwitchInlineQueryChosenChat
 import dev.inmo.tgbotapi.types.toChatId
+import dev.inmo.tgbotapi.utils.DraftIdAllocator
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.withTimeoutOrNull
+
+private val richDraftIds = DraftIdAllocator()
 
 /**
- * Runs a long-polling showcase of the rich-message APIs introduced in Telegram Bot API 10.1 and 10.2.
+ * Runs a long-polling showcase of the rich-message APIs introduced in Telegram Bot API 10.1 through 10.3.
  *
  * Outgoing [dev.inmo.tgbotapi.types.rich.InputRichMessage] values use one of three representations:
  * [InputRichMessageHTML], [InputRichMessageMarkdown], or a typed [InputRichMessageBlocks] tree of
@@ -60,7 +79,9 @@ import kotlinx.coroutines.flow.mapNotNull
  * [sendRichMessageDraft] revisions sharing a draft ID (including draft-only `thinking()` blocks), and edits
  * through [EditChatMessageRichText]. Media is shown both as [InputRichMessageMedia] references such as
  * `tg://photo?id=...` and as typed blocks; [dev.inmo.tgbotapi.requests.send.SendRichMessage] also turns
- * multipart files inside an input tree into `attach://` uploads.
+ * multipart files inside an input tree into `attach://` uploads. Bot API 10.3 button rows, inline rich-text buttons,
+ * compact tables, expandable quotations and document blocks are demonstrated by `/rich_10_3` and the document
+ * trigger.
  *
  * Incoming [dev.inmo.tgbotapi.types.message.content.RichMessageContent] and user-selected content covers
  * [onRichMessage], [waitRichMessage], [onlyRichMessageContentMessages], photo reuse, and
@@ -692,20 +713,40 @@ suspend fun main(vararg args: String) {
 
         // sendRichMessageDraft: stream partial rich messages sharing one draftId, then finalize
         // with a full sendRichMessage. Emulates streaming of an AI-generated reply.
-        onCommand("rich_draft") {
-            val chatId = it.chat.id.toChatId()
-            val draftId = 1L
+        onCommand("rich_draft", initialFilter = { it.chat is PrivateChat }) { origin ->
+            val chatId = origin.chat.id.toChatId()
+            val draftId = richDraftIds.allocate()
+            val stoppedUpdate = async(start = CoroutineStart.UNDISPATCHED) {
+                waitMessageGenerationStopped()
+                    .filter { it.chat.id == origin.chat.id && it.draftId == draftId }
+                    .first()
+            }
             val parts = listOf(
                 "Thinking",
                 "Thinking about *rich* messages",
                 "Thinking about *rich* messages and how to _stream_ them"
             )
-            parts.forEach { part ->
-                sendRichMessageDraft(chatId, draftId, InputRichMessageMarkdown(part))
-                delay(1000)
+            try {
+                parts.forEach { part ->
+                    sendRichMessageDraft(
+                        chatId,
+                        draftId.long,
+                        InputRichMessageMarkdown(part),
+                        canStop = true,
+                        keepOnStop = true,
+                    )
+                    val stopped = withTimeoutOrNull(1000L) { stoppedUpdate.await() }
+                    if (stopped != null) {
+                        println("Stopped rich draft ${stopped.draftId.long} in ${stopped.chat.id}")
+                        return@onCommand
+                    }
+                }
+                // Finalize only if the user did not stop generation; a normal message removes a retained draft.
+                sendRichMessage(chatId, InputRichMessageMarkdown("Done! Here is the *final* rich message."))
+            } finally {
+                stoppedUpdate.cancel()
+                richDraftIds.free(draftId)
             }
-            // finalize the streamed draft with the real message
-            sendRichMessage(chatId, InputRichMessageMarkdown("Done! Here is the *final* rich message."))
         }
 
         // EditChatMessageRichText: send a rich message, then edit it with new rich content
@@ -772,27 +813,146 @@ suspend fun main(vararg args: String) {
             )
         }
 
-        // sendRichMessageDraft with blocks: the thinking() block is only valid inside a draft and is used
-        // to stream a model's reasoning before the finalized rich message is sent via sendRichMessage.
-        onCommand("rich_blocks_draft") {
-            val chatId = it.chat.id.toChatId()
-            val draftId = 2L
-            listOf("Analyzing your request", "Composing a structured answer").forEach { step ->
-                sendRichMessageDraft(
-                    chatId,
-                    draftId,
-                    InputRichMessageBlocks { thinking(step) }
-                )
-                delay(1000)
-            }
-            // finalize the streamed draft with the real (non-thinking) blocks
+        // === Bot API 10.3 additions: buttons, compact tables, expandable quotes and documents ===
+        onCommand("rich_10_3") {
+            val callbackButton = RichMessageButton.CallbackData(
+                RichTextPlain("Callback"),
+                callbackData = "rich_10_3_callback",
+                style = RichMessageButtonStyle.Link,
+            )
             sendRichMessage(
-                chatId,
+                it.chat.id,
                 InputRichMessageBlocks {
-                    heading("Answer", level = 2)
-                    paragraph("Here is the finalized, structured reply.")
+                    h1("Bot API 10.3 rich blocks")
+                    paragraph {
+                        plain("A RichTextButton can live inline with text: ")
+                        button(
+                            RichMessageButton.CopyText(
+                                RichTextPlain("copy 42"),
+                                CopyTextButtonData("42"),
+                                style = RichMessageButtonStyle.Primary,
+                            )
+                        )
+                    }
+
+                    expandableBlockQuotation(credit = RichTextPlain("Expandable quotation credit")) {
+                        plain("This quotation starts collapsed and can be expanded by the reader. ")
+                        dateTime("Bot API 10.3", TelegramDate(1787518800L), "d MMMM yyyy")
+                    }
+
+                    table(
+                        isBordered = true,
+                        isStriped = true,
+                        isCompact = true,
+                        caption = RichTextPlain("A compact table"),
+                    ) {
+                        row {
+                            headerCell(RichBlockTableCellAlign.Left, RichBlockTableCellVAlign.Middle) { plain("Feature") }
+                            headerCell(RichBlockTableCellAlign.Right, RichBlockTableCellVAlign.Middle) { plain("Version") }
+                        }
+                        row {
+                            cell(RichBlockTableCellAlign.Left, RichBlockTableCellVAlign.Middle) { plain("Compact tables") }
+                            cell(RichBlockTableCellAlign.Right, RichBlockTableCellVAlign.Middle) { plain("10.3") }
+                        }
+                    }
+
+                    buttons(
+                        listOf(
+                            RichMessageButton.Url(
+                                RichTextPlain("Telegram"),
+                                "https://telegram.org",
+                                RichMessageButtonStyle.Primary,
+                            ),
+                            callbackButton,
+                        ),
+                        align = RichBlockButtonAlignment.Left,
+                    )
+                    buttons(
+                        listOf(
+                            RichMessageButton.SwitchInlineQuery(
+                                RichTextPlain("Choose chat"),
+                                "rich 10.3",
+                                RichMessageButtonStyle.Success,
+                            ),
+                            RichMessageButton.SwitchInlineQueryCurrentChat(
+                                RichTextPlain("Current chat"),
+                                "rich 10.3",
+                            ),
+                            RichMessageButton.SwitchInlineQueryChosenChat(
+                                RichTextPlain("Groups only"),
+                                SwitchInlineQueryChosenChat(
+                                    query = "rich 10.3",
+                                    allowGroups = true,
+                                ),
+                            ),
+                        ),
+                        align = RichBlockButtonAlignment.Center,
+                    )
+                    buttons(
+                        listOf(
+                            RichMessageButton.CopyText(
+                                RichTextPlain("Copy value"),
+                                CopyTextButtonData("Bot API 10.3"),
+                            ),
+                            RichMessageButton.Disabled(
+                                RichTextPlain("Disabled"),
+                                RichMessageButtonStyle.Danger,
+                            ),
+                        ),
+                        align = RichBlockButtonAlignment.Right,
+                    )
+
+                    document(
+                        TelegramMediaDocument(
+                            InputFile.fromUrl("https://telegram.org/example/document.pdf")
+                        ),
+                        RichBlockCaption(RichTextPlain("A general-file document block")),
+                    )
                 }
             )
+        }
+
+        onMessageDataCallbackQuery(Regex("rich_10_3_callback")) { query ->
+            answer(query, "Rich-message callback received")
+        }
+
+        // sendRichMessageDraft with blocks: the thinking() block is only valid inside a draft and is used
+        // to stream a model's reasoning before the finalized rich message is sent via sendRichMessage.
+        onCommand("rich_blocks_draft", initialFilter = { it.chat is PrivateChat }) { origin ->
+            val chatId = origin.chat.id.toChatId()
+            val draftId = richDraftIds.allocate()
+            val stoppedUpdate = async(start = CoroutineStart.UNDISPATCHED) {
+                waitMessageGenerationStopped()
+                    .filter { it.chat.id == origin.chat.id && it.draftId == draftId }
+                    .first()
+            }
+            try {
+                listOf("Analyzing your request", "Composing a structured answer").forEach { step ->
+                    sendRichMessageDraft(
+                        chatId,
+                        draftId.long,
+                        InputRichMessageBlocks { thinking(step) },
+                        canStop = true,
+                        keepOnStop = true,
+                    )
+                    val stopped = withTimeoutOrNull(1000L) { stoppedUpdate.await() }
+                    if (stopped != null) {
+                        println("Stopped rich block draft ${stopped.draftId.long} in ${stopped.chat.id}")
+                        return@onCommand
+                    }
+                }
+                // Finalize only if the user did not stop generation; a normal message removes a retained draft.
+                sendRichMessage(
+                    chatId,
+                    InputRichMessageBlocks {
+                        heading("Answer", level = 2)
+                        paragraph("Here is the finalized, structured reply.")
+                    }
+                )
+            } finally {
+                stoppedUpdate.cancel()
+                richDraftIds.free(draftId)
+            }
         }
 
         // Rich message media: send me a photo and it gets embedded into a rich message two ways.
@@ -824,6 +984,40 @@ suspend fun main(vararg args: String) {
                     heading("Your photo, as a media block", level = 2)
                     paragraph("The same photo, this time a photo() block inside the blocks tree:")
                     photo(photoMedia)
+                }
+            )
+        }
+
+        // A received document demonstrates both tg://document?id= references and a direct multipart upload.
+        onDocument { message ->
+            val reusedDocument = TelegramMediaDocument(message.content.media.fileId)
+            sendRichMessage(
+                message.chat.id,
+                InputRichMessageHTML(
+                    """
+                        <h2>Your document, referenced from HTML</h2>
+                        <tg-document src="tg://document?id=userdocument"></tg-document>
+                    """.trimIndent(),
+                    media = listOf(
+                        InputRichMessageMedia(id = "userdocument", media = reusedDocument)
+                    )
+                )
+            )
+
+            val uploadedDocument = TelegramMediaDocument(
+                downloadFile(message.content).asMultipartFile(
+                    message.content.media.fileName ?: "document.bin"
+                )
+            )
+            sendRichMessage(
+                message.chat.id,
+                InputRichMessageBlocks {
+                    h2("Your document, uploaded as a new file")
+                    paragraph("SendRichMessage collects the MultipartFile nested in this document block.")
+                    document(
+                        uploadedDocument,
+                        RichBlockCaption(RichTextPlain("Direct attach:// document upload")),
+                    )
                 }
             )
         }
@@ -913,6 +1107,7 @@ suspend fun main(vararg args: String) {
             BotCommand("rich_html", "Send a rich message described with HTML"),
             BotCommand("rich_markdown", "Send a rich message described with Markdown"),
             BotCommand("rich_blocks", "Send a rich message built from the InputRichBlocks DSL"),
+            BotCommand("rich_10_3", "Show Bot API 10.3 rich blocks and buttons"),
             BotCommand("rich_draft", "Stream a rich message draft, then finalize it"),
             BotCommand("rich_blocks_draft", "Stream a blocks draft with thinking(), then finalize it"),
             BotCommand("rich_edit", "Send a rich message and edit it with new rich content"),
