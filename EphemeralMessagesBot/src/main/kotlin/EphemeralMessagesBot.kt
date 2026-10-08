@@ -152,7 +152,10 @@ suspend fun main(vararg args: String) {
                 photoMessage.chat.id,
                 receiverUserId,
                 ephemeralMessageId,
-                TelegramMediaPhoto(photoBytes.asMultipartFile("ephemeral-photo.jpg")),
+                TelegramMediaPhoto(
+                    photoBytes.asMultipartFile("ephemeral-photo.jpg"),
+                    text = "sample"
+                ),
             )
             editEphemeralMessageCaption(
                 photoMessage.chat.id,

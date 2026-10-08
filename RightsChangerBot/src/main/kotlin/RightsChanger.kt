@@ -3,6 +3,7 @@ import dev.inmo.kslog.common.LogLevel
 import dev.inmo.kslog.common.defaultMessageFormatter
 import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.micro_utils.coroutines.firstOf
+import dev.inmo.micro_utils.coroutines.runCatchingLogging
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.micro_utils.fsm.common.State
 import dev.inmo.tgbotapi.bot.ktor.telegramBot
@@ -22,6 +23,7 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitUserShare
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMessageDataCallbackQuery
 import dev.inmo.tgbotapi.extensions.utils.*
+import dev.inmo.tgbotapi.extensions.utils.extensions.raw.from
 import dev.inmo.tgbotapi.extensions.utils.extensions.sameChat
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.*
 import dev.inmo.tgbotapi.types.*
@@ -32,30 +34,30 @@ import dev.inmo.tgbotapi.types.chat.PublicChat
 import dev.inmo.tgbotapi.types.chat.member.AdministratorChatMember
 import dev.inmo.tgbotapi.types.chat.member.ChatCommonAdministratorRights
 import dev.inmo.tgbotapi.types.commands.BotCommandScope
-import dev.inmo.tgbotapi.types.message.abstracts.AccessibleMessage
 import dev.inmo.tgbotapi.types.message.abstracts.ChatMessage
 import dev.inmo.tgbotapi.types.request.RequestId
 import dev.inmo.tgbotapi.utils.*
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.merge
 
 /** States used by the private-chat flow that selects a channel and one of its users. */
 sealed interface UserRetrievingStep : State {
     /** Waits for the user to share a channel in the private chat identified by [context]. */
     data class RetrievingChannelChatState(
-        override val context: ChatId
+        override val context: IdChatIdentifier
     ) : UserRetrievingStep
 
     /** Waits for a user selection after [channelId] has been shared. */
     data class RetrievingUserIdChatState(
-        override val context: ChatId,
+        override val context: IdChatIdentifier,
         val channelId: ChatId
     ) : UserRetrievingStep
 
     /** Carries the selected [channelId] and [userId] to the administrator-rights keyboard step. */
     data class RetrievingChatInfoDoneState(
-        override val context: ChatId,
+        override val context: IdChatIdentifier,
         val channelId: ChatId,
         val userId: UserId
     ) : UserRetrievingStep
@@ -247,13 +249,14 @@ suspend fun main(args: Array<String>) {
             }
         ) {
             val replyMessage = it.replyTo
-            val userInReply = replyMessage?.fromUserMessageOrNull()?.user?.id ?: return@onCommand
+            val userInReply = replyMessage ?.from ?.id ?: return@onCommand
 
             if (replyMessage is ChatMessage) {
+                val keyboard = buildGranularKeyboard(it.chat.id.toChatId(), userInReply)
                 reply(
                     replyMessage,
                     "Manage keyboard:",
-                    replyMarkup = buildGranularKeyboard(it.chat.id.toChatId(), userInReply) ?: return@onCommand
+                    replyMarkup = keyboard ?: return@onCommand
                 )
             } else {
                 reply(it) {
@@ -485,7 +488,8 @@ suspend fun main(args: Array<String>) {
             }
         }
         strictlyOn<UserRetrievingStep.RetrievingUserIdChatState> { state ->
-            val requestId = RequestId.random()
+            val userRequestId = RequestId.random()
+            val botRequestId = RequestId.random()
             send(
                 state.context,
                 replyMarkup = replyKeyboard(
@@ -495,7 +499,11 @@ suspend fun main(args: Array<String>) {
                     row {
                         requestUserButton(
                             "Choose user",
-                            requestId = requestId
+                            requestId = userRequestId
+                        )
+                        requestBotButton(
+                            "Choose bot",
+                            requestId = botRequestId
                         )
                     }
                 }
@@ -543,8 +551,8 @@ suspend fun main(args: Array<String>) {
             null
         }
 
-        onCommand("rights_in_channel") {
-            startChain(UserRetrievingStep.RetrievingChannelChatState(it.chat.id.toChatId()))
+        onCommand("rights_in_channel", initialFilter = { it.chat.privateChatOrNull() != null }) {
+            startChain(UserRetrievingStep.RetrievingChannelChatState(it.chat.id))
         }
 
         setMyCommands(
