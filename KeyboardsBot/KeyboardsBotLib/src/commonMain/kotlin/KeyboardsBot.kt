@@ -105,7 +105,6 @@ fun InlineKeyboardBuilder.includePageButtons(page: Int, count: Int) {
  * @param token the Telegram bot token
  * @param print receives the bot information returned by the startup `getMe` request
  */
-@OptIn(PreviewFeature::class)
 suspend fun activateKeyboardsBot(
     token: String,
     print: (Any) -> Unit
