@@ -21,6 +21,7 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onPhoto
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onRichMessage
 import dev.inmo.tgbotapi.extensions.utils.baseSentMessageUpdateOrNull
 import dev.inmo.tgbotapi.extensions.utils.contentMessageOrNull
+import dev.inmo.tgbotapi.extensions.utils.extensions.sameChat
 import dev.inmo.tgbotapi.extensions.utils.onlyRichMessageContentMessages
 import dev.inmo.tgbotapi.extensions.utils.withContentOrNull
 import dev.inmo.tgbotapi.requests.edit.text.EditChatMessageRichText
@@ -28,6 +29,7 @@ import dev.inmo.tgbotapi.requests.abstracts.InputFile
 import dev.inmo.tgbotapi.requests.abstracts.asMultipartFile
 import dev.inmo.tgbotapi.types.BotCommand
 import dev.inmo.tgbotapi.types.CustomEmojiId
+import dev.inmo.tgbotapi.types.DateTimeEntityFormatting
 import dev.inmo.tgbotapi.types.InlineQueries.InlineQueryResult.InlineQueryResultArticle
 import dev.inmo.tgbotapi.types.InlineQueries.InputMessageContent.InputRichMessageContent
 import dev.inmo.tgbotapi.types.InlineQueryId
@@ -56,6 +58,7 @@ import dev.inmo.tgbotapi.types.rich.RichTextPlain
 import dev.inmo.tgbotapi.types.rich.buildRichText
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.CopyTextButtonData
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.SwitchInlineQueryChosenChat
+import dev.inmo.tgbotapi.types.directMessageThreadIdOrMessageThreadIdAsDirectMessageThreadId
 import dev.inmo.tgbotapi.types.toChatId
 import dev.inmo.tgbotapi.utils.DraftIdAllocator
 import kotlinx.coroutines.CoroutineScope
@@ -353,7 +356,15 @@ suspend fun main(vararg args: String) {
             plain("\n")
             customEmoji(CustomEmojiId("5368324170671202286"), "👍")
             plain("\n")
-            dateTime("22:45 tomorrow", TelegramDate(1647531900L), "wDT")
+            dateTime(
+                text = "22:45 tomorrow",
+                unixTime = TelegramDate(1647531900L),
+                dateTimeFormat = DateTimeEntityFormatting(
+                    useWeek = true,
+                    useDateLong = false,
+                    useTimeLong = false
+                )
+            )
             plain("\n")
             mathematicalExpression("x^2 + y^2")
             plain("\n#hashtag ${'$'}USD +12345678901, card: 4242 4242 4242 4242, https://t.me t.me a@t.me /command @username\n")
@@ -714,11 +725,12 @@ suspend fun main(vararg args: String) {
         // sendRichMessageDraft: stream partial rich messages sharing one draftId, then finalize
         // with a full sendRichMessage. Emulates streaming of an AI-generated reply.
         onCommand("rich_draft", initialFilter = { it.chat is PrivateChat }) { origin ->
-            val chatId = origin.chat.id.toChatId()
             val draftId = richDraftIds.allocate()
             val stoppedUpdate = async(start = CoroutineStart.UNDISPATCHED) {
                 waitMessageGenerationStopped()
-                    .filter { it.chat.id == origin.chat.id && it.draftId == draftId }
+                    .filter {
+                        it.sameChat(origin) && it.draftId == draftId
+                    }
                     .first()
             }
             val parts = listOf(
@@ -729,20 +741,20 @@ suspend fun main(vararg args: String) {
             try {
                 parts.forEach { part ->
                     sendRichMessageDraft(
-                        chatId,
+                        origin.chat.id,
                         draftId.long,
                         InputRichMessageMarkdown(part),
                         canStop = true,
                         keepOnStop = true,
                     )
-                    val stopped = withTimeoutOrNull(1000L) { stoppedUpdate.await() }
+                    val stopped = withTimeoutOrNull(5000L) { stoppedUpdate.await() }
                     if (stopped != null) {
-                        println("Stopped rich draft ${stopped.draftId.long} in ${stopped.chat.id}")
+                        reply(origin, "Stopped rich draft ${stopped.draftId.long} in ${stopped.chat.id}")
                         return@onCommand
                     }
                 }
                 // Finalize only if the user did not stop generation; a normal message removes a retained draft.
-                sendRichMessage(chatId, InputRichMessageMarkdown("Done! Here is the *final* rich message."))
+                sendRichMessage(origin.chat.id, InputRichMessageMarkdown("Done! Here is the *final* rich message."))
             } finally {
                 stoppedUpdate.cancel()
                 richDraftIds.free(draftId)
@@ -837,7 +849,7 @@ suspend fun main(vararg args: String) {
 
                     expandableBlockQuotation(credit = RichTextPlain("Expandable quotation credit")) {
                         plain("This quotation starts collapsed and can be expanded by the reader. ")
-                        dateTime("Bot API 10.3", TelegramDate(1787518800L), "d MMMM yyyy")
+                        dateTime("Bot API 10.3", TelegramDate(1787518800L), DateTimeEntityFormatting(useDateLong = true))
                     }
 
                     table(
@@ -904,7 +916,7 @@ suspend fun main(vararg args: String) {
 
                     document(
                         TelegramMediaDocument(
-                            InputFile.fromUrl("https://telegram.org/example/document.pdf")
+                            InputFile.fromUrl("https://github.com/InsanusMokrassar/ktgbotapi/archive/refs/heads/master.zip"),
                         ),
                         RichBlockCaption(RichTextPlain("A general-file document block")),
                     )
