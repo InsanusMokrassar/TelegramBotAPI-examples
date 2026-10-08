@@ -28,6 +28,7 @@ import dev.inmo.tgbotapi.extensions.utils.types.buttons.flatInlineKeyboard
 import dev.inmo.tgbotapi.requests.abstracts.asMultipartFile
 import dev.inmo.tgbotapi.types.BotCommand
 import dev.inmo.tgbotapi.types.EphemeralMessageParameters
+import dev.inmo.tgbotapi.types.directMessageThreadIdOrMessageThreadIdAsDirectMessageThreadId
 import dev.inmo.tgbotapi.types.ephemeralReplyReceiverUserIdOrNull
 import dev.inmo.tgbotapi.types.media.TelegramMediaLivePhoto
 import dev.inmo.tgbotapi.types.media.TelegramMediaPhoto
@@ -103,7 +104,7 @@ suspend fun main(vararg args: String) {
                 ephemeralMessageParameters = EphemeralMessageParameters(
                     receiverUserId = receiverUserId,
                     callbackQueryId = query.id,
-                    replaceCallbackQueryMessage = true,
+                    replaceCallbackQueryMessage = false,
                 ),
             )
 
