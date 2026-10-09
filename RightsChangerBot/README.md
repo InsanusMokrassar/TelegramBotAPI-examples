@@ -19,7 +19,7 @@ Send `/rights_in_channel` in a private chat with the bot. Telegram's chat/user r
 
 1. Select a channel where the bot is already a member. The picker requests `can_promote_members` and `can_restrict_members` for both the bot and the selecting user.
 2. Select a user, or send `/cancel` during either selection step.
-3. If the selected user is currently a channel administrator, the bot sends a keyboard for refreshing or toggling post-message, edit-message, delete-message, post-story, edit-story, and delete-story rights.
+3. If the selected user is currently a channel administrator, the bot sends a keyboard for refreshing or toggling post-message, edit-message, delete-message, post-story, edit-story, delete-story, and Bot API 10.3's send-welcome-messages rights.
 
 Selecting a non-administrator ends the flow without a message. A stale keyboard whose target is later demoted can display **Promote to admin**; that action promotes the target with the post-messages right enabled. Telegram allows the bot to change an administrator's rights only when the bot promoted that administrator itself.
 
@@ -29,7 +29,7 @@ Callbacks are processed only when clicked by the configured allowed user. They a
 
 - Create a bot with [@BotFather](https://t.me/BotFather) and obtain its token.
 - Choose one trusted Telegram numeric user ID as `ALLOWED_USER_ID`. `/simple` and all permission-changing callbacks are restricted to this ID.
-- Promote the bot in managed groups/channels. It needs `can_restrict_members` for member permissions and `can_promote_members` for channel administrator rights, plus enough rights to read member state and send/edit its keyboard messages. It cannot grant rights it does not possess.
+- Promote the bot in managed groups/channels. It needs `can_restrict_members` for member permissions and `can_promote_members` for channel administrator rights, plus enough rights to read member state and send/edit its keyboard messages. To grant `can_send_welcome_messages`, the bot must possess that right itself. It cannot grant rights it does not possess.
 - BotFather privacy mode can remain enabled because the group workflows use commands, replies, and callbacks.
 - Treat console output as sensitive: the example prints every raw update, and handler failures print stack traces.
 

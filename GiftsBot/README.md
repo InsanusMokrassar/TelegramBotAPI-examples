@@ -15,12 +15,16 @@ Regular gifts are shown with their ID, optional text, and Stars cost. Unique gif
 name, model, and number. Long results are split into multiple Telegram messages; an empty result produces
 `This chat have no any gifts`.
 
+The bot also handles `UniqueGiftInfo` service messages with `onUniqueGiftSentOrReceived`. It logs and replies with
+Bot API 10.3's `text`, parsed `textSources` (`entities`), and `isPrivate` fields. When entities are present, the reply
+reuses them so the gift text keeps its formatting.
+
 ## Command
 
 - `/start` — lists the owned gifts selected by the current chat type. It must be the only command in the message and
   takes no arguments.
 
-Other commands and non-command messages are ignored.
+Other commands and ordinary non-command messages are ignored; unique-gift service messages are handled separately.
 
 ## Setup and permissions
 

@@ -1,6 +1,6 @@
 # KeyboardsBot
 
-A multiplatform long-polling example that demonstrates Telegram reply keyboards, inline keyboards, callback queries, copy-text buttons, inline-mode buttons, and keyboard button styles. The shared bot behavior lives in `KeyboardsBotLib`; the project provides a browser/JS entry point and a separate JVM launcher.
+A multiplatform long-polling example that demonstrates Telegram reply keyboards, inline keyboards, callback queries, copy-text buttons, inline-mode buttons, keyboard button styles, disabled buttons, and forced reply interfaces. The shared bot behavior lives in `KeyboardsBotLib`; the project provides a browser/JS entry point and a separate JVM launcher.
 
 ## Bot behavior
 
@@ -16,16 +16,16 @@ At startup, the bot calls `getMe`, reports the returned bot information through 
 
 Only numeric command arguments are considered. Use positive integers with `page <= count`; the example does not validate the count or clamp the page to the upper bound.
 
-The generated inline keyboard contains:
+The generated inline keyboard sets Bot API 10.3's `force_reply` field and contains:
 
-- numbered buttons for the current page and any adjacent pages that are within `1..count`;
+- a disabled button for the current page and callback buttons for adjacent pages within `1..count`;
 - styled jump buttons for moving toward the first or last page when applicable;
 - a **Command copy button** that copies `/inline <page> <count>`;
 - a **Send somebody page** button that starts inline mode and lets the user choose a user, bot, group, or channel.
 
 Pagination callbacks edit the original message and replace its text with `This is <page> of <count>`. This works for both ordinary bot messages and messages sent through inline mode. Unsupported callback data or an unsupported message type is answered with a callback notification instead.
 
-Any command not handled above, including `/start`, receives a one-time reply keyboard containing a styled `/inline` button. Ordinary non-command messages are ignored.
+Any command not handled above, including `/start`, receives a one-time reply keyboard containing a styled `/inline` button. That reply keyboard also sets `force_reply`, demonstrating the field on both markup types. Ordinary non-command messages are ignored.
 
 ### Inline mode
 
