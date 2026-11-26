@@ -87,3 +87,5 @@ include ":EphemeralMessagesBot"
 include ":CommunitiesBot"
 
 include ":BotSubscriptionsBot"
+
+include ":WidgetsBot"

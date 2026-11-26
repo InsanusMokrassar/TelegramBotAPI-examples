@@ -30,7 +30,6 @@ The required first argument is the bot token. Additional arguments are ignored.
 ./gradlew :StickerInfoBot:jvm_launcher:run --args="<BOT_TOKEN>"
 ```
 
-> **Known issue:** `jvm_launcher/build.gradle` declares `StickerInfoBotJvmKt`, while the current launcher filename produces `StickerInfoBotBotJvmKt`. The `run` task cannot start until that main-class setting is corrected; it is left unchanged by this documentation-only update.
 
 The JVM launcher prints the startup `getMe` result, raw updates, and errors to standard output.
 

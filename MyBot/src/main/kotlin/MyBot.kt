@@ -4,7 +4,6 @@ import dev.inmo.kslog.common.defaultMessageFormatter
 import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.micro_utils.coroutines.launchLoggingDropExceptions
 import dev.inmo.micro_utils.coroutines.runCatchingLogging
-import dev.inmo.tgbotapi.bot.ktor.telegramBot
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.bot.removeMyProfilePhoto
 import dev.inmo.tgbotapi.extensions.api.bot.setMyProfilePhoto
@@ -47,16 +46,14 @@ suspend fun main(vararg args: String) {
         )
     }
 
-    val bot = telegramBot(botToken)
-
     telegramBotWithBehaviourAndLongPolling(
         botToken,
         CoroutineScope(Dispatchers.Default),
         testServer = isTestServer,
     ) {
-        val me = bot.getMe()
+        val me = getMe()
         println(me)
-        println(bot.getChat(me))
+        println(getChat(me.id))
 
         onCommand("setMyProfilePhoto") { commandMessage ->
             reply(commandMessage, "ok, send me new photo")

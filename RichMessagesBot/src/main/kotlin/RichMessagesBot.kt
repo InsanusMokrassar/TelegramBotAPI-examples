@@ -7,6 +7,7 @@ import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.bot.setMyCommands
 import dev.inmo.tgbotapi.extensions.api.files.downloadFile
 import dev.inmo.tgbotapi.extensions.api.send.reply
+import dev.inmo.tgbotapi.extensions.api.send.sendMessage
 import dev.inmo.tgbotapi.extensions.api.send.sendRichMessage
 import dev.inmo.tgbotapi.extensions.api.send.sendRichMessageDraft
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitMessageGenerationStopped
@@ -14,9 +15,9 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitRichMessa
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onBaseInlineQuery
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onDataCallbackQuery
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onDocument
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onGuestRequestMessage
-import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMessageDataCallbackQuery
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onPhoto
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onRichMessage
 import dev.inmo.tgbotapi.extensions.utils.baseSentMessageUpdateOrNull
@@ -33,6 +34,7 @@ import dev.inmo.tgbotapi.types.DateTimeEntityFormatting
 import dev.inmo.tgbotapi.types.InlineQueries.InlineQueryResult.InlineQueryResultArticle
 import dev.inmo.tgbotapi.types.InlineQueries.InputMessageContent.InputRichMessageContent
 import dev.inmo.tgbotapi.types.InlineQueryId
+import dev.inmo.tgbotapi.types.ReplyParameters
 import dev.inmo.tgbotapi.types.TelegramDate
 import dev.inmo.tgbotapi.types.chat.PrivateChat
 import dev.inmo.tgbotapi.types.message.content.TextContent
@@ -43,6 +45,7 @@ import dev.inmo.tgbotapi.types.media.TelegramMediaDocument
 import dev.inmo.tgbotapi.types.media.TelegramMediaPhoto
 import dev.inmo.tgbotapi.types.media.TelegramMediaVideo
 import dev.inmo.tgbotapi.types.media.TelegramMediaVoiceNote
+import dev.inmo.tgbotapi.types.payments.ton.TonAddress
 import dev.inmo.tgbotapi.types.rich.InputRichMessage
 import dev.inmo.tgbotapi.types.rich.InputRichMessageBlocks
 import dev.inmo.tgbotapi.types.rich.InputRichMessageHTML
@@ -74,7 +77,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 private val richDraftIds = DraftIdAllocator()
 
 /**
- * Runs a long-polling showcase of the rich-message APIs introduced in Telegram Bot API 10.1 through 10.3.
+ * Runs a long-polling showcase of Telegram's rich-message APIs.
  *
  * Outgoing [dev.inmo.tgbotapi.types.rich.InputRichMessage] values use one of three representations:
  * [InputRichMessageHTML], [InputRichMessageMarkdown], or a typed [InputRichMessageBlocks] tree of
@@ -84,7 +87,8 @@ private val richDraftIds = DraftIdAllocator()
  * `tg://photo?id=...` and as typed blocks; [dev.inmo.tgbotapi.requests.send.SendRichMessage] also turns
  * multipart files inside an input tree into `attach://` uploads. Bot API 10.3 button rows, inline rich-text buttons,
  * compact tables, expandable quotations and document blocks are demonstrated by `/rich_10_3` and the document
- * trigger.
+ * trigger. `/rich_quote` demonstrates nested expandable quotations, a TON address, and replying to a
+ * user-selected passage using its rich texts and UTF-16 position.
  *
  * Incoming [dev.inmo.tgbotapi.types.message.content.RichMessageContent] and user-selected content covers
  * [onRichMessage], [waitRichMessage], [onlyRichMessageContentMessages], photo reuse, and
@@ -924,8 +928,47 @@ suspend fun main(vararg args: String) {
             )
         }
 
-        onMessageDataCallbackQuery(Regex("rich_10_3_callback")) { query ->
+        onDataCallbackQuery("rich_10_3_callback") { query ->
             answer(query, "Rich-message callback received")
+        }
+
+        onCommand("rich_quote") { command ->
+            val quote = command.content.quote
+            val original = command.replyTo
+            if (original != null && quote != null && !quote.richTexts.isNullOrEmpty()) {
+                sendMessage(
+                    command.chat.id,
+                    "Your selection starts at UTF-16 offset ${quote.position}.",
+                    replyParameters = ReplyParameters(
+                        messageId = original.messageId,
+                        quoteRichTexts = quote.richTexts,
+                        quotePosition = quote.position,
+                    ),
+                )
+                return@onCommand
+            }
+
+            val zeroAddress = TonAddress("EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c")
+            sendRichMessage(
+                command.chat.id,
+                InputRichMessageBlocks {
+                    paragraph("Expand the quotation, select a passage, and reply with /rich_quote.")
+                    expandableBlockQuotation(
+                        blocks = {
+                            paragraph { bold("📘 Sample address book") }
+                            unorderedList {
+                                item {
+                                    paragraph {
+                                        plain("The TON zero address is ")
+                                        tonAddress(zeroAddress.value, zeroAddress)
+                                    }
+                                }
+                            }
+                        },
+                        credit = RichTextPlain("Address book example"),
+                    )
+                },
+            )
         }
 
         // sendRichMessageDraft with blocks: the thinking() block is only valid inside a draft and is used
@@ -1120,6 +1163,7 @@ suspend fun main(vararg args: String) {
             BotCommand("rich_markdown", "Send a rich message described with Markdown"),
             BotCommand("rich_blocks", "Send a rich message built from the InputRichBlocks DSL"),
             BotCommand("rich_10_3", "Show Bot API 10.3 rich blocks and buttons"),
+            BotCommand("rich_quote", "Select and quote a passage from a rich message"),
             BotCommand("rich_draft", "Stream a rich message draft, then finalize it"),
             BotCommand("rich_blocks_draft", "Stream a blocks draft with thinking(), then finalize it"),
             BotCommand("rich_edit", "Send a rich message and edit it with new rich content"),

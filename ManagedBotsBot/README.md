@@ -39,7 +39,7 @@ No chat-administrator permission is requested by the code.
 
 ## Run
 
-The intended command from the repository root is:
+Run from the repository root:
 
 ```bash
 ./gradlew :ManagedBotsBot:run --args="BOT_TOKEN"
@@ -47,7 +47,3 @@ The intended command from the repository root is:
 
 The first argument is the required token. Optional exact flags may follow it in any
 order: `debug` enables formatted logging, and `testServer` uses Telegram's test API.
-
-Known issue: `build.gradle` currently sets `mainClassName` to `CustomBotKt`, while
-this source's entry point is `ManagedBotsBotKt`; the `run` task cannot start until
-that Gradle setting is corrected.

@@ -22,6 +22,7 @@ This is a feature demonstration, not a production-ready bot. Several commands ch
 | Edit bio (`can_edit_bio`) | `/set_business_account_bio` |
 | Edit profile photo (`can_edit_profile_photo`) | Both profile-photo commands |
 | View gifts and Stars (`can_view_gifts_and_stars`) | Balance and gift-list commands |
+| Convert gifts to Stars (`can_convert_gifts_to_stars`) | `/delete_business_account_gift` |
 | Transfer Stars (`can_transfer_stars`) | `/transfer_business_account_stars` |
 | Manage stories (`can_manage_stories`) | `/post_story` and `/delete_story` |
 
@@ -58,7 +59,7 @@ The inline **Read message** button calls `readBusinessMessage`. **Delete message
 
 ## Private-chat commands
 
-These commands must be sent by the connected account owner in their private chat with the bot. Except for `/get_business_account_info`, handlers silently stop when that chat is not associated with an in-memory business connection.
+Send these commands from the connected account owner's private chat with the bot. The account-info and gift-deletion commands report a missing connection. The other commands require a connection already recorded in memory.
 
 | Command | Behavior |
 | --- | --- |
@@ -67,7 +68,8 @@ These commands must be sent by the connected account owner in their private chat
 | `/set_business_account_username <username>` | Changes the account username to the single supplied argument. |
 | `/get_business_account_star_balance` | Prints the account's current Telegram Stars balance. |
 | `/transfer_business_account_stars <count>` | Transfers an integer number of Stars from the business account to the bot. Telegram accepts values from 1 through 10,000; this example leaves range validation to Telegram. |
-| `/get_business_account_gifts` | Fetches every page of owned gifts and prints their Kotlin representations, splitting long output across messages. |
+| `/get_business_account_gifts` | Lists each gift with its owned gift ID when Telegram supplies one, followed by the full gift details. Long results span multiple messages. |
+| `/delete_business_account_gift <owned_gift_id>` | Permanently deletes the specified regular, unlimited, unrefunded gift. Type the command directly in the owner's bot chat using the owned gift ID from the listing. The bot checks the active connection, sender and business right before calling `deleteBusinessAccountGift`. Deletion credits no Stars. |
 | `/set_business_account_bio <text>` | Saves the current bio, sets the complete text after the command as the new bio, waits 15 seconds, and attempts to restore the saved value. An empty text clears it temporarily. |
 | `/set_business_account_profile_photo` | Reply to a photo with this command to set it as the main profile photo; after 15 seconds the bot removes that photo. |
 | `/set_business_account_profile_photo_public` | Reply to a photo to set it as the public profile photo; after 15 seconds the bot removes it. |

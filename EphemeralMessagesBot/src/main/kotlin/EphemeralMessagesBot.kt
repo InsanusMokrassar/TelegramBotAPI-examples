@@ -3,8 +3,10 @@ import dev.inmo.kslog.common.LogLevel
 import dev.inmo.kslog.common.defaultMessageFormatter
 import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
+import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.bot.setMyCommands
+import dev.inmo.tgbotapi.extensions.api.bot.setMySettings
 import dev.inmo.tgbotapi.extensions.api.deleteEphemeralMessage
 import dev.inmo.tgbotapi.extensions.api.edit.caption.editEphemeralMessageCaption
 import dev.inmo.tgbotapi.extensions.api.edit.media.editEphemeralMessageMedia
@@ -20,23 +22,20 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitPhotoMess
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onContentMessage
-import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMessageDataCallbackQuery
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onDataCallbackQuery
 import dev.inmo.tgbotapi.extensions.utils.fromUserMessageOrNull
 import dev.inmo.tgbotapi.extensions.utils.extensions.sameChat
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.dataButton
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.flatInlineKeyboard
 import dev.inmo.tgbotapi.requests.abstracts.asMultipartFile
 import dev.inmo.tgbotapi.types.BotCommand
-import dev.inmo.tgbotapi.types.EphemeralMessageParameters
-import dev.inmo.tgbotapi.types.directMessageThreadIdOrMessageThreadIdAsDirectMessageThreadId
+import dev.inmo.tgbotapi.types.CallbackQueryMode
 import dev.inmo.tgbotapi.types.ephemeralReplyReceiverUserIdOrNull
 import dev.inmo.tgbotapi.types.media.TelegramMediaLivePhoto
 import dev.inmo.tgbotapi.types.media.TelegramMediaPhoto
 import dev.inmo.tgbotapi.types.message.abstracts.PossiblyEphemeralMessage
 import dev.inmo.tgbotapi.types.rich.InputRichMessageBlocks
 import korlibs.time.seconds
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
@@ -44,7 +43,7 @@ import kotlinx.coroutines.flow.first
 /**
  * Runs the ephemeral-messages example bot using long polling.
  *
- * `/ephemeral` posts an inline button whose callback replaces it with a rich message visible only to
+ * `/ephemeral` posts an inline button whose callback sends a separate rich message visible only to
  * the user who pressed it, edits that message, and deletes it. `/ephemeral_photo` demonstrates uploading new media
  * to an ephemeral edit and moving its caption above the media. `/ephemeral_live_photo` demonstrates collecting both
  * multipart files of a Live Photo edit. Incoming [PossiblyEphemeralMessage] instances receive both an automatic
@@ -72,6 +71,10 @@ suspend fun main(vararg args: String) {
         botToken,
         testServer = isTestServer,
     ) {
+        when {
+            "inlineCallbacks" in args -> setMySettings(callbackQueryMode = CallbackQueryMode.Inline)
+            "defaultCallbacks" in args -> setMySettings(callbackQueryMode = CallbackQueryMode.Default)
+        }
         val me = getMe()
         println("Bot info: $me")
 
@@ -87,47 +90,37 @@ suspend fun main(vararg args: String) {
             )
         }
 
-        // Bot API 10.3 groups the recipient/callback fields in EphemeralMessageParameters. Setting
-        // replaceCallbackQueryMessage replaces the button message only for the user who pressed it.
-        onMessageDataCallbackQuery(Regex("reveal")) { query ->
-            val chatId = query.message.chat.id
-            val receiverUserId = query.from.id
-
+        // Telegram resolves the destination from the callback, including callbacks carrying an inline message ID.
+        onDataCallbackQuery("reveal") { query ->
             val sent = sendRichMessage(
-                chatId,
-                InputRichMessageBlocks {
+                callbackQueryId = query.id,
+                richMessage = InputRichMessageBlocks {
                     paragraph {
                         plain("🔒 ${query.from.firstName}, here is your personal secret: ")
                         code("42")
                     }
                 },
-                ephemeralMessageParameters = EphemeralMessageParameters(
-                    receiverUserId = receiverUserId,
-                    callbackQueryId = query.id,
-                    replaceCallbackQueryMessage = false,
-                ),
+                replaceCallbackQueryMessage = false,
             )
+            answer(query)
 
-            // Only the group-family Common*ContentMessage types implement PossiblyEphemeralMessage, so the
-            // sent ephemeral message exposes its ephemeralMessageId through that interface.
             val ephemeralMessageId = (sent as? PossiblyEphemeralMessage)?.ephemeralMessageId
-            if (ephemeralMessageId != null) {
-                delay(3.seconds)
-                // editEphemeralMessageText now accepts rich_message; the typed extension exposes that as
-                // editEphemeralMessageRichText.
-                editEphemeralMessageRichText(
-                    chatId,
-                    receiverUserId,
-                    ephemeralMessageId,
-                    InputRichMessageBlocks {
-                        h2("Secret revealed")
-                        paragraph { plain("The answer is "); code("42") }
-                    },
-                )
-                delay(3.seconds)
-                // deleteEphemeralMessage: same addressing (there is also a PossiblyEphemeralMessage overload)
-                deleteEphemeralMessage(chatId, receiverUserId, ephemeralMessageId)
-            }
+                ?: return@onDataCallbackQuery
+            delay(3.seconds)
+            editEphemeralMessageRichText(
+                sent.chat.id,
+                query.from.id,
+                ephemeralMessageId,
+                InputRichMessageBlocks {
+                    h2("Secret revealed")
+                    paragraph {
+                        plain("The answer is ")
+                        code("42")
+                    }
+                },
+            )
+            delay(3.seconds)
+            deleteEphemeralMessage(sent.chat.id, query.from.id, ephemeralMessageId)
         }
 
         // Upload a received photo again as a brand-new multipart file while editing an ephemeral media message.
@@ -142,7 +135,7 @@ suspend fun main(vararg args: String) {
                 photoMessage.chat.id,
                 photoMessage.content.media.fileId,
                 text = "Ephemeral photo using its existing Telegram file ID",
-                ephemeralMessageParameters = EphemeralMessageParameters(receiverUserId),
+                receiverUserId = receiverUserId,
             )
             val ephemeralMessageId = (sent as? PossiblyEphemeralMessage)?.ephemeralMessageId
                 ?: return@onCommand
@@ -180,7 +173,7 @@ suspend fun main(vararg args: String) {
                 chatId = livePhotoMessage.chat.id,
                 livePhoto = livePhoto,
                 text = "Ephemeral Live Photo using existing Telegram file IDs",
-                ephemeralMessageParameters = EphemeralMessageParameters(receiverUserId),
+                receiverUserId = receiverUserId,
             )
             val ephemeralMessageId = (sent as? PossiblyEphemeralMessage)?.ephemeralMessageId
                 ?: return@onCommand
@@ -203,23 +196,19 @@ suspend fun main(vararg args: String) {
 
         // Incoming ephemeral messages: detect them via PossiblyEphemeralMessage, then answer them.
         onContentMessage { message ->
-            val ephemeral = (message as? PossiblyEphemeralMessage)?.takeIf { it.ephemeralMessageId != null }
+            val ephemeralMessageId = (message as? PossiblyEphemeralMessage)?.ephemeralMessageId
                 ?: return@onContentMessage
+            val receiverUserId = message.ephemeralReplyReceiverUserIdOrNull ?: return@onContentMessage
 
-            // reply smart-branch: because `message` is ephemeral, this reply is sent ephemeral to the same
-            // receiver automatically — no ephemeral parameters needed here.
+            // reply derives the receiver and ephemeral message ID from the incoming message.
             reply(message, "Got your ephemeral message — I am replying ephemerally too.")
 
-            // The explicit equivalent, addressing the ephemeral message by hand:
-            val receiverUserId = ephemeral.ephemeralReplyReceiverUserIdOrNull
-            if (receiverUserId != null) {
-                replyToEphemeral(
-                    message.chat.id,
-                    EphemeralMessageParameters(receiverUserId),
-                    ephemeral.ephemeralMessageId!!,
-                    "Explicit ephemeral reply via replyToEphemeral",
-                )
-            }
+            replyToEphemeral(
+                chatId = message.chat.id,
+                receiverUserId = receiverUserId,
+                ephemeralMessageId = ephemeralMessageId,
+                text = "Explicit ephemeral reply via replyToEphemeral",
+            )
         }
 
         setMyCommands(

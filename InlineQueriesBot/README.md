@@ -17,11 +17,9 @@ The bot also prints its own account information at startup, logs received update
 
 ## Setup
 
-Create a bot and obtain its token, then enable inline mode for it in BotFather (for example, with `/setinline`). Keep the
-token private.
-
-Both launchers require the bot token as the first command-line argument. Starting either launcher without an argument
-fails immediately; additional arguments are ignored.
+Create a bot and obtain its token. To enable inline mode and set the search placeholder through `setMySettings`,
+pass `configureInline` after the token on either launcher. Telegram saves both settings, so subsequent launches only
+need the token. You can also enable inline mode through BotFather.
 
 ## Launch from the repository root
 
@@ -29,6 +27,12 @@ fails immediately; additional arguments are ignored.
 
 ```bash
 ./gradlew :InlineQueriesBot:runJvm --args="<BOT_TOKEN>"
+```
+
+To configure inline mode on the first run:
+
+```bash
+./gradlew :InlineQueriesBot:runJvm --args="<BOT_TOKEN> configureInline"
 ```
 
 ### Kotlin/Native

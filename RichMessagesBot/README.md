@@ -1,15 +1,14 @@
 # RichMessagesBot
 
 RichMessagesBot is a long-polling showcase of Telegram rich messages. It sends
-rich content from HTML, Markdown, and the typed `InputRichMessageBlocks` DSL;
-streams drafts; edits rich text; handles incoming rich messages; and supplies
-rich content from inline and guest queries. Bot API 10.3 coverage includes rich
-buttons, compact tables, expandable quotations, document blocks, document
-references, direct document uploads, and stoppable drafts.
+HTML, Markdown, and typed `InputRichMessageBlocks`, streams drafts, edits rich
+text, and answers inline and guest queries. Its examples include buttons, compact
+tables, document uploads, expandable quotations with nested blocks, TON addresses,
+and replies that preserve a user's rich-text selection.
 
 ## Commands
 
-The bot installs eight commands in Telegram's default command menu. Three
+The bot installs nine commands in Telegram's default command menu. Three
 additional handlers can be invoked by typing their commands manually.
 
 | Command | In menu | Demonstration |
@@ -21,10 +20,17 @@ additional handlers can be invoked by typing their commands manually.
 | `/rich_markdown_medialess_blocks` | No | Sends and logs the same typed block tree without its media section. |
 | `/rich_blocks` | Yes | Sends a smaller, directly constructed block tree with headings, formatted paragraphs, ordered and unordered checkbox lists, a divider, preformatted Kotlin, and a quotation. |
 | `/rich_10_3` | Yes | Sends an inline `RichTextButton`, three aligned `InputRichBlockButtons` rows with URL, callback, inline-query, copy-text, and disabled actions, a compact table, an expandable quotation, and a document block. |
+| `/rich_quote` | Yes | Sends an expandable quotation containing a formatted paragraph and a list with a typed TON address. Send the command as a quoted reply to reproduce the selected passage. |
 | `/rich_draft` | Yes | In a private chat, streams three Markdown revisions with `canStop` and `keepOnStop`, one second apart, then sends a normal final rich message unless generation is stopped. |
 | `/rich_blocks_draft` | Yes | In a private chat, streams two draft-only `thinking()` blocks with `canStop` and `keepOnStop`, then sends a normal typed-block answer unless generation is stopped. |
 | `/rich_edit` | Yes | Sends a Markdown rich message, waits two seconds, and replaces its rich content with `EditChatMessageRichText`. |
 | `/wait_rich` | Yes | Prompts for a rich message, waits for the next matching content, and reports its block count. |
+
+To try a rich-text selection, send `/rich_quote`, expand the address book, select
+some text, and reply to that selection with `/rich_quote`. The bot replies to the
+original address book using the received `TextQuote.richTexts` as `quoteRichTexts`
+and the received UTF-16 offset as `quotePosition`. Telegram counts UTF-16 code
+units across quotable texts separated by line feeds.
 
 The two draft examples allocate a unique draft ID and subscribe to
 `waitMessageGenerationStopped` before sending the first revision. They finalize

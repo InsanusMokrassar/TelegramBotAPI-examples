@@ -15,12 +15,14 @@ import dev.inmo.tgbotapi.extensions.api.chat.members.restrictChatMember
 import dev.inmo.tgbotapi.extensions.api.edit.edit
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.send
+import dev.inmo.tgbotapi.extensions.api.verifications.verifyChat
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
 import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviourWithFSMAndStartLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitChatSharedEventsMessages
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitCommandMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitUserSharedEventsMessages
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommandWithArgs
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onMessageDataCallbackQuery
 import dev.inmo.tgbotapi.extensions.utils.*
 import dev.inmo.tgbotapi.extensions.utils.extensions.raw.from
@@ -30,6 +32,7 @@ import dev.inmo.tgbotapi.types.*
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardMarkup
 import dev.inmo.tgbotapi.types.chat.ChannelChat
 import dev.inmo.tgbotapi.types.chat.ChatPermissions
+import dev.inmo.tgbotapi.types.chat.PrivateChat
 import dev.inmo.tgbotapi.types.chat.PublicChat
 import dev.inmo.tgbotapi.types.chat.member.AdministratorChatMember
 import dev.inmo.tgbotapi.types.chat.member.ChatCommonAdministratorRights
@@ -224,6 +227,23 @@ suspend fun main(args: Array<String>) {
             it.printStackTrace()
         },
     ) {
+        onCommandWithArgs(
+            "verify",
+            initialFilter = { it.chat is PrivateChat && it.fromUserMessageOrNull()?.user?.id == allowedAdmin }
+        ) { message, arguments ->
+            val targetId = arguments.getOrNull(0)?.toLongOrNull()
+            val recordUrl = arguments.getOrNull(1)
+            if (arguments.size != 2 || targetId == null || recordUrl == null || !recordUrl.startsWith("https://")) {
+                reply(message, "Usage: /verify <user_or_chat_id> <https_record_url>")
+                return@onCommandWithArgs
+            }
+            val target = getChat(ChatId(RawChatId(targetId)))
+            verifyChat(target, buildEntities {
+                link("Verification record", recordUrl)
+            })
+            reply(message, "Verified ${target.id}.")
+        }
+
         onCommand(
             "simple",
             initialFilter = { it.chat is PublicChat && it.fromUserMessageOrNull()?.user?.id == allowedAdmin }

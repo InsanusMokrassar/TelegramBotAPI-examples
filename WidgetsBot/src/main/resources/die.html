@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<body>
+    <h3>Last roll</h3>
+    <p id="last-roll">No rolls yet</p>
+    <button id="roll" disabled>Roll a die</button>
+    <p id="answer"></p>
+    <script>
+        const widget = window.TelegramWidget;
+        if (widget) {
+            const lastRoll = document.getElementById('last-roll');
+            const button = document.getElementById('roll');
+            const answer = document.getElementById('answer');
+
+            function render() {
+                lastRoll.textContent = widget.chatData || widget.publicData || 'No rolls yet';
+            }
+
+            widget.onEvent('chatDataChanged', render);
+            widget.onEvent('publicDataChanged', render);
+            widget.watchPublicData();
+            render();
+
+            button.disabled = !widget.viewer;
+            button.addEventListener('click', () => {
+                button.disabled = true;
+                widget.request('roll').then(
+                    response => { answer.textContent = response.result; },
+                    error => { answer.textContent = 'Roll failed (' + error.code + ').'; }
+                ).finally(() => { button.disabled = false; });
+            });
+        }
+    </script>
+</body>
+</html>
