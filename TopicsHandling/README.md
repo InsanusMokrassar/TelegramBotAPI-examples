@@ -17,7 +17,8 @@ In a private chat, `/start_test_topics` first checks the bot's `has_topics_enabl
 The bot replies to these service events:
 
 - forum topic created or edited;
-- private topic created or edited;
+- private topic created or edited. The creation reply includes a link that reopens the topic in the user's private
+  chat with the bot when Telegram supplies the thread ID;
 - forum topic reopened;
 - General topic hidden or unhidden.
 

@@ -2,20 +2,24 @@ import dev.inmo.kslog.common.KSLog
 import dev.inmo.kslog.common.LogLevel
 import dev.inmo.kslog.common.defaultMessageFormatter
 import dev.inmo.kslog.common.setDefaultKSLog
+import dev.inmo.tgbotapi.bot.exceptions.BotException
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.business.getBusinessAccountGiftsFlow
 import dev.inmo.tgbotapi.extensions.api.gifts.getChatGiftsFlow
+import dev.inmo.tgbotapi.extensions.api.gifts.getUniqueGift
 import dev.inmo.tgbotapi.extensions.api.gifts.getUserGiftsFlow
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.withTypingAction
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommandWithArgs
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onUniqueGiftSentOrReceived
 import dev.inmo.tgbotapi.types.chat.BusinessChat
 import dev.inmo.tgbotapi.types.chat.PrivateChat
 import dev.inmo.tgbotapi.types.chat.PublicChat
 import dev.inmo.tgbotapi.types.chat.UnknownChatType
 import dev.inmo.tgbotapi.types.gifts.OwnedGift
+import dev.inmo.tgbotapi.types.gifts.UniqueGiftName
 import dev.inmo.tgbotapi.types.message.textsources.splitForText
 import dev.inmo.tgbotapi.utils.bold
 import dev.inmo.tgbotapi.utils.buildEntities
@@ -24,7 +28,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
 /**
- * Starts a long-polling bot whose standalone `/start` command lists all owned gifts for the current chat.
+ * Lists owned gifts with `/start` and looks up an individual collectible by name with `/unique_gift`.
  *
  * Business chats are queried through their business connection, private chats through their user ID, and public or
  * unknown chat types through their chat ID. Regular and unique gifts are rendered as formatted text and long results
@@ -53,6 +57,26 @@ suspend fun main(vararg args: String) {
         // start here!!
         val me = getMe()
         println(me)
+
+        onCommandWithArgs("unique_gift") { message, arguments ->
+            val name = arguments.singleOrNull()?.takeIf { it.isNotBlank() }
+            if (name == null) {
+                reply(message, "Use /unique_gift <name> with the name from a t.me/nft/ link.")
+                return@onCommandWithArgs
+            }
+            val gift = try {
+                getUniqueGift(UniqueGiftName(name))
+            } catch (error: BotException) {
+                reply(message, error.response?.description ?: "Telegram could not look up this gift.")
+                return@onCommandWithArgs
+            }
+            reply(
+                message,
+                "${gift.baseName} #${gift.number}\n" +
+                    "${gift.model.name} model, ${gift.symbol.name} symbol, ${gift.backdrop.name} backdrop\n" +
+                    gift.name.nftLink
+            )
+        }
 
         onUniqueGiftSentOrReceived { message ->
             val uniqueGiftInfo = message.chatEvent

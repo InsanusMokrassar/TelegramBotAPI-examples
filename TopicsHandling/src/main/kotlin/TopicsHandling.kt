@@ -19,6 +19,8 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onGenera
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onGeneralForumTopicUnhidden
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onPrivateForumTopicCreated
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onPrivateForumTopicEdited
+import dev.inmo.tgbotapi.extensions.behaviour_builder.utils.botInfo
+import dev.inmo.tgbotapi.extensions.utils.formatting.link
 import dev.inmo.tgbotapi.extensions.utils.forumChatOrNull
 import dev.inmo.tgbotapi.extensions.utils.forumContentMessageOrNull
 import dev.inmo.tgbotapi.extensions.utils.privateChatOrNull
@@ -193,8 +195,9 @@ suspend fun main(vararg args: String) {
         onForumTopicCreated {
             reply(it, "Topic has been created")
         }
-        onPrivateForumTopicCreated {
-            reply(it, "Private topic has been created")
+        onPrivateForumTopicCreated { message ->
+            val topicLink = message.chat.id.threadId?.let { thread -> botInfo()?.username?.link(thread) }
+            reply(message, listOfNotNull("Private topic has been created", topicLink).joinToString("\n"))
         }
 
         onForumTopicEdited {

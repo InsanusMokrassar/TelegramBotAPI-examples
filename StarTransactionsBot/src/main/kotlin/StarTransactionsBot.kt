@@ -4,6 +4,7 @@ import dev.inmo.kslog.common.defaultMessageFormatter
 import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.tgbotapi.extensions.api.answers.payments.answerPreCheckoutQueryOk
+import dev.inmo.tgbotapi.extensions.api.chat.get.getChat
 import dev.inmo.tgbotapi.extensions.api.edit.edit
 import dev.inmo.tgbotapi.extensions.api.files.downloadFileToTemp
 import dev.inmo.tgbotapi.extensions.api.get.getStarTransactions
@@ -11,6 +12,7 @@ import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.send
 import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAndLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
+import dev.inmo.tgbotapi.extensions.utils.extendedPrivateChatOrNull
 import dev.inmo.tgbotapi.extensions.utils.extensions.sameChat
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.*
 import dev.inmo.tgbotapi.extensions.utils.withContentOrNull
@@ -19,6 +21,7 @@ import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.tgbotapi.types.RawChatId
 import dev.inmo.tgbotapi.types.UserId
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardMarkup
+import dev.inmo.tgbotapi.types.chat.PrivateChat
 import dev.inmo.tgbotapi.types.files.*
 import dev.inmo.tgbotapi.types.media.TelegramPaidMediaPhoto
 import dev.inmo.tgbotapi.types.media.TelegramPaidMediaVideo
@@ -33,6 +36,7 @@ import dev.inmo.tgbotapi.utils.bold
 import dev.inmo.tgbotapi.utils.buildEntities
 import dev.inmo.tgbotapi.utils.regular
 import dev.inmo.tgbotapi.utils.row
+import dev.inmo.tgbotapi.utils.tonAddress
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
@@ -42,8 +46,8 @@ import kotlinx.coroutines.Dispatchers
  * The first element of [args] must be the bot token and the second a numeric admin
  * user/chat ID authorized for `/transactions`. Optional exact values `debug` and
  * `testServer` enable diagnostic logging and Telegram's test environment. Other
- * handlers create a one-Star invoice or paid media and report payment-related
- * updates.
+ * handlers display the current user's TON wallet card, report TON transfers and
+ * free-message access, or create a one-Star invoice or paid media.
  */
 suspend fun main(vararg args: String) {
     val botToken = args.first()
@@ -77,6 +81,32 @@ suspend fun main(vararg args: String) {
 
         onPreCheckoutQuery(initialFilter = { it.invoicePayload == payload }) {
             answerPreCheckoutQueryOk(it)
+        }
+
+        onCommand("wallet_card", initialFilter = { it.chat is PrivateChat }) { message ->
+            val card = getChat(message.chat.id).extendedPrivateChatOrNull()?.tonWalletCard
+            if (card == null) {
+                reply(message, "Your profile has no public TON wallet card.")
+                return@onCommand
+            }
+            reply(message) {
+                +"Wallet "
+                tonAddress(card.address.value)
+                +"\nBalance of ${card.amount} in the smallest units\n${card.stickers.size} NFT stickers"
+            }
+        }
+
+        onTonWalletTransfer { message ->
+            val transfer = message.chatEvent
+            reply(message) {
+                +"TON transfer of ${transfer.amount} in the smallest units\nPeer wallet "
+                tonAddress(transfer.peerAddress.value)
+                +"\nTransaction ${transfer.transactionId.ifEmpty { "pending" }}"
+            }
+        }
+
+        onPaidMessagesWaived { message ->
+            reply(message, "The sender used a link that grants free messages to this recipient.")
         }
 
         val transactionsDataPrefix = "getStarTransactions"

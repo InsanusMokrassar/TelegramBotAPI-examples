@@ -32,8 +32,11 @@ suspend fun main(vararg args: String) {
 
     telegramBotWithBehaviourAndLongPolling(botToken, CoroutineScope(Dispatchers.IO)) {
         val me = getMe()
+        val usernames = listOfNotNull(me.username) + me.activeUsernames
         onContentMessage(
-            initialFilter = initialFilter@{ it.text ?.contains(me.username ?.full ?: return@initialFilter false) == true }
+            initialFilter = { message ->
+                usernames.any { message.text?.contains(it.full, ignoreCase = true) == true }
+            }
         ) { message ->
             val answerText = when (val chat = message.chat) {
                 is PreviewChannelChat -> {

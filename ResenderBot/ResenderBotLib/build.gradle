@@ -15,8 +15,7 @@ plugins {
 
 kotlin {
     jvm()
-//    js(LEGACY) {
-    js(IR) {
+    js {
         browser()
         binaries.executable()
     }

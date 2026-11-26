@@ -9,10 +9,9 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.telegramBotWithBehaviourAn
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onContentMessage
 import dev.inmo.tgbotapi.extensions.utils.possiblyWithEffectMessageOrNull
 import dev.inmo.tgbotapi.extensions.utils.shortcuts.executeUnsafe
-import dev.inmo.tgbotapi.extensions.utils.withContentOrNull
 import dev.inmo.tgbotapi.types.ReplyParameters
+import dev.inmo.tgbotapi.types.abstracts.WithOptionalQuoteInfo
 import dev.inmo.tgbotapi.types.message.abstracts.BusinessContentMessage
-import dev.inmo.tgbotapi.types.message.content.TextContent
 import dev.inmo.tgbotapi.utils.DefaultKTgBotAPIKSLog
 import dev.inmo.tgbotapi.utils.extensions.threadIdOrNull
 import kotlinx.coroutines.CancellationException
@@ -49,11 +48,13 @@ suspend fun activateResenderBot(
                     it.content.createResend(
                         chat.id,
                         replyParameters = it.replyInfo?.messageMeta?.let { meta ->
-                            val quote = it.withContentOrNull<TextContent>()?.content?.quote
+                            val quote = (it.content as? WithOptionalQuoteInfo)?.quote
+                                ?: return@let ReplyParameters(meta)
                             ReplyParameters(
                                 meta,
-                                entities = quote?.textSources ?: emptyList(),
-                                quotePosition = quote?.position
+                                entities = quote.textSources,
+                                quotePosition = quote.position,
+                                quoteRichTexts = quote.richTexts
                             )
                         },
                         effectId = it.possiblyWithEffectMessageOrNull()?.effectId

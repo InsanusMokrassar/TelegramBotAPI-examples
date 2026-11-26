@@ -5,9 +5,8 @@ message addresses the bot by username.
 
 ## Trigger and replies
 
-There are no slash commands. The bot handles a content message only when its
-text contains the bot's full username. This is a case-sensitive substring
-check; messages without text or without the username are ignored.
+The bot greets messages whose text contains its primary username or an active alias
+returned by `getMe`. The match includes the leading `@` and ignores case.
 
 - In a private chat, it replies with a MarkdownV2 text mention of the user.
 - In a group or supergroup, it greets the group and links its title to a public

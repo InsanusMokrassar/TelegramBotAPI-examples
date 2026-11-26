@@ -1,6 +1,6 @@
 # GiftsBot
 
-Demonstrates the paginated owned-gift APIs by listing gifts for the chat in which the command is received.
+Lists gifts owned by the current chat and looks up individual collectible gifts by name.
 
 ## Behavior
 
@@ -19,10 +19,13 @@ The bot also handles `UniqueGiftInfo` service messages with `onUniqueGiftSentOrR
 Bot API 10.3's `text`, parsed `textSources` (`entities`), and `isPrivate` fields. When entities are present, the reply
 reuses them so the gift text keeps its formatting.
 
-## Command
+## Commands
 
 - `/start` — lists the owned gifts selected by the current chat type. It must be the only command in the message and
   takes no arguments.
+- `/unique_gift <name>` calls `getUniqueGift` and replies with the collectible's number, model, symbol, backdrop,
+  and Telegram link. Use the name after `t.me/nft/` in a collectible's link, or copy the name from a `/start` result.
+  The lookup works independently of gift ownership.
 
 Other commands and ordinary non-command messages are ignored; unique-gift service messages are handled separately.
 
@@ -34,8 +37,8 @@ Other commands and ordinary non-command messages are ignored; unique-gift servic
 4. For business-chat use, enable the bot's Business/Secretary mode, connect it to the business account, and grant the
    **View gifts and Stars** (`can_view_gifts_and_stars`) business right.
 
-The example performs no access checks or error recovery, so Telegram API or permission errors end that command
-handler.
+The lookup reports Telegram's error description when available. The owned-gift listing requires the applicable chat
+or business access.
 
 ## Arguments and launch
 

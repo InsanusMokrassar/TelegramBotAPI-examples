@@ -11,8 +11,8 @@ buildscript {
 apply plugin: 'kotlin'
 apply plugin: 'application'
 
-mainClassName="{{$title}}Kt"
-        {{$subtitle}}
+application.mainClass = "{{$title}}Kt"
+description = "{{$subtitle}}"
 
 
 dependencies {

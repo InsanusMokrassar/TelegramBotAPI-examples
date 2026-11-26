@@ -1,6 +1,7 @@
 import dev.inmo.micro_utils.coroutines.subscribeLoggingDropExceptions
 import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
+import dev.inmo.tgbotapi.extensions.api.bot.setMySettings
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.telegramBot
 import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviourWithLongPolling
@@ -16,8 +17,14 @@ import dev.inmo.tgbotapi.utils.buildEntities
 /**
  * Starts the inline-query bot with [token] and suspends until long polling stops.
  */
-suspend fun doInlineQueriesBot(token: String) {
+suspend fun doInlineQueriesBot(token: String, configureInline: Boolean = false) {
     val bot = telegramBot(token)
+    if (configureInline) {
+        bot.setMySettings(
+            supportsInlineQueries = true,
+            inlineQueryPlaceholder = "Search numbered articles"
+        )
+    }
 
     bot.buildBehaviourWithLongPolling(
         defaultExceptionsHandler = { it.printStackTrace() },

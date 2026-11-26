@@ -16,6 +16,10 @@ plugins {
     id "org.jetbrains.compose" version "$compose_version"
 }
 
+composeCompiler {
+    targetKotlinPlatforms.set([org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType.js])
+}
+
 kotlin {
     jvm {
         binaries {
@@ -24,7 +28,7 @@ kotlin {
             }
         }
     }
-    js(IR) {
+    js {
         browser()
         binaries.executable()
     }
@@ -35,13 +39,13 @@ kotlin {
                 implementation kotlin('stdlib')
                 implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:$serialization_version"
                 implementation "dev.inmo:tgbotapi.core:$telegram_bot_api_version"
-                implementation compose.runtime
             }
         }
 
         jsMain {
             dependencies {
                 implementation "dev.inmo:tgbotapi.webapps:$telegram_bot_api_version"
+                implementation compose.runtime
                 implementation compose.web.core
             }
         }
@@ -51,7 +55,6 @@ kotlin {
                 implementation "dev.inmo:tgbotapi:$telegram_bot_api_version"
                 implementation "dev.inmo:micro_utils.ktor.server:$micro_utils_version"
                 implementation "io.ktor:ktor-server-cio:$ktor_version"
-                implementation compose.desktop.currentOs
             }
         }
     }

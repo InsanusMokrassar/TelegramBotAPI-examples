@@ -1,8 +1,17 @@
 # RightsChangerBot
 
-A long-polling/FSM example for changing a member's chat permissions and a channel administrator's rights with inline keyboards. The bot registers its commands in the all-group-chats scope and prints every received update to standard output.
+A long-polling/FSM example for changing a member's chat permissions and a channel administrator's rights with inline keyboards. The group command menu lists `/simple`, `/granular`, and `/rights_in_channel`. The bot prints every received update to standard output.
 
 ## Commands and callbacks
+
+### Linked verification descriptions
+
+An approved third-party verifier bot can attach a text link to its verification description. Type
+`/verify <user_or_chat_id> <https_record_url>` in the allowed user's private chat with the bot.
+Use the numeric ID of a user or chat the bot can look up. The example calls `verifyChat` with the
+chat and a formatted description. For a private chat the library calls `verifyUser`. Telegram displays
+**Verification record** as a link to the supplied URL. The verifier needs permission to set a custom
+description. [Telegram verification API](https://core.telegram.org/bots/api#verifychat)
 
 ### Member permissions
 

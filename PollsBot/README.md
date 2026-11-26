@@ -43,7 +43,7 @@ chat and client that support them.
 
 ## Run
 
-The intended command from the repository root is:
+Run from the repository root:
 
 ```bash
 ./gradlew :PollsBot:run --args="BOT_TOKEN"
@@ -51,7 +51,3 @@ The intended command from the repository root is:
 
 The first argument is the required token. An optional exact `debug` argument in any
 later position enables formatted logging; other arguments are ignored.
-
-Known issue: `build.gradle` currently names `HelloBotKt` as the main class, while
-this source's entry point is `PollsBotKt`; the `run` task cannot start until that
-Gradle setting is corrected.

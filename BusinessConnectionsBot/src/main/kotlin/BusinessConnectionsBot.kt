@@ -3,9 +3,10 @@ import dev.inmo.kslog.common.LogLevel
 import dev.inmo.kslog.common.defaultMessageFormatter
 import dev.inmo.kslog.common.setDefaultKSLog
 import dev.inmo.micro_utils.common.Percentage
-import dev.inmo.tgbotapi.types.chat.PreviewBot
+import dev.inmo.tgbotapi.bot.exceptions.BotException
 import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
+import dev.inmo.tgbotapi.extensions.api.business.deleteBusinessAccountGift
 import dev.inmo.tgbotapi.extensions.api.business.getBusinessAccountStarBalance
 import dev.inmo.tgbotapi.extensions.api.business.deleteBusinessMessages
 import dev.inmo.tgbotapi.extensions.api.business.getBusinessAccountGifts
@@ -41,23 +42,28 @@ import dev.inmo.tgbotapi.extensions.utils.withContentOrNull
 import dev.inmo.tgbotapi.requests.abstracts.multipartFile
 import dev.inmo.tgbotapi.requests.business_connection.InputProfilePhoto
 import dev.inmo.tgbotapi.requests.stories.PostStory
+import dev.inmo.tgbotapi.types.AreaPosition
 import dev.inmo.tgbotapi.types.ChatId
+import dev.inmo.tgbotapi.types.GiftId
 import dev.inmo.tgbotapi.types.MessageId
 import dev.inmo.tgbotapi.types.RawChatId
 import dev.inmo.tgbotapi.types.business_connection.BusinessConnectionId
+import dev.inmo.tgbotapi.types.chat.PreviewBot
 import dev.inmo.tgbotapi.types.chat.PrivateChat
 import dev.inmo.tgbotapi.types.message.abstracts.ChatContentMessage
+import dev.inmo.tgbotapi.types.message.abstracts.FromUserMessage
 import dev.inmo.tgbotapi.types.message.content.LivePhotoContent
 import dev.inmo.tgbotapi.types.message.content.PhotoContent
 import dev.inmo.tgbotapi.types.message.content.StoryContent
 import dev.inmo.tgbotapi.types.message.content.TextContent
 import dev.inmo.tgbotapi.types.message.content.VideoContent
 import dev.inmo.tgbotapi.types.message.content.VisualMediaGroupPartContent
+import dev.inmo.tgbotapi.types.message.textsources.BotCommandTextSource
 import dev.inmo.tgbotapi.types.stories.InputStoryContent
 import dev.inmo.tgbotapi.types.stories.InputStoryContent.*
 import dev.inmo.tgbotapi.types.stories.StoryArea
-import dev.inmo.tgbotapi.types.stories.StoryAreaPosition
 import dev.inmo.tgbotapi.types.stories.StoryAreaType
+import dev.inmo.tgbotapi.types.toChatId
 import dev.inmo.tgbotapi.utils.botCommand
 import dev.inmo.tgbotapi.utils.code
 import dev.inmo.tgbotapi.utils.extensions.splitForText
@@ -324,13 +330,50 @@ suspend fun main(args: Array<String>) {
                 }
             } else {
                 giftsFlow.collect { giftsPage ->
-                    giftsPage.gifts.joinToString {
-                        it.toString()
+                    giftsPage.gifts.joinToString("\n\n") { gift ->
+                        buildString {
+                            gift.ownedGiftId?.let { appendLine("Owned gift ID ${it.string}") }
+                            append(gift)
+                        }
                     }.splitForText().forEach { message ->
                         reply(it, message)
                     }
                 }
             }
+        }
+        val deleteGiftCommand = "delete_business_account_gift"
+        onCommandWithArgs(deleteGiftCommand, initialFilter = { message ->
+            val command = message.content.textSources.firstOrNull() as? BotCommandTextSource
+            message.chat is PrivateChat && message.forwardInfo == null && command?.command == deleteGiftCommand
+        }) { message, arguments ->
+            val ownedGiftId = arguments.singleOrNull()?.takeIf { it.isNotBlank() }
+            if (ownedGiftId == null) {
+                reply(message, "Use /$deleteGiftCommand <owned_gift_id> to permanently delete one gift.")
+                return@onCommandWithArgs
+            }
+            val connectionId = businessConnectionsChatsMutex.withLock {
+                chatsBusinessConnections[message.chat.id.toChatId()]
+            }
+            if (connectionId == null) {
+                reply(message, "No business account is connected to this chat.")
+                return@onCommandWithArgs
+            }
+            val result = try {
+                val connection = getBusinessConnection(connectionId)
+                when {
+                    !connection.isEnabled || connection.user.id != (message as? FromUserMessage)?.from?.id ->
+                        "Only the owner of an active business connection can delete a gift."
+                    !connection.rights.canConvertGiftsToStars ->
+                        "Grant the Convert gifts to Stars business right to delete a gift."
+                    else -> {
+                        deleteBusinessAccountGift(connectionId, GiftId(ownedGiftId))
+                        "Deleted owned gift $ownedGiftId."
+                    }
+                }
+            } catch (error: BotException) {
+                error.response?.description ?: "Telegram could not delete this gift."
+            }
+            reply(message, result)
         }
         onCommand("set_business_account_bio", requireOnlyCommandInMessage = false, initialFilter = { it.chat is PrivateChat }) {
             val initialBio = getChat(it.chat).extendedPrivateChatOrThrow().bio
@@ -463,7 +506,7 @@ suspend fun main(args: Array<String>) {
                     activePeriod = PostStory.ACTIVE_PERIOD_6_HOURS,
                     areas = listOf(
                         StoryArea(
-                            StoryAreaPosition(
+                            AreaPosition(
                                 x = Percentage.of100(50.0),
                                 y = Percentage.of100(50.0),
                                 width = Percentage.of100(8.0),

@@ -8,6 +8,11 @@ ways to consume their payloads with the TelegramBotAPI behaviour builder.
 - On startup, the bot fetches and prints its own account details. It stops if the
   account has no username, because a username is required to build a deep link.
 - `/start` without arguments returns a short usage hint.
+- `/invite` returns the bot owner's invitation link. The owner can open it to invite a user to
+  a private chat with the bot. When Telegram delivers `WriteAccessAllowed.FromInvitation`,
+  the bot greets that user and names the inviter.
+- `/sharetheme` shows the theme for sharing a link to the current chat. For an emoji theme it
+  looks up the selected backdrop by ID. For a unique-gift theme it shows the gift name.
 - A text message containing no bot-command entity is used as the payload of a new
   deep link, which the bot returns to the sender.
 - A `/start <payload>` deep link is observed by both an `onDeepLink` trigger and a

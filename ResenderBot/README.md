@@ -8,8 +8,8 @@ points start it in platform-specific ways.
 
 The bot defines no commands. For each content message, it shows a typing action and
 uses `createResend` to send equivalent content back to the originating chat. When
-present, it carries over the replied-to message metadata, text quote entities and
-position, and the message effect ID.
+present, it carries over the replied-to message metadata, quote entities, rich-text
+selections, their UTF-16 position, and the message effect ID.
 
 Business content sent by the business-connection owner is ignored; other delivered
 content messages are eligible. Processing is separated by chat. The bot prints each

@@ -1,7 +1,7 @@
 # StarTransactionsBot
 
-A long-polling Telegram Stars playground for invoices, transaction history, paid
-media, pre-checkout approval, and refund updates.
+A long-polling bot for Telegram Stars invoices, transaction history, paid media,
+refund updates, and TON wallet information.
 
 ## Commands
 
@@ -10,6 +10,9 @@ media, pre-checkout approval, and refund updates.
   automatically.
 - `/transactions` works only in the chat whose numeric ID was supplied as the
   second program argument. It replies with the bot's first transaction page.
+- `/wallet_card` in your private chat with the bot reads the public TON wallet card
+  on your profile with `getChat`. It shows the wallet address, balance in the
+  smallest units, and NFT sticker count, or reports that the card is absent.
 
 The commands are not registered in Telegram's command menu.
 
@@ -34,6 +37,12 @@ Pagination state is encoded in callback data and is not persisted by the bot.
   paid media, retaining its caption above the media; only photos and videos are used.
 - Paid-media-info messages are printed to standard output.
 - Refunded-payment events receive a reply containing the payment information.
+- `onTonWalletTransfer` replies to a transfer service message with the signed
+  amount, peer wallet address, and transaction ID. The amount stays in Telegram's
+  decimal-string representation. Outgoing amounts are negative, and an empty
+  transaction ID appears as pending.
+- `onPaidMessagesWaived` acknowledges the service message Telegram sends when
+  someone uses a link that grants free messages to the recipient.
 - Every received update is printed to standard output.
 
 ## Setup, permissions, and payment safety
